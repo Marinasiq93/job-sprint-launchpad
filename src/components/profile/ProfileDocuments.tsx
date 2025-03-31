@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -61,12 +62,18 @@ export const ProfileDocuments = () => {
         }
 
         if (data) {
-          // Only set the document data if we actually got a valid result
-          const documentData = data as UserDocument;
-          setUserDocuments(documentData);
-          setResumeText(documentData.resume_text || "");
-          setCoverLetterText(documentData.cover_letter_text || "");
-          setReferenceText(documentData.reference_text || "");
+          // Check if data is a valid UserDocument before type assertion
+          if ('id' in data && 'user_id' in data) {
+            // Only set the document data if we actually got a valid result
+            const documentData = data as unknown as UserDocument;
+            setUserDocuments(documentData);
+            setResumeText(documentData.resume_text || "");
+            setCoverLetterText(documentData.cover_letter_text || "");
+            setReferenceText(documentData.reference_text || "");
+          } else {
+            console.error("Data returned from Supabase does not match UserDocument structure:", data);
+            setUserDocuments(null);
+          }
         } else {
           // If no data was found, keep userDocuments as null
           setUserDocuments(null);
