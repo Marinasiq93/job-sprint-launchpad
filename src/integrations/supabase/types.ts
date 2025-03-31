@@ -33,6 +33,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_documents: {
+        Row: {
+          cover_letter_file_name: string | null
+          cover_letter_text: string | null
+          created_at: string
+          id: string
+          reference_files: Json | null
+          reference_text: string | null
+          resume_file_name: string | null
+          resume_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_letter_file_name?: string | null
+          cover_letter_text?: string | null
+          created_at?: string
+          id?: string
+          reference_files?: Json | null
+          reference_text?: string | null
+          resume_file_name?: string | null
+          resume_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_letter_file_name?: string | null
+          cover_letter_text?: string | null
+          created_at?: string
+          id?: string
+          reference_files?: Json | null
+          reference_text?: string | null
+          resume_file_name?: string | null
+          resume_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

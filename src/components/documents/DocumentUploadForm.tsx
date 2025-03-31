@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 import { ResumeUploadCard } from "./ResumeUploadCard";
 import { CoverLetterUploadCard } from "./CoverLetterUploadCard";
@@ -51,21 +52,47 @@ export const DocumentUploadForm = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get the current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Você precisa estar logado para salvar documentos.");
+        navigate("/login");
+        return;
+      }
 
-      // Save document data to localStorage (for demo only)
-      localStorage.setItem('userDocuments', JSON.stringify({
-        resume: resumeFile ? resumeFile.name : "texto do currículo",
-        coverLetter: coverLetterFile ? coverLetterFile.name : (coverLetterText ? "texto da carta" : null),
-        references: referenceFiles.length ? referenceFiles.map(f => f.name) : (referenceText ? "texto das referências" : null),
+      // Prepare reference files data for JSON storage
+      const referenceFilesData = referenceFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type
       }));
+
+      // Save document data to Supabase
+      const { error } = await supabase
+        .from('user_documents')
+        .upsert({
+          user_id: session.user.id,
+          resume_file_name: resumeFile ? resumeFile.name : null,
+          resume_text: resumeText || null,
+          cover_letter_file_name: coverLetterFile ? coverLetterFile.name : null,
+          cover_letter_text: coverLetterText || null,
+          reference_files: referenceFiles.length > 0 ? referenceFilesData : null,
+          reference_text: referenceText || null
+        }, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error("Erro ao salvar documentos:", error);
+        toast.error("Erro ao salvar documentos. Tente novamente.");
+        setIsLoading(false);
+        return;
+      }
 
       toast.success("Documentos salvos com sucesso!");
       navigate("/dashboard");
     } catch (error) {
+      console.error("Erro não esperado:", error);
       toast.error("Erro ao salvar documentos. Tente novamente.");
-      console.error(error);
     } finally {
       setIsLoading(false);
     }

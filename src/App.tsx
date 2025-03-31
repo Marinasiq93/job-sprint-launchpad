@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import DocumentUpload from "./pages/DocumentUpload";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import NewSprint from "./pages/NewSprint";
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/onboarding/documents" element={<DocumentUpload />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/profile" element={<Profile />} />
           <Route path="/dashboard/new-sprint" element={<NewSprint />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
