@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the form schema
 const formSchema = z.object({
@@ -46,23 +48,18 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
       
-      // Check if user exists (for demo only)
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        if (user.email === data.email) {
-          // Password check would happen on the server in a real application
-          toast.success("Login realizado com sucesso!");
-          navigate("/dashboard");
-          return;
-        }
+      if (error) {
+        toast.error(error.message || "Erro ao fazer login. Tente novamente.");
+        return;
       }
       
-      // If we get here, login failed
-      toast.error("Email ou senha inválidos.");
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
     } catch (error) {
       toast.error("Erro ao fazer login. Tente novamente.");
       console.error(error);

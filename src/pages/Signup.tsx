@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/lib/toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   firstName: z.string().min(2, {
@@ -59,14 +61,21 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      localStorage.setItem('user', JSON.stringify({
-        id: Date.now().toString(),
-        firstName: data.firstName,
-        lastName: data.lastName,
+      const { error } = await supabase.auth.signUp({
         email: data.email,
-      }));
+        password: data.password,
+        options: {
+          data: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+          },
+        },
+      });
+      
+      if (error) {
+        toast.error(error.message || "Erro ao criar conta. Tente novamente.");
+        return;
+      }
       
       toast.success("Conta criada com sucesso!");
       

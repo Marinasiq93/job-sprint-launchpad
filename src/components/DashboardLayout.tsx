@@ -1,9 +1,10 @@
 
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/lib/toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
   FileText, 
@@ -22,14 +23,36 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const handleLogout = () => {
-    // Clear user data from localStorage (for demo only)
-    localStorage.removeItem('user');
-    localStorage.removeItem('userDocuments');
+  
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      
+      if (!data.session) {
+        toast.error("Você precisa estar logado para acessar esta página");
+        navigate("/login");
+      }
+    };
     
-    toast.success("Logout realizado com sucesso!");
-    navigate("/");
+    checkUser();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast.error("Erro ao fazer logout. Tente novamente.");
+        return;
+      }
+      
+      toast.success("Logout realizado com sucesso!");
+      navigate("/");
+    } catch (error) {
+      toast.error("Erro ao fazer logout. Tente novamente.");
+      console.error(error);
+    }
   };
 
   const toggleSidebar = () => {

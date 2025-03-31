@@ -5,11 +5,12 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Clock, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface User {
-  firstName: string;
-  lastName: string;
-  email: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 const Dashboard = () => {
@@ -18,23 +19,25 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (for demo only)
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      navigate('/login');
-      return;
-    }
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      
+      if (!data.user) {
+        navigate('/login');
+        return;
+      }
 
-    // Parse user data
-    try {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      navigate('/login');
-    } finally {
+      // Set user data from metadata
+      setUser({
+        firstName: data.user.user_metadata?.firstName || "",
+        lastName: data.user.user_metadata?.lastName || "",
+        email: data.user.email
+      });
+      
       setIsLoading(false);
-    }
+    };
+
+    fetchUser();
   }, [navigate]);
 
   if (isLoading) {
