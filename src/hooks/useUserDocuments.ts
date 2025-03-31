@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "@/lib/toast";
 import { UserDocument, ReferenceFile } from "@/types/documents";
 import { documentService } from "@/services/documentService";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useUserDocuments = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,27 +33,8 @@ export const useUserDocuments = () => {
         setCoverLetterText(data.cover_letter_text || "");
         setReferenceText(data.reference_text || "");
         
-        // Process reference files
-        if (data.reference_files && Array.isArray(data.reference_files)) {
-          const typedFiles: ReferenceFile[] = [];
-          
-          for (const file of data.reference_files) {
-            if (typeof file === 'object' && file !== null) {
-              const fileObj = file as Record<string, unknown>;
-              if ('name' in fileObj && 'size' in fileObj && 'type' in fileObj) {
-                typedFiles.push({
-                  name: String(fileObj.name || ''),
-                  size: Number(fileObj.size || 0),
-                  type: String(fileObj.type || '')
-                });
-              }
-            }
-          }
-            
-          setReferenceFiles(typedFiles);
-        } else {
-          setReferenceFiles([]);
-        }
+        // Set reference files from the user document data
+        setReferenceFiles(data.reference_files || []);
       } else {
         setUserDocuments(null);
       }
@@ -182,7 +163,6 @@ export const useUserDocuments = () => {
     }
   };
 
-  // Helper function to get current user ID
   const getCurrentUserId = async (): Promise<string | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     return session?.user?.id || null;

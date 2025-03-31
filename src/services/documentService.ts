@@ -22,7 +22,13 @@ export const documentService = {
       return { data: null, error };
     }
 
-    return { data: data as UserDocument | null, error: null };
+    // Convert the data to our UserDocument type with proper reference_files handling
+    const userDocument = data ? {
+      ...data,
+      reference_files: processReferenceFiles(data.reference_files)
+    } as UserDocument : null;
+
+    return { data: userDocument, error: null };
   },
 
   async saveUserDocuments({ 
@@ -75,3 +81,29 @@ export const documentService = {
     return { success: true, error: null };
   }
 };
+
+// Helper function to process reference_files from the database
+function processReferenceFiles(referenceFiles: Json | null): ReferenceFile[] | null {
+  if (!referenceFiles) return null;
+  
+  if (Array.isArray(referenceFiles)) {
+    const typedFiles: ReferenceFile[] = [];
+    
+    for (const file of referenceFiles) {
+      if (typeof file === 'object' && file !== null) {
+        const fileObj = file as Record<string, unknown>;
+        if ('name' in fileObj && 'size' in fileObj && 'type' in fileObj) {
+          typedFiles.push({
+            name: String(fileObj.name || ''),
+            size: Number(fileObj.size || 0),
+            type: String(fileObj.type || '')
+          });
+        }
+      }
+    }
+      
+    return typedFiles.length > 0 ? typedFiles : null;
+  }
+  
+  return null;
+}
