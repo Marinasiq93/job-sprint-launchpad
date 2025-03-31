@@ -17,6 +17,13 @@ export interface UserDocument {
   updated_at: string;
 }
 
+// Define a type for reference files
+export interface ReferenceFile {
+  name: string;
+  size: number;
+  type: string;
+}
+
 export const useUserDocuments = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userDocuments, setUserDocuments] = useState<UserDocument | null>(null);
@@ -24,7 +31,7 @@ export const useUserDocuments = () => {
   const [resumeText, setResumeText] = useState("");
   const [coverLetterText, setCoverLetterText] = useState("");
   const [referenceText, setReferenceText] = useState("");
-  const [referenceFiles, setReferenceFiles] = useState<Array<{name: string, size: number, type: string}>>([]);
+  const [referenceFiles, setReferenceFiles] = useState<ReferenceFile[]>([]);
 
   useEffect(() => {
     fetchUserDocuments();
@@ -58,7 +65,28 @@ export const useUserDocuments = () => {
         setResumeText(data.resume_text || "");
         setCoverLetterText(data.cover_letter_text || "");
         setReferenceText(data.reference_text || "");
-        setReferenceFiles(data.reference_files || []);
+        
+        // Ensure reference_files is properly typed
+        if (data.reference_files && Array.isArray(data.reference_files)) {
+          // Make sure each file has the expected properties
+          const typedFiles: ReferenceFile[] = data.reference_files
+            .filter(file => 
+              typeof file === 'object' && 
+              file !== null && 
+              'name' in file && 
+              'size' in file && 
+              'type' in file
+            )
+            .map(file => ({
+              name: String(file.name || ''),
+              size: Number(file.size || 0),
+              type: String(file.type || '')
+            }));
+            
+          setReferenceFiles(typedFiles);
+        } else {
+          setReferenceFiles([]);
+        }
       } else {
         setUserDocuments(null);
       }
@@ -107,7 +135,7 @@ export const useUserDocuments = () => {
 
   const handleReferenceFileUpload = (fileName: string, fileSize: number, fileType: string) => {
     // Allow multiple reference files
-    const newReferenceFile = { name: fileName, size: fileSize, type: fileType };
+    const newReferenceFile: ReferenceFile = { name: fileName, size: fileSize, type: fileType };
     const updatedReferenceFiles = [...(referenceFiles || []), newReferenceFile];
     setReferenceFiles(updatedReferenceFiles);
     
@@ -146,6 +174,8 @@ export const useUserDocuments = () => {
         return;
       }
 
+      const referenceFilesData = referenceFiles.length > 0 ? referenceFiles : null;
+
       const { error } = await supabase
         .from('user_documents')
         .upsert({
@@ -154,7 +184,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText || null,
           cover_letter_file_name: userDocuments?.cover_letter_file_name || null,
           cover_letter_text: coverLetterText || null,
-          reference_files: referenceFiles.length > 0 ? referenceFiles : null,
+          reference_files: referenceFilesData,
           reference_text: referenceText || null
         }, { onConflict: 'user_id' });
 
@@ -170,7 +200,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText,
           cover_letter_text: coverLetterText,
           reference_text: referenceText,
-          reference_files: referenceFiles.length > 0 ? referenceFiles : null,
+          reference_files: referenceFilesData,
           updated_at: new Date().toISOString()
         });
       } else {
@@ -181,7 +211,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText,
           cover_letter_file_name: null,
           cover_letter_text: coverLetterText,
-          reference_files: referenceFiles.length > 0 ? referenceFiles : null,
+          reference_files: referenceFilesData,
           reference_text: referenceText,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
