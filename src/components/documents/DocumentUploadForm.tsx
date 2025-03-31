@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ReferenceFile } from "@/types/documents";
 
 import { ResumeUploadCard } from "./ResumeUploadCard";
 import { CoverLetterUploadCard } from "./CoverLetterUploadCard";

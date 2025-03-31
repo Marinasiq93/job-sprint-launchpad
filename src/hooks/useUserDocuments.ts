@@ -1,29 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
-import { Json } from "@/integrations/supabase/types";
-
-// Define a type for the user document that matches our database schema
-export interface UserDocument {
-  id: string;
-  user_id: string;
-  resume_file_name: string | null;
-  resume_text: string | null;
-  cover_letter_file_name: string | null;
-  cover_letter_text: string | null;
-  reference_files: Array<{name: string, size: number, type: string}> | null;
-  reference_text: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// Define a type for reference files
-export interface ReferenceFile {
-  name: string;
-  size: number;
-  type: string;
-}
+import { UserDocument, ReferenceFile } from "@/types/documents";
+import { documentService } from "@/services/documentService";
 
 export const useUserDocuments = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -41,35 +20,21 @@ export const useUserDocuments = () => {
   const fetchUserDocuments = async () => {
     try {
       setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('user_documents')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+      const { data, error } = await documentService.getUserDocuments();
 
       if (error) {
-        console.error("Erro ao buscar documentos:", error);
         toast.error("Erro ao carregar documentos");
-        setIsLoading(false);
         return;
       }
 
       if (data) {
-        setUserDocuments(data as UserDocument);
+        setUserDocuments(data);
         setResumeText(data.resume_text || "");
         setCoverLetterText(data.cover_letter_text || "");
         setReferenceText(data.reference_text || "");
         
-        // Ensure reference_files is properly typed
+        // Process reference files
         if (data.reference_files && Array.isArray(data.reference_files)) {
-          // Make sure each file has the expected properties
           const typedFiles: ReferenceFile[] = [];
           
           for (const file of data.reference_files) {
@@ -111,9 +76,7 @@ export const useUserDocuments = () => {
   };
 
   const handleResumeFileUpload = (fileName: string, fileContent: string) => {
-    // Enforce the rule: only one resume allowed
     setResumeText(fileContent);
-    // Update user documents state to reflect the new file name
     if (userDocuments) {
       setUserDocuments({
         ...userDocuments,
@@ -124,7 +87,6 @@ export const useUserDocuments = () => {
   };
 
   const handleCoverLetterFileUpload = (fileName: string, fileContent: string) => {
-    // Enforce the rule: only one cover letter allowed
     setCoverLetterText(fileContent);
     if (userDocuments) {
       setUserDocuments({
@@ -136,12 +98,10 @@ export const useUserDocuments = () => {
   };
 
   const handleReferenceFileUpload = (fileName: string, fileSize: number, fileType: string) => {
-    // Allow multiple reference files
     const newReferenceFile: ReferenceFile = { name: fileName, size: fileSize, type: fileType };
     const updatedReferenceFiles = [...(referenceFiles || []), newReferenceFile];
     setReferenceFiles(updatedReferenceFiles);
     
-    // Update user documents state
     if (userDocuments) {
       setUserDocuments({
         ...userDocuments,
@@ -152,11 +112,9 @@ export const useUserDocuments = () => {
   };
 
   const handleRemoveReferenceFile = (fileName: string) => {
-    // Remove specific reference file
     const updatedReferenceFiles = referenceFiles.filter(file => file.name !== fileName);
     setReferenceFiles(updatedReferenceFiles);
     
-    // Update user documents state
     if (userDocuments) {
       setUserDocuments({
         ...userDocuments,
@@ -169,72 +127,65 @@ export const useUserDocuments = () => {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) {
-        toast.error("Sessão expirada. Faça login novamente.");
-        return;
-      }
-
-      // Convert ReferenceFile[] to a format that can be stored as JSON in Supabase
-      const referenceFilesData = referenceFiles.length > 0 
-        ? referenceFiles.map(file => ({
-            name: file.name,
-            size: file.size,
-            type: file.type
-          }))
-        : null;
-
-      const { error } = await supabase
-        .from('user_documents')
-        .upsert({
-          user_id: session.user.id,
-          resume_file_name: userDocuments?.resume_file_name || null,
-          resume_text: resumeText || null,
-          cover_letter_file_name: userDocuments?.cover_letter_file_name || null,
-          cover_letter_text: coverLetterText || null,
-          reference_files: referenceFilesData as unknown as Json,
-          reference_text: referenceText || null
-        }, { onConflict: 'user_id' });
+      const { success, error } = await documentService.saveUserDocuments({
+        resumeFileName: userDocuments?.resume_file_name || null,
+        resumeText: resumeText || null,
+        coverLetterFileName: userDocuments?.cover_letter_file_name || null,
+        coverLetterText: coverLetterText || null,
+        referenceFiles: referenceFiles.length > 0 ? referenceFiles : null,
+        referenceText: referenceText || null
+      });
 
       if (error) {
-        console.error("Erro ao atualizar documentos:", error);
         toast.error("Erro ao salvar alterações");
         return;
       }
 
-      if (userDocuments) {
-        setUserDocuments({
-          ...userDocuments,
-          resume_text: resumeText,
-          cover_letter_text: coverLetterText,
-          reference_text: referenceText,
-          reference_files: referenceFilesData as any,
-          updated_at: new Date().toISOString()
-        });
-      } else {
-        setUserDocuments({
-          id: '', // This will be generated by the database
-          user_id: session.user.id,
-          resume_file_name: null,
-          resume_text: resumeText,
-          cover_letter_file_name: null,
-          cover_letter_text: coverLetterText,
-          reference_files: referenceFilesData as any,
-          reference_text: referenceText,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      }
+      if (success) {
+        if (userDocuments) {
+          setUserDocuments({
+            ...userDocuments,
+            resume_text: resumeText,
+            cover_letter_text: coverLetterText,
+            reference_text: referenceText,
+            reference_files: referenceFiles.length > 0 ? referenceFiles : null,
+            updated_at: new Date().toISOString()
+          });
+        } else {
+          // Create a placeholder until we refresh
+          const userId = await getCurrentUserId();
+          if (userId) {
+            setUserDocuments({
+              id: '', // This will be generated by the database
+              user_id: userId,
+              resume_file_name: null,
+              resume_text: resumeText,
+              cover_letter_file_name: null,
+              cover_letter_text: coverLetterText,
+              reference_files: referenceFiles.length > 0 ? referenceFiles : null,
+              reference_text: referenceText,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          }
+        }
 
-      setIsEditing(false);
-      toast.success("Documentos atualizados com sucesso!");
+        setIsEditing(false);
+        toast.success("Documentos atualizados com sucesso!");
+      }
     } catch (error) {
       console.error("Erro não esperado:", error);
       toast.error("Erro ao salvar alterações");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to get current user ID
+  const getCurrentUserId = async (): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.user?.id || null;
   };
 
   return {
