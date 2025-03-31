@@ -1,267 +1,42 @@
 
-import React, { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { FileText, FileCheck, AlertCircle } from "lucide-react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/lib/toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-
-// Define a type for the user document that matches our database schema
-interface UserDocument {
-  id: string;
-  user_id: string;
-  resume_file_name: string | null;
-  resume_text: string | null;
-  cover_letter_file_name: string | null;
-  cover_letter_text: string | null;
-  reference_files: Array<{name: string, size: number, type: string}> | null;
-  reference_text: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { useUserDocuments } from "@/hooks/useUserDocuments";
+import { ResumeSection } from "./documents/ResumeSection";
+import { CoverLetterSection } from "./documents/CoverLetterSection";
+import { ReferenceSection } from "./documents/ReferenceSection";
+import { EmptyDocuments } from "./documents/EmptyDocuments";
 
 export const ProfileDocuments = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [userDocuments, setUserDocuments] = useState<UserDocument | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [resumeText, setResumeText] = useState("");
-  const [coverLetterText, setCoverLetterText] = useState("");
-  const [referenceText, setReferenceText] = useState("");
+  const { 
+    isLoading, 
+    userDocuments, 
+    isEditing, 
+    resumeText, 
+    coverLetterText, 
+    referenceText,
+    setResumeText,
+    setCoverLetterText,
+    setReferenceText,
+    handleEditToggle,
+    handleSave
+  } = useUserDocuments();
 
-  useEffect(() => {
-    const fetchUserDocuments = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setIsLoading(false);
-          return;
-        }
-
-        // Use the correct table name directly since we added the type definition
-        const { data, error } = await supabase
-          .from('user_documents')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Erro ao buscar documentos:", error);
-          toast.error("Erro ao carregar documentos");
-          setIsLoading(false);
-          return;
-        }
-
-        if (data) {
-          // Set the document data
-          setUserDocuments(data as UserDocument);
-          setResumeText(data.resume_text || "");
-          setCoverLetterText(data.cover_letter_text || "");
-          setReferenceText(data.reference_text || "");
-        } else {
-          // If no data was found, keep userDocuments as null
-          setUserDocuments(null);
-        }
-      } catch (error) {
-        console.error("Erro não esperado:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserDocuments();
-  }, []);
-
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-    if (!isEditing) {
-      // Reset text fields to current values when entering edit mode
-      if (userDocuments) {
-        setResumeText(userDocuments.resume_text || "");
-        setCoverLetterText(userDocuments.cover_letter_text || "");
-        setReferenceText(userDocuments.reference_text || "");
-      }
-    }
+  const handleResumeTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setResumeText(e.target.value);
   };
 
-  const handleSave = async () => {
-    try {
-      setIsLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error("Sessão expirada. Faça login novamente.");
-        return;
-      }
+  const handleCoverLetterTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCoverLetterText(e.target.value);
+  };
 
-      // Use the correct table name directly with upsert
-      const { error } = await supabase
-        .from('user_documents')
-        .upsert({
-          user_id: session.user.id,
-          resume_file_name: userDocuments?.resume_file_name || null,
-          resume_text: resumeText || null,
-          cover_letter_file_name: userDocuments?.cover_letter_file_name || null,
-          cover_letter_text: coverLetterText || null,
-          reference_files: userDocuments?.reference_files || null,
-          reference_text: referenceText || null
-        }, { onConflict: 'user_id' });
-
-      if (error) {
-        console.error("Erro ao atualizar documentos:", error);
-        toast.error("Erro ao salvar alterações");
-        return;
-      }
-
-      // Update local state - only if we have a document already
-      if (userDocuments) {
-        setUserDocuments({
-          ...userDocuments,
-          resume_text: resumeText,
-          cover_letter_text: coverLetterText,
-          reference_text: referenceText,
-          updated_at: new Date().toISOString()
-        });
-      } else {
-        // If we didn't have a document before, create a new one with the minimal required fields
-        setUserDocuments({
-          id: '', // This will be generated by the database
-          user_id: session.user.id,
-          resume_file_name: null,
-          resume_text: resumeText,
-          cover_letter_file_name: null,
-          cover_letter_text: coverLetterText,
-          reference_files: null,
-          reference_text: referenceText,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      }
-
-      setIsEditing(false);
-      toast.success("Documentos atualizados com sucesso!");
-    } catch (error) {
-      console.error("Erro não esperado:", error);
-      toast.error("Erro ao salvar alterações");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleReferenceTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setReferenceText(e.target.value);
   };
 
   if (isLoading) {
     return <div className="text-center py-8">Carregando documentos...</div>;
-  }
-
-  // Content to display if no documents were found
-  if (!userDocuments) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Meus Documentos</h2>
-          <Button 
-            onClick={handleEditToggle}
-            variant={isEditing ? "destructive" : "outline"}
-          >
-            {isEditing ? "Cancelar" : "Adicionar Documentos"}
-          </Button>
-        </div>
-        
-        <Separator />
-        
-        {!isEditing ? (
-          <Alert variant="default" className="mb-4 bg-gray-50 border-gray-200">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Você ainda não possui documentos. Clique em "Adicionar Documentos" para começar.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <div className="space-y-6">
-            {/* Resume */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-                  Currículo
-                </CardTitle>
-                <CardDescription>
-                  Adicione seu currículo
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                  placeholder="Cole o texto do seu currículo aqui..."
-                  rows={5}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Cover Letter */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-jobsprint-pink" />
-                  Carta de Apresentação
-                </CardTitle>
-                <CardDescription>
-                  Adicione sua carta de apresentação
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={coverLetterText}
-                  onChange={(e) => setCoverLetterText(e.target.value)}
-                  placeholder="Cole o texto da sua carta de apresentação aqui..."
-                  rows={5}
-                />
-              </CardContent>
-            </Card>
-
-            {/* References - Updated title here */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-                  Carta de Recomendação
-                </CardTitle>
-                <CardDescription>
-                  Adicione suas cartas de recomendação
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={referenceText}
-                  onChange={(e) => setReferenceText(e.target.value)}
-                  placeholder="Cole o texto das suas cartas de recomendação aqui..."
-                  rows={5}
-                />
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button 
-                onClick={handleSave}
-                className="bg-jobsprint-blue hover:bg-jobsprint-blue/90"
-                disabled={isLoading}
-              >
-                {isLoading ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
   }
 
   return (
@@ -272,129 +47,46 @@ export const ProfileDocuments = () => {
           onClick={handleEditToggle}
           variant={isEditing ? "destructive" : "outline"}
         >
-          {isEditing ? "Cancelar" : "Editar Documentos"}
+          {isEditing ? "Cancelar" : userDocuments ? "Editar Documentos" : "Adicionar Documentos"}
         </Button>
       </div>
-
+      
       <Separator />
+      
+      {!userDocuments ? (
+        <EmptyDocuments 
+          isEditing={isEditing}
+          resumeText={resumeText}
+          coverLetterText={coverLetterText}
+          referenceText={referenceText}
+          onResumeTextChange={handleResumeTextChange}
+          onCoverLetterTextChange={handleCoverLetterTextChange}
+          onReferenceTextChange={handleReferenceTextChange}
+        />
+      ) : (
+        <div className="space-y-6">
+          <ResumeSection 
+            resumeFileName={userDocuments.resume_file_name}
+            resumeText={isEditing ? resumeText : userDocuments.resume_text}
+            isEditing={isEditing}
+            onChange={handleResumeTextChange}
+          />
 
-      {/* Resume Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-            Currículo
-          </CardTitle>
-          <CardDescription>
-            Seu currículo atual
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {userDocuments.resume_file_name && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-md flex items-center">
-              <FileCheck className="h-5 w-5 text-green-600 mr-2" />
-              <span>{userDocuments.resume_file_name}</span>
-            </div>
-          )}
+          <CoverLetterSection 
+            coverLetterFileName={userDocuments.cover_letter_file_name}
+            coverLetterText={isEditing ? coverLetterText : userDocuments.cover_letter_text}
+            isEditing={isEditing}
+            onChange={handleCoverLetterTextChange}
+          />
 
-          {isEditing ? (
-            <Textarea
-              value={resumeText}
-              onChange={(e) => setResumeText(e.target.value)}
-              placeholder="Cole o texto do seu currículo aqui..."
-              rows={5}
-            />
-          ) : (
-            userDocuments.resume_text ? (
-              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md max-h-[300px] overflow-y-auto">
-                {userDocuments.resume_text}
-              </div>
-            ) : (
-              <div className="text-gray-500 italic">Nenhum texto de currículo fornecido</div>
-            )
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Cover Letter Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="mr-2 h-5 w-5 text-jobsprint-pink" />
-            Carta de Apresentação
-          </CardTitle>
-          <CardDescription>
-            Sua carta de apresentação atual
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {userDocuments.cover_letter_file_name && (
-            <div className="mb-4 p-3 bg-gray-50 rounded-md flex items-center">
-              <FileCheck className="h-5 w-5 text-green-600 mr-2" />
-              <span>{userDocuments.cover_letter_file_name}</span>
-            </div>
-          )}
-
-          {isEditing ? (
-            <Textarea
-              value={coverLetterText}
-              onChange={(e) => setCoverLetterText(e.target.value)}
-              placeholder="Cole o texto da sua carta de apresentação aqui..."
-              rows={5}
-            />
-          ) : (
-            userDocuments.cover_letter_text ? (
-              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md max-h-[300px] overflow-y-auto">
-                {userDocuments.cover_letter_text}
-              </div>
-            ) : (
-              <div className="text-gray-500 italic">Nenhuma carta de apresentação fornecida</div>
-            )
-          )}
-        </CardContent>
-      </Card>
-
-      {/* References Section - Updated title here */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-            Carta de Recomendação
-          </CardTitle>
-          <CardDescription>
-            Suas cartas de recomendação atuais
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {userDocuments.reference_files && userDocuments.reference_files.length > 0 && (
-            <div className="mb-4 space-y-2">
-              {userDocuments.reference_files.map((file, idx) => (
-                <div key={idx} className="p-3 bg-gray-50 rounded-md flex items-center">
-                  <FileCheck className="h-5 w-5 text-green-600 mr-2" />
-                  <span>{file.name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {isEditing ? (
-            <Textarea
-              value={referenceText}
-              onChange={(e) => setReferenceText(e.target.value)}
-              placeholder="Cole o texto das suas cartas de recomendação aqui..."
-              rows={5}
-            />
-          ) : (
-            userDocuments.reference_text ? (
-              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md max-h-[300px] overflow-y-auto">
-                {userDocuments.reference_text}
-              </div>
-            ) : (
-              <div className="text-gray-500 italic">Nenhuma carta de recomendação fornecida</div>
-            )
-          )}
-        </CardContent>
-      </Card>
+          <ReferenceSection 
+            referenceFiles={userDocuments.reference_files}
+            referenceText={isEditing ? referenceText : userDocuments.reference_text}
+            isEditing={isEditing}
+            onChange={handleReferenceTextChange}
+          />
+        </div>
+      )}
 
       {isEditing && (
         <div className="flex justify-end">
