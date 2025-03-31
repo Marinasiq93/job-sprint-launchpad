@@ -77,6 +77,18 @@ export const useUserDocuments = () => {
     }
   };
 
+  const handleResumeFileUpload = (fileName: string, fileContent: string) => {
+    setResumeText(fileContent);
+    // Update user documents state to reflect the new file name
+    if (userDocuments) {
+      setUserDocuments({
+        ...userDocuments,
+        resume_file_name: fileName
+      });
+    }
+    toast.success("Currículo carregado com sucesso!");
+  };
+
   const handleSave = async () => {
     try {
       setIsLoading(true);
@@ -149,6 +161,7 @@ export const useUserDocuments = () => {
     setCoverLetterText,
     setReferenceText,
     handleEditToggle,
-    handleSave
+    handleSave,
+    handleResumeFileUpload
   };
 };

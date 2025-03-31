@@ -20,7 +20,8 @@ export const ProfileDocuments = () => {
     setCoverLetterText,
     setReferenceText,
     handleEditToggle,
-    handleSave
+    handleSave,
+    handleResumeFileUpload
   } = useUserDocuments();
 
   const handleResumeTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -70,6 +71,7 @@ export const ProfileDocuments = () => {
             resumeText={isEditing ? resumeText : userDocuments.resume_text}
             isEditing={isEditing}
             onChange={handleResumeTextChange}
+            onFileUpload={handleResumeFileUpload}
           />
 
           <CoverLetterSection 
