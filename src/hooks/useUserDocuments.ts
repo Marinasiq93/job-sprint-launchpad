@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
+import { Json } from "@/integrations/supabase/types";
 
 // Define a type for the user document that matches our database schema
 export interface UserDocument {
@@ -69,19 +70,20 @@ export const useUserDocuments = () => {
         // Ensure reference_files is properly typed
         if (data.reference_files && Array.isArray(data.reference_files)) {
           // Make sure each file has the expected properties
-          const typedFiles: ReferenceFile[] = data.reference_files
-            .filter(file => 
-              typeof file === 'object' && 
-              file !== null && 
-              'name' in file && 
-              'size' in file && 
-              'type' in file
-            )
-            .map(file => ({
-              name: String(file.name || ''),
-              size: Number(file.size || 0),
-              type: String(file.type || '')
-            }));
+          const typedFiles: ReferenceFile[] = [];
+          
+          for (const file of data.reference_files) {
+            if (typeof file === 'object' && file !== null) {
+              const fileObj = file as Record<string, unknown>;
+              if ('name' in fileObj && 'size' in fileObj && 'type' in fileObj) {
+                typedFiles.push({
+                  name: String(fileObj.name || ''),
+                  size: Number(fileObj.size || 0),
+                  type: String(fileObj.type || '')
+                });
+              }
+            }
+          }
             
           setReferenceFiles(typedFiles);
         } else {
@@ -174,7 +176,14 @@ export const useUserDocuments = () => {
         return;
       }
 
-      const referenceFilesData = referenceFiles.length > 0 ? referenceFiles : null;
+      // Convert ReferenceFile[] to a format that can be stored as JSON in Supabase
+      const referenceFilesData = referenceFiles.length > 0 
+        ? referenceFiles.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type
+          }))
+        : null;
 
       const { error } = await supabase
         .from('user_documents')
@@ -184,7 +193,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText || null,
           cover_letter_file_name: userDocuments?.cover_letter_file_name || null,
           cover_letter_text: coverLetterText || null,
-          reference_files: referenceFilesData,
+          reference_files: referenceFilesData as unknown as Json,
           reference_text: referenceText || null
         }, { onConflict: 'user_id' });
 
@@ -200,7 +209,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText,
           cover_letter_text: coverLetterText,
           reference_text: referenceText,
-          reference_files: referenceFilesData,
+          reference_files: referenceFilesData as any,
           updated_at: new Date().toISOString()
         });
       } else {
@@ -211,7 +220,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText,
           cover_letter_file_name: null,
           cover_letter_text: coverLetterText,
-          reference_files: referenceFilesData,
+          reference_files: referenceFilesData as any,
           reference_text: referenceText,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
