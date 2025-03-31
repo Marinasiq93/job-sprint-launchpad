@@ -3,7 +3,7 @@ import { useState, ReactNode } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/lib/toast";
 import { 
   Home, 
   FileText, 

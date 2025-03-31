@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -16,9 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/lib/toast";
 
-// Define the form schema
 const formSchema = z.object({
   firstName: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
@@ -46,7 +44,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -58,15 +55,12 @@ const Signup = () => {
     },
   });
 
-  // Handle form submission
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Save user data to localStorage (for demo only - would use a real backend in production)
       localStorage.setItem('user', JSON.stringify({
         id: Date.now().toString(),
         firstName: data.firstName,
@@ -74,10 +68,8 @@ const Signup = () => {
         email: data.email,
       }));
       
-      // Show success message
       toast.success("Conta criada com sucesso!");
       
-      // Redirect to documents upload page
       navigate("/onboarding/documents");
     } catch (error) {
       toast.error("Erro ao criar conta. Tente novamente.");
