@@ -29,10 +29,10 @@ export const ReferenceUploadCard = ({
       <CardHeader>
         <CardTitle className="flex items-center">
           <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-          Cartas de Referência (Opcional)
+          Cartas de Recomendação (Opcional)
         </CardTitle>
         <CardDescription>
-          Faça upload de cartas de referência ou cole o texto
+          Faça upload de cartas de recomendação ou cole o texto
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -72,7 +72,7 @@ export const ReferenceUploadCard = ({
             <Label htmlFor="reference-text">Ou cole o texto das suas referências:</Label>
             <Textarea
               id="reference-text"
-              placeholder="Cole o conteúdo das suas cartas de referência aqui..."
+              placeholder="Cole o conteúdo das suas cartas de recomendação aqui..."
               value={referenceText}
               onChange={(e) => onReferenceTextChange(e)}
               rows={5}

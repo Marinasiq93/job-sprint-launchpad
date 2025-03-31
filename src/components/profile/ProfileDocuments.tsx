@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -227,22 +228,22 @@ export const ProfileDocuments = () => {
               </CardContent>
             </Card>
 
-            {/* References */}
+            {/* References - Updated title here */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-                  Carta de Indicação
+                  Carta de Recomendação
                 </CardTitle>
                 <CardDescription>
-                  Adicione suas cartas de indicação
+                  Adicione suas cartas de recomendação
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Textarea
                   value={referenceText}
                   onChange={(e) => setReferenceText(e.target.value)}
-                  placeholder="Cole o texto das suas cartas de indicação aqui..."
+                  placeholder="Cole o texto das suas cartas de recomendação aqui..."
                   rows={5}
                 />
               </CardContent>
@@ -315,7 +316,7 @@ export const ProfileDocuments = () => {
         </CardContent>
       </Card>
 
-      {/* Cover Letter Section - Changed title to "Carta de Apresentação" */}
+      {/* Cover Letter Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -353,15 +354,15 @@ export const ProfileDocuments = () => {
         </CardContent>
       </Card>
 
-      {/* References Section - Changed title to "Carta de Indicação" */}
+      {/* References Section - Updated title here */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-            Carta de Indicação
+            Carta de Recomendação
           </CardTitle>
           <CardDescription>
-            Suas cartas de indicação atuais
+            Suas cartas de recomendação atuais
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -380,7 +381,7 @@ export const ProfileDocuments = () => {
             <Textarea
               value={referenceText}
               onChange={(e) => setReferenceText(e.target.value)}
-              placeholder="Cole o texto das suas cartas de indicação aqui..."
+              placeholder="Cole o texto das suas cartas de recomendação aqui..."
               rows={5}
             />
           ) : (
@@ -389,7 +390,7 @@ export const ProfileDocuments = () => {
                 {userDocuments.reference_text}
               </div>
             ) : (
-              <div className="text-gray-500 italic">Nenhuma carta de indicação fornecida</div>
+              <div className="text-gray-500 italic">Nenhuma carta de recomendação fornecida</div>
             )
           )}
         </CardContent>
