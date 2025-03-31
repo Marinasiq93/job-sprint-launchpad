@@ -168,14 +168,106 @@ export const ProfileDocuments = () => {
     return <div className="text-center py-8">Carregando documentos...</div>;
   }
 
+  // Content to display if no documents were found
   if (!userDocuments) {
     return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Você ainda não possui documentos. Por favor, adicione seus documentos para melhorar suas candidaturas.
-        </AlertDescription>
-      </Alert>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Meus Documentos</h2>
+          <Button 
+            onClick={handleEditToggle}
+            variant={isEditing ? "destructive" : "outline"}
+          >
+            {isEditing ? "Cancelar" : "Adicionar Documentos"}
+          </Button>
+        </div>
+        
+        <Separator />
+        
+        {!isEditing ? (
+          <Alert variant="default" className="mb-4 bg-gray-50 border-gray-200">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Você ainda não possui documentos. Clique em "Adicionar Documentos" para começar.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="space-y-6">
+            {/* Resume */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
+                  Currículo
+                </CardTitle>
+                <CardDescription>
+                  Adicione seu currículo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={resumeText}
+                  onChange={(e) => setResumeText(e.target.value)}
+                  placeholder="Cole o texto do seu currículo aqui..."
+                  rows={5}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Cover Letter */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5 text-jobsprint-pink" />
+                  Carta de Apresentação
+                </CardTitle>
+                <CardDescription>
+                  Adicione sua carta de apresentação
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={coverLetterText}
+                  onChange={(e) => setCoverLetterText(e.target.value)}
+                  placeholder="Cole o texto da sua carta de apresentação aqui..."
+                  rows={5}
+                />
+              </CardContent>
+            </Card>
+
+            {/* References */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
+                  Carta de Indicação
+                </CardTitle>
+                <CardDescription>
+                  Adicione suas cartas de indicação
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={referenceText}
+                  onChange={(e) => setReferenceText(e.target.value)}
+                  placeholder="Cole o texto das suas cartas de indicação aqui..."
+                  rows={5}
+                />
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button 
+                onClick={handleSave}
+                className="bg-jobsprint-blue hover:bg-jobsprint-blue/90"
+                disabled={isLoading}
+              >
+                {isLoading ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -193,7 +285,7 @@ export const ProfileDocuments = () => {
 
       <Separator />
 
-      {/* Resume */}
+      {/* Resume Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -221,7 +313,7 @@ export const ProfileDocuments = () => {
             />
           ) : (
             userDocuments.resume_text ? (
-              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md">
+              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md max-h-[300px] overflow-y-auto">
                 {userDocuments.resume_text}
               </div>
             ) : (
@@ -231,7 +323,7 @@ export const ProfileDocuments = () => {
         </CardContent>
       </Card>
 
-      {/* Cover Letter */}
+      {/* Cover Letter Section - Changed title to "Carta de Apresentação" */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -259,7 +351,7 @@ export const ProfileDocuments = () => {
             />
           ) : (
             userDocuments.cover_letter_text ? (
-              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md">
+              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md max-h-[300px] overflow-y-auto">
                 {userDocuments.cover_letter_text}
               </div>
             ) : (
@@ -269,15 +361,15 @@ export const ProfileDocuments = () => {
         </CardContent>
       </Card>
 
-      {/* References */}
+      {/* References Section - Changed title to "Carta de Indicação" */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5 text-jobsprint-blue" />
-            Referências
+            Carta de Indicação
           </CardTitle>
           <CardDescription>
-            Suas referências atuais
+            Suas cartas de indicação atuais
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -296,16 +388,16 @@ export const ProfileDocuments = () => {
             <Textarea
               value={referenceText}
               onChange={(e) => setReferenceText(e.target.value)}
-              placeholder="Cole o texto das suas referências aqui..."
+              placeholder="Cole o texto das suas cartas de indicação aqui..."
               rows={5}
             />
           ) : (
             userDocuments.reference_text ? (
-              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md">
+              <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded-md max-h-[300px] overflow-y-auto">
                 {userDocuments.reference_text}
               </div>
             ) : (
-              <div className="text-gray-500 italic">Nenhuma referência fornecida</div>
+              <div className="text-gray-500 italic">Nenhuma carta de indicação fornecida</div>
             )
           )}
         </CardContent>
