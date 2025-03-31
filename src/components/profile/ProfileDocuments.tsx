@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -47,9 +46,9 @@ export const ProfileDocuments = () => {
           return;
         }
 
-        // Use type assertion to bypass TypeScript errors
+        // Use the correct table name directly since we added the type definition
         const { data, error } = await supabase
-          .from('user_documents' as any)
+          .from('user_documents')
           .select('*')
           .eq('user_id', session.user.id)
           .maybeSingle();
@@ -62,18 +61,11 @@ export const ProfileDocuments = () => {
         }
 
         if (data) {
-          // Check if data is a valid UserDocument before type assertion
-          if ('id' in data && 'user_id' in data) {
-            // Only set the document data if we actually got a valid result
-            const documentData = data as unknown as UserDocument;
-            setUserDocuments(documentData);
-            setResumeText(documentData.resume_text || "");
-            setCoverLetterText(documentData.cover_letter_text || "");
-            setReferenceText(documentData.reference_text || "");
-          } else {
-            console.error("Data returned from Supabase does not match UserDocument structure:", data);
-            setUserDocuments(null);
-          }
+          // Set the document data
+          setUserDocuments(data as UserDocument);
+          setResumeText(data.resume_text || "");
+          setCoverLetterText(data.cover_letter_text || "");
+          setReferenceText(data.reference_text || "");
         } else {
           // If no data was found, keep userDocuments as null
           setUserDocuments(null);
@@ -110,9 +102,9 @@ export const ProfileDocuments = () => {
         return;
       }
 
-      // Use type assertion to bypass TypeScript errors
+      // Use the correct table name directly with upsert
       const { error } = await supabase
-        .from('user_documents' as any)
+        .from('user_documents')
         .upsert({
           user_id: session.user.id,
           resume_file_name: userDocuments?.resume_file_name || null,

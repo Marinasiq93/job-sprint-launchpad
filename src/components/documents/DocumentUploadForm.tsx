@@ -68,9 +68,9 @@ export const DocumentUploadForm = () => {
         type: file.type
       }));
 
-      // Save document data to Supabase using raw query to bypass TypeScript errors
+      // Now we can use upsert with onConflict since we added a unique constraint on user_id
       const { error } = await supabase
-        .from('user_documents' as any)
+        .from('user_documents')
         .upsert({
           user_id: session.user.id,
           resume_file_name: resumeFile ? resumeFile.name : null,
