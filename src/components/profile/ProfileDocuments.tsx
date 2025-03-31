@@ -16,12 +16,16 @@ export const ProfileDocuments = () => {
     resumeText, 
     coverLetterText, 
     referenceText,
+    referenceFiles,
     setResumeText,
     setCoverLetterText,
     setReferenceText,
     handleEditToggle,
     handleSave,
-    handleResumeFileUpload
+    handleResumeFileUpload,
+    handleCoverLetterFileUpload,
+    handleReferenceFileUpload,
+    handleRemoveReferenceFile
   } = useUserDocuments();
 
   const handleResumeTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -79,13 +83,16 @@ export const ProfileDocuments = () => {
             coverLetterText={isEditing ? coverLetterText : userDocuments.cover_letter_text}
             isEditing={isEditing}
             onChange={handleCoverLetterTextChange}
+            onFileUpload={handleCoverLetterFileUpload}
           />
 
           <ReferenceSection 
-            referenceFiles={userDocuments.reference_files}
+            referenceFiles={isEditing ? referenceFiles : userDocuments.reference_files}
             referenceText={isEditing ? referenceText : userDocuments.reference_text}
             isEditing={isEditing}
             onChange={handleReferenceTextChange}
+            onFileUpload={handleReferenceFileUpload}
+            onRemoveFile={handleRemoveReferenceFile}
           />
         </div>
       )}

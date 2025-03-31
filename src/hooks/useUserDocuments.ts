@@ -24,6 +24,7 @@ export const useUserDocuments = () => {
   const [resumeText, setResumeText] = useState("");
   const [coverLetterText, setCoverLetterText] = useState("");
   const [referenceText, setReferenceText] = useState("");
+  const [referenceFiles, setReferenceFiles] = useState<Array<{name: string, size: number, type: string}>>([]);
 
   useEffect(() => {
     fetchUserDocuments();
@@ -57,6 +58,7 @@ export const useUserDocuments = () => {
         setResumeText(data.resume_text || "");
         setCoverLetterText(data.cover_letter_text || "");
         setReferenceText(data.reference_text || "");
+        setReferenceFiles(data.reference_files || []);
       } else {
         setUserDocuments(null);
       }
@@ -74,10 +76,12 @@ export const useUserDocuments = () => {
       setResumeText(userDocuments.resume_text || "");
       setCoverLetterText(userDocuments.cover_letter_text || "");
       setReferenceText(userDocuments.reference_text || "");
+      setReferenceFiles(userDocuments.reference_files || []);
     }
   };
 
   const handleResumeFileUpload = (fileName: string, fileContent: string) => {
+    // Enforce the rule: only one resume allowed
     setResumeText(fileContent);
     // Update user documents state to reflect the new file name
     if (userDocuments) {
@@ -87,6 +91,49 @@ export const useUserDocuments = () => {
       });
     }
     toast.success("Currículo carregado com sucesso!");
+  };
+
+  const handleCoverLetterFileUpload = (fileName: string, fileContent: string) => {
+    // Enforce the rule: only one cover letter allowed
+    setCoverLetterText(fileContent);
+    if (userDocuments) {
+      setUserDocuments({
+        ...userDocuments,
+        cover_letter_file_name: fileName
+      });
+    }
+    toast.success("Carta de apresentação carregada com sucesso!");
+  };
+
+  const handleReferenceFileUpload = (fileName: string, fileSize: number, fileType: string) => {
+    // Allow multiple reference files
+    const newReferenceFile = { name: fileName, size: fileSize, type: fileType };
+    const updatedReferenceFiles = [...(referenceFiles || []), newReferenceFile];
+    setReferenceFiles(updatedReferenceFiles);
+    
+    // Update user documents state
+    if (userDocuments) {
+      setUserDocuments({
+        ...userDocuments,
+        reference_files: updatedReferenceFiles
+      });
+    }
+    toast.success("Carta de recomendação adicionada com sucesso!");
+  };
+
+  const handleRemoveReferenceFile = (fileName: string) => {
+    // Remove specific reference file
+    const updatedReferenceFiles = referenceFiles.filter(file => file.name !== fileName);
+    setReferenceFiles(updatedReferenceFiles);
+    
+    // Update user documents state
+    if (userDocuments) {
+      setUserDocuments({
+        ...userDocuments,
+        reference_files: updatedReferenceFiles
+      });
+    }
+    toast.success("Carta de recomendação removida com sucesso!");
   };
 
   const handleSave = async () => {
@@ -107,7 +154,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText || null,
           cover_letter_file_name: userDocuments?.cover_letter_file_name || null,
           cover_letter_text: coverLetterText || null,
-          reference_files: userDocuments?.reference_files || null,
+          reference_files: referenceFiles.length > 0 ? referenceFiles : null,
           reference_text: referenceText || null
         }, { onConflict: 'user_id' });
 
@@ -123,6 +170,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText,
           cover_letter_text: coverLetterText,
           reference_text: referenceText,
+          reference_files: referenceFiles.length > 0 ? referenceFiles : null,
           updated_at: new Date().toISOString()
         });
       } else {
@@ -133,7 +181,7 @@ export const useUserDocuments = () => {
           resume_text: resumeText,
           cover_letter_file_name: null,
           cover_letter_text: coverLetterText,
-          reference_files: null,
+          reference_files: referenceFiles.length > 0 ? referenceFiles : null,
           reference_text: referenceText,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -157,11 +205,16 @@ export const useUserDocuments = () => {
     resumeText,
     coverLetterText,
     referenceText,
+    referenceFiles,
     setResumeText,
     setCoverLetterText,
     setReferenceText,
+    setReferenceFiles,
     handleEditToggle,
     handleSave,
-    handleResumeFileUpload
+    handleResumeFileUpload,
+    handleCoverLetterFileUpload,
+    handleReferenceFileUpload,
+    handleRemoveReferenceFile
   };
 };
