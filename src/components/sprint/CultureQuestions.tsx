@@ -8,9 +8,10 @@ import { Mic, MicOff, ArrowRight } from "lucide-react";
 interface CultureQuestionsProps {
   companyName: string;
   jobTitle: string;
+  onQuestionChange: (questionIndex: number) => void;
 }
 
-// Define the questions
+// Define the questions for the Culture & Purpose phase
 const questions = [
   "Por que você quer trabalhar nesta empresa especificamente? O que te atrai na cultura deles?",
   "Quais valores da empresa se alinham com seus valores pessoais e profissionais?",
@@ -19,7 +20,7 @@ const questions = [
   "Como sua experiência anterior se relaciona com a cultura desta empresa?"
 ];
 
-const CultureQuestions = ({ companyName, jobTitle }: CultureQuestionsProps) => {
+const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQuestionsProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill(""));
   const [isRecording, setIsRecording] = useState(false);
@@ -28,13 +29,17 @@ const CultureQuestions = ({ companyName, jobTitle }: CultureQuestionsProps) => {
   
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      onQuestionChange(nextIndex);
     }
   };
   
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      onQuestionChange(prevIndex);
     }
   };
   

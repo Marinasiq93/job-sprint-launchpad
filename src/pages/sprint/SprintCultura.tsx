@@ -18,6 +18,7 @@ const SprintCultura = () => {
   const { sprintId } = useParams();
   const [sprintData, setSprintData] = useState<SprintData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     // Get sprint data from location state or fetch it based on sprintId
@@ -30,6 +31,10 @@ const SprintCultura = () => {
       setLoading(false);
     }
   }, [location.state, sprintId]);
+
+  const handleQuestionChange = (questionIndex: number) => {
+    setCurrentQuestionIndex(questionIndex);
+  };
 
   if (loading) {
     return (
@@ -54,6 +59,7 @@ const SprintCultura = () => {
               companyName={sprintData?.companyName || ""} 
               companyWebsite={sprintData?.companyWebsite || ""} 
               jobDescription={sprintData?.jobDescription || ""}
+              currentQuestionIndex={currentQuestionIndex}
             />
           </div>
           
@@ -62,6 +68,7 @@ const SprintCultura = () => {
             <CultureQuestions 
               companyName={sprintData?.companyName || ""} 
               jobTitle={sprintData?.jobTitle || ""}
+              onQuestionChange={handleQuestionChange}
             />
           </div>
         </div>
