@@ -12,6 +12,7 @@ import DocumentUpload from "./pages/DocumentUpload";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import NewSprint from "./pages/NewSprint";
+import SprintCultura from "./pages/sprint/SprintCultura";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/profile" element={<Profile />} />
           <Route path="/dashboard/new-sprint" element={<NewSprint />} />
+          <Route path="/dashboard/sprint/:sprintId/cultura" element={<SprintCultura />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

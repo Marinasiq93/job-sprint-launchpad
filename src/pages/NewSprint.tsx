@@ -28,8 +28,11 @@ const NewSprint = () => {
       // Show success message
       toast.success("Sprint criada com sucesso!");
       
-      // Navigate back to dashboard (future: navigate to next step)
-      navigate("/dashboard");
+      // Create a temporary sprint ID (this would come from the database in a real implementation)
+      const tempSprintId = Date.now().toString();
+      
+      // Navigate to the first phase: Cultura e Propósito
+      navigate(`/dashboard/sprint/${tempSprintId}/cultura`, { state: { sprintData: data } });
     } catch (error) {
       console.error("Error creating sprint:", error);
       toast.error("Erro ao criar sprint. Tente novamente.");
