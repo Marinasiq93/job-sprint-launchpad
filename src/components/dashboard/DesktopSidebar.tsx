@@ -6,12 +6,17 @@ import { Home, FileText, User, LogOut } from "lucide-react";
 interface DesktopSidebarProps {
   activePath: string;
   onLogout: () => void;
+  hidden?: boolean;
 }
 
-const DesktopSidebar = ({ activePath, onLogout }: DesktopSidebarProps) => {
+const DesktopSidebar = ({ activePath, onLogout, hidden = false }: DesktopSidebarProps) => {
   const isActivePath = (path: string) => {
     return activePath === path;
   };
+
+  if (hidden) {
+    return null;
+  }
 
   return (
     <aside className="w-64 border-r hidden md:block">

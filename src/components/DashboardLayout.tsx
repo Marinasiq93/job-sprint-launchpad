@@ -16,6 +16,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
+  // Check if current route is a sprint route
+  const isSprintRoute = location.pathname.includes('/sprint/');
+  
   // Check if user is authenticated
   useEffect(() => {
     const checkUser = async () => {
@@ -68,10 +71,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <DesktopSidebar 
           activePath={location.pathname}
           onLogout={handleLogout}
+          hidden={isSprintRoute}
         />
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className={`flex-1 overflow-auto p-6 ${isSprintRoute ? 'md:ml-0' : ''}`}>
           {children}
         </main>
       </div>
