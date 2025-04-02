@@ -13,10 +13,28 @@ interface CompanyBriefingProps {
   currentQuestionIndex: number;
 }
 
-// Define content sections that will change based on the current question
-const briefingSections = [
-  // Question 0: "Por que você quer trabalhar nesta empresa..."
-  {
+// Define content categories for briefings
+const BRIEFING_CATEGORIES = {
+  COMPANY_OVERVIEW: 'company_overview',
+  COMPANY_VALUES: 'company_values',
+  MISSION_VISION: 'mission_vision', 
+  INDUSTRY_TRENDS: 'industry_trends',
+  EXPERIENCE_FIT: 'experience_fit'
+};
+
+// Define the mapping between questions and briefing categories
+// This allows multiple questions to reference the same briefing without duplication
+const questionToBriefingMap = [
+  BRIEFING_CATEGORIES.COMPANY_OVERVIEW,  // Question 0: "Por que você quer trabalhar nesta empresa..."
+  BRIEFING_CATEGORIES.COMPANY_VALUES,    // Question 1: "Quais valores da empresa se alinham..."
+  BRIEFING_CATEGORIES.MISSION_VISION,    // Question 2: "Como você se vê contribuindo para a missão e visão..."
+  BRIEFING_CATEGORIES.INDUSTRY_TRENDS,   // Question 3: "O que você conhece sobre o setor/indústria..."
+  BRIEFING_CATEGORIES.EXPERIENCE_FIT     // Question 4: "Como sua experiência anterior se relaciona..."
+];
+
+// Store the briefing content by category
+const briefingContentByCategory = {
+  [BRIEFING_CATEGORIES.COMPANY_OVERVIEW]: {
     title: "Sobre a Empresa",
     content: (companyName: string) => `${companyName} é uma empresa de tecnologia focada em soluções inovadoras para o mercado. 
       Com uma cultura voltada para resultados e trabalho em equipe, a empresa valoriza
@@ -33,8 +51,7 @@ const briefingSections = [
       em sustentabilidade e responsabilidade social, a empresa busca não apenas crescer,
       mas também contribuir para um mundo melhor.`
   },
-  // Question 1: "Quais valores da empresa se alinham..."
-  {
+  [BRIEFING_CATEGORIES.COMPANY_VALUES]: {
     title: "Valores da Empresa",
     content: (companyName: string) => `${companyName} tem uma cultura organizacional forte, baseada em valores bem definidos.
       Estes valores norteiam todas as decisões e ações da empresa, desde o desenvolvimento
@@ -51,8 +68,7 @@ const briefingSections = [
       princípios se harmonizam com os seus. Isso é fundamental para uma relação
       de trabalho duradoura e satisfatória.`
   },
-  // Question 2: "Como você se vê contribuindo para a missão e visão..."
-  {
+  [BRIEFING_CATEGORIES.MISSION_VISION]: {
     title: "Missão e Visão",
     content: (companyName: string) => `A ${companyName} tem uma missão clara de transformar o setor em que atua,
       trazendo inovação e excelência para seus clientes. A visão de longo prazo
@@ -69,8 +85,7 @@ const briefingSections = [
       seus objetivos estratégicos. Sua contribuição pode impactar diretamente o crescimento
       e a direção futura da organização.`
   },
-  // Question 3: "O que você conhece sobre o setor/indústria..."
-  {
+  [BRIEFING_CATEGORIES.INDUSTRY_TRENDS]: {
     title: "Setor e Tendências",
     content: (companyName: string) => `O setor em que a ${companyName} atua está em constante evolução,
       com novas tecnologias e tendências emergindo rapidamente. Demonstrar conhecimento
@@ -87,8 +102,7 @@ const briefingSections = [
       não está apenas focado na função específica, mas entende como seu trabalho
       se conecta ao panorama mais amplo do mercado.`
   },
-  // Question 4: "Como sua experiência anterior se relaciona..."
-  {
+  [BRIEFING_CATEGORIES.EXPERIENCE_FIT]: {
     title: "Conexão de Experiências",
     content: (companyName: string) => `Relacionar suas experiências anteriores com a cultura da ${companyName}
       é uma forma poderosa de demonstrar que você não apenas possui as habilidades
@@ -105,23 +119,72 @@ const briefingSections = [
       organização. Isso reduz o risco percebido na contratação e aumenta suas chances
       de sucesso no processo seletivo.`
   }
-];
+};
 
 const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQuestionIndex }: CompanyBriefingProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [briefingCache, setBriefingCache] = useState<Record<string, any>>({});
 
-  // Get the current briefing section based on the question index
-  const currentBriefing = briefingSections[currentQuestionIndex] || briefingSections[0];
+  // Get the current briefing category based on the question index
+  const currentBriefingCategory = questionToBriefingMap[currentQuestionIndex] || BRIEFING_CATEGORIES.COMPANY_OVERVIEW;
+  
+  // Get the current briefing content based on the category
+  const currentBriefing = briefingContentByCategory[currentBriefingCategory];
 
-  // This is a placeholder function for refreshing the company analysis
-  // In the future, this will call the Perplexity API
-  const handleRefreshAnalysis = () => {
+  // This will be used when integrating with Perplexity API
+  const fetchBriefingContent = async (category: string) => {
+    // If we already have cached data for this category, use it
+    if (briefingCache[category]) {
+      return briefingCache[category];
+    }
+
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Here you would make the call to Perplexity API
+      // const response = await fetchFromPerplexity(category, companyName, jobDescription);
+      
+      // For now, simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // In the real implementation, you'd store the response from Perplexity
+      const newBriefingData = { ...briefingContentByCategory[category] };
+      
+      // Cache the result
+      setBriefingCache(prev => ({
+        ...prev,
+        [category]: newBriefingData
+      }));
+      
       setIsLoading(false);
-    }, 1500);
+      return newBriefingData;
+    } catch (error) {
+      console.error('Error fetching briefing content:', error);
+      setIsLoading(false);
+      // Return default content if API call fails
+      return briefingContentByCategory[category];
+    }
+  };
+
+  const handleRefreshAnalysis = async () => {
+    // When the refresh button is clicked, fetch fresh data for the current category
+    // This will clear the cache for this specific category
+    setIsLoading(true);
+    
+    try {
+      // Here you would make a new call to Perplexity API
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Update the cache with new data
+      const updatedBriefingCache = { ...briefingCache };
+      delete updatedBriefingCache[currentBriefingCategory]; // Remove from cache to force refresh
+      setBriefingCache(updatedBriefingCache);
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error refreshing analysis:', error);
+      setIsLoading(false);
+    }
   };
 
   return (
