@@ -17,6 +17,10 @@ const CompanyBriefing = ({
   jobDescription, 
   currentQuestionIndex 
 }: CompanyBriefingProps) => {
+  // Ensure we're not passing empty values to the useBriefing hook
+  const validCompanyName = companyName?.trim() || "Empresa";
+  const validCompanyWebsite = companyWebsite?.trim() || "https://www.google.com";
+  
   const { 
     isLoading, 
     currentBriefing, 
@@ -24,8 +28,8 @@ const CompanyBriefing = ({
     handleRefreshAnalysis,
     error
   } = useBriefing({
-    companyName,
-    companyWebsite,
+    companyName: validCompanyName,
+    companyWebsite: validCompanyWebsite,
     currentQuestionIndex
   });
 

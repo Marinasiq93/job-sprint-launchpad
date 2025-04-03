@@ -86,6 +86,12 @@ export const fetchBriefingContent = async (
   refresh = false
 ): Promise<BriefingContent> => {
   try {
+    // Check if the required parameters are provided
+    if (!category || !companyName || !companyWebsite) {
+      console.error('Missing required parameters:', { category, companyName, companyWebsite });
+      throw new Error('Parâmetros insuficientes para analisar a empresa. Verifique os dados fornecidos.');
+    }
+
     console.log(`Fetching briefing for category "${category}" and company "${companyName}"`);
 
     // Get the prompt for this category
