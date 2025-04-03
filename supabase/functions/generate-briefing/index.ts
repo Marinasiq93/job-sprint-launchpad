@@ -111,6 +111,7 @@ const generateBriefingWithPerplexity = async (
 
     console.log(`Fetching information for ${companyName} - Category: ${category}`);
 
+    // Updated to use the correct model name and format
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -118,7 +119,7 @@ const generateBriefingWithPerplexity = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'sonar-small-online',
+        model: 'llama-3.1-sonar-small-128k-online', // Updated model name
         messages: [
           {
             role: 'system',
@@ -135,7 +136,9 @@ const generateBriefingWithPerplexity = async (
     });
 
     if (!response.ok) {
+      const responseText = await response.text();
       console.error(`Perplexity API error: ${response.status} - ${response.statusText}`);
+      console.error(`Response body: ${responseText}`);
       throw new Error(`Perplexity API responded with status: ${response.status}`);
     }
 
