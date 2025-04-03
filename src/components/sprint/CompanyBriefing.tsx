@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RefreshCw } from "lucide-react";
+import { toast } from "@/lib/toast";
 
 interface CompanyBriefingProps {
   companyName: string;
@@ -15,109 +16,123 @@ interface CompanyBriefingProps {
 
 // Define content categories for briefings
 const BRIEFING_CATEGORIES = {
-  COMPANY_OVERVIEW: 'company_overview',
-  COMPANY_VALUES: 'company_values',
-  MISSION_VISION: 'mission_vision', 
-  INDUSTRY_TRENDS: 'industry_trends',
-  EXPERIENCE_FIT: 'experience_fit'
+  CULTURE_VALUES: 'culture_values',
+  MISSION_VISION: 'mission_vision',
+  PRODUCT_MARKET: 'product_market',
+  LEADERSHIP: 'leadership',
+  COMPANY_HISTORY: 'company_history'
 };
 
 // Define the mapping between questions and briefing categories
 // This allows multiple questions to reference the same briefing without duplication
 const questionToBriefingMap = [
-  BRIEFING_CATEGORIES.COMPANY_OVERVIEW,  // Question 0: "Por que você quer trabalhar nesta empresa..."
-  BRIEFING_CATEGORIES.COMPANY_VALUES,    // Question 1: "Quais valores da empresa se alinham..."
-  BRIEFING_CATEGORIES.MISSION_VISION,    // Question 2: "Como você se vê contribuindo para a missão e visão..."
-  BRIEFING_CATEGORIES.INDUSTRY_TRENDS,   // Question 3: "O que você conhece sobre o setor/indústria..."
-  BRIEFING_CATEGORIES.EXPERIENCE_FIT     // Question 4: "Como sua experiência anterior se relaciona..."
+  BRIEFING_CATEGORIES.CULTURE_VALUES,    // Question 0: "Você se sente alinhado com a cultura e os valores da empresa?"
+  BRIEFING_CATEGORIES.MISSION_VISION,    // Question 1: "Você se identifica com a missão da empresa?"
+  BRIEFING_CATEGORIES.PRODUCT_MARKET,    // Question 2: "Você tem alguma conexão pessoal ou profissional com o produto...?"
+  BRIEFING_CATEGORIES.LEADERSHIP,        // Question 3: "Você vê o time de liderança como alguém em quem confiaria...?"
+  BRIEFING_CATEGORIES.COMPANY_HISTORY    // Question 4: "Algum pensamento ou conexão sobre a história da fundação...?"
 ];
 
-// Store the briefing content by category
-const briefingContentByCategory = {
-  [BRIEFING_CATEGORIES.COMPANY_OVERVIEW]: {
-    title: "Sobre a Empresa",
-    content: (companyName: string) => `${companyName} é uma empresa de tecnologia focada em soluções inovadoras para o mercado. 
-      Com uma cultura voltada para resultados e trabalho em equipe, a empresa valoriza
-      a criatividade, a colaboração e o desenvolvimento contínuo de seus colaboradores.`,
-    values: [
-      "Foco em inovação e tecnologia de ponta",
-      "Valorização do trabalho em equipe e colaboração",
-      "Ambiente de trabalho flexível e dinâmico",
-      "Compromisso com o desenvolvimento profissional",
-      "Preocupação com o equilíbrio entre vida pessoal e profissional"
+// Perplexity prompts for each category
+const perplexityPromptsByCategory = {
+  [BRIEFING_CATEGORIES.CULTURE_VALUES]: (companyName: string, companyWebsite: string) => 
+    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
+    Me dê um overview da empresa ${companyName}: o que ela faz, seu tamanho, mercado, e principais produtos. 
+    Em seguida, aprofunde sobre sua cultura organizacional e valores. Inclua informações do site oficial, 
+    entrevistas com fundadores ou funcionários, e reviews públicos como Glassdoor. 
+    Há algo que indique o que essa empresa valoriza no dia a dia e como isso se traduz em práticas internas?`,
+  
+  [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
+    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
+    Primeiro, traga um resumo geral da empresa ${companyName}: setor de atuação, produtos, e posicionamento no mercado. 
+    Depois, detalhe qual é a missão e visão da empresa, com base em fontes oficiais e declarações públicas de liderança. 
+    Há alguma causa ou propósito maior guiando suas ações?`,
+  
+  [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
+    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
+    Comece com um panorama da empresa ${companyName}: produtos e serviços oferecidos, público-alvo, e contexto de mercado. 
+    Depois, explique qual é o perfil típico dos usuários ou clientes. Quais tipos de profissionais costumam usar ou 
+    integrar esse produto? Em que setores essa solução é mais comum? Inclua também possíveis concorrentes ou ferramentas similares.`,
+  
+  [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
+    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
+    Forneça uma visão geral da empresa ${companyName}: o que ela faz, em que estágio está (startup, scale-up, enterprise) 
+    e qual seu posicionamento no setor. Em seguida, descreva quem compõe o time de liderança (fundadores, CEO, CPO, etc). 
+    Qual o histórico profissional dessas pessoas? Há entrevistas, podcasts ou artigos onde compartilham sua visão de negócio, 
+    cultura ou liderança?`,
+  
+  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
+    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
+    Dê primeiro um resumo sobre a empresa ${companyName}: mercado, produto e tamanho atual. Em seguida, conte como a 
+    empresa foi fundada: quem são os fundadores, qual foi a motivação ou problema que queriam resolver, e se há alguma 
+    história marcante ou inspiradora sobre os primeiros passos da empresa.`
+};
+
+// Category titles for UI display
+const categoryTitles = {
+  [BRIEFING_CATEGORIES.CULTURE_VALUES]: "Cultura e Valores",
+  [BRIEFING_CATEGORIES.MISSION_VISION]: "Missão e Visão",
+  [BRIEFING_CATEGORIES.PRODUCT_MARKET]: "Produto e Mercado",
+  [BRIEFING_CATEGORIES.LEADERSHIP]: "Time de Liderança",
+  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: "História da Empresa"
+};
+
+// Store default fallback content by category (used before API fetch or on error)
+const defaultContentByCategory = {
+  [BRIEFING_CATEGORIES.CULTURE_VALUES]: {
+    overview: "Carregando informações sobre a cultura e valores da empresa...",
+    highlights: [
+      "Valores e princípios organizacionais",
+      "Ambiente de trabalho e cultura interna",
+      "Práticas e políticas de colaboração",
+      "Compromissos sociais e ambientais",
+      "Testimunhos de funcionários"
     ],
-    purpose: `A missão da empresa é transformar a maneira como as pessoas interagem com a tecnologia,
-      criando soluções que tornem o dia a dia mais simples e eficiente. Com um foco claro
-      em sustentabilidade e responsabilidade social, a empresa busca não apenas crescer,
-      mas também contribuir para um mundo melhor.`
-  },
-  [BRIEFING_CATEGORIES.COMPANY_VALUES]: {
-    title: "Valores da Empresa",
-    content: (companyName: string) => `${companyName} tem uma cultura organizacional forte, baseada em valores bem definidos.
-      Estes valores norteiam todas as decisões e ações da empresa, desde o desenvolvimento
-      de produtos até a relação com clientes e colaboradores.`,
-    values: [
-      "Inovação: busca constante por soluções criativas",
-      "Integridade: transparência e ética em todas as relações",
-      "Colaboração: trabalho em equipe e compartilhamento de conhecimento",
-      "Excelência: compromisso com a qualidade e melhoria contínua",
-      "Diversidade: valorização das diferenças e promoção da inclusão"
-    ],
-    purpose: `Ao conhecer e se alinhar aos valores da empresa, você demonstra
-      que não está apenas procurando um emprego, mas sim uma organização cujos
-      princípios se harmonizam com os seus. Isso é fundamental para uma relação
-      de trabalho duradoura e satisfatória.`
+    summary: "A cultura de uma empresa define como as pessoas trabalham juntas e quais comportamentos são valorizados no dia a dia."
   },
   [BRIEFING_CATEGORIES.MISSION_VISION]: {
-    title: "Missão e Visão",
-    content: (companyName: string) => `A ${companyName} tem uma missão clara de transformar o setor em que atua,
-      trazendo inovação e excelência para seus clientes. A visão de longo prazo
-      inclui expandir sua atuação global e se tornar referência em tecnologia sustentável.`,
-    values: [
-      "Compromisso com a inovação tecnológica",
-      "Expansão de mercado responsável",
-      "Desenvolvimento de soluções sustentáveis",
-      "Formação de líderes e talentos",
-      "Impacto social positivo nas comunidades"
+    overview: "Carregando informações sobre a missão e visão da empresa...",
+    highlights: [
+      "Propósito e objetivos de longo prazo",
+      "Impacto pretendido no mercado e sociedade",
+      "Compromissos com stakeholders",
+      "Metas de crescimento e expansão",
+      "Valores que guiam a tomada de decisão"
     ],
-    purpose: `Contribuir para esta missão significa não apenas aplicar suas habilidades técnicas,
-      mas também trazer novas perspectivas e ideias que ajudem a empresa a alcançar
-      seus objetivos estratégicos. Sua contribuição pode impactar diretamente o crescimento
-      e a direção futura da organização.`
+    summary: "A missão expressa o propósito principal da empresa, enquanto a visão descreve onde ela pretende chegar no futuro."
   },
-  [BRIEFING_CATEGORIES.INDUSTRY_TRENDS]: {
-    title: "Setor e Tendências",
-    content: (companyName: string) => `O setor em que a ${companyName} atua está em constante evolução,
-      com novas tecnologias e tendências emergindo rapidamente. Demonstrar conhecimento
-      sobre este cenário é fundamental para se destacar no processo seletivo.`,
-    values: [
-      "Transformação digital acelerada pós-pandemia",
-      "Aumento da demanda por soluções em nuvem",
-      "Crescente preocupação com segurança de dados",
-      "Integração de inteligência artificial em processos",
-      "Sustentabilidade como diferencial competitivo"
+  [BRIEFING_CATEGORIES.PRODUCT_MARKET]: {
+    overview: "Carregando informações sobre os produtos, serviços e mercado...",
+    highlights: [
+      "Principais produtos e serviços oferecidos",
+      "Público-alvo e necessidades atendidas",
+      "Diferenciação competitiva no mercado",
+      "Tendências do setor e oportunidades",
+      "Concorrentes diretos e indiretos"
     ],
-    purpose: `Compreender o contexto mais amplo do setor permite que você entenda
-      os desafios e oportunidades que a empresa enfrenta. Isso demonstra que você
-      não está apenas focado na função específica, mas entende como seu trabalho
-      se conecta ao panorama mais amplo do mercado.`
+    summary: "Compreender o posicionamento de mercado e o valor oferecido aos clientes ajuda a contextualizar sua contribuição potencial."
   },
-  [BRIEFING_CATEGORIES.EXPERIENCE_FIT]: {
-    title: "Conexão de Experiências",
-    content: (companyName: string) => `Relacionar suas experiências anteriores com a cultura da ${companyName}
-      é uma forma poderosa de demonstrar que você não apenas possui as habilidades
-      técnicas necessárias, mas também se adaptará bem ao ambiente da empresa.`,
-    values: [
-      "Projetos anteriores que demonstrem alinhamento cultural",
-      "Contribuições para ambientes de trabalho colaborativos",
-      "Experiências que mostrem adaptabilidade e aprendizado",
-      "Iniciativas que reflitam valores similares aos da empresa",
-      "Resultados que evidenciem compromisso com a excelência"
+  [BRIEFING_CATEGORIES.LEADERSHIP]: {
+    overview: "Carregando informações sobre o time de liderança da empresa...",
+    highlights: [
+      "Fundadores e história de fundação",
+      "Experiência e trajetória dos executivos",
+      "Estilo de liderança e comunicação",
+      "Visão estratégica para o negócio",
+      "Presença pública e comunicação externa"
     ],
-    purpose: `Ao fazer conexões claras entre suas experiências passadas e a cultura
-      da empresa, você ajuda o recrutador a visualizar como você se encaixará na
-      organização. Isso reduz o risco percebido na contratação e aumenta suas chances
-      de sucesso no processo seletivo.`
+    summary: "A liderança define o tom e a direção da empresa, influenciando diretamente sua cultura e resultados."
+  },
+  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: {
+    overview: "Carregando informações sobre a história e origem da empresa...",
+    highlights: [
+      "Contexto da fundação e motivação inicial",
+      "Desafios enfrentados nos primeiros anos",
+      "Marcos significativos de crescimento",
+      "Pivôs e mudanças estratégicas importantes",
+      "Evolução da proposta de valor ao longo do tempo"
+    ],
+    summary: "Conhecer a história da empresa oferece insights valiosos sobre seus valores e prioridades atuais."
   }
 };
 
@@ -126,12 +141,12 @@ const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQ
   const [briefingCache, setBriefingCache] = useState<Record<string, any>>({});
 
   // Get the current briefing category based on the question index
-  const currentBriefingCategory = questionToBriefingMap[currentQuestionIndex] || BRIEFING_CATEGORIES.COMPANY_OVERVIEW;
+  const currentBriefingCategory = questionToBriefingMap[currentQuestionIndex] || BRIEFING_CATEGORIES.CULTURE_VALUES;
   
-  // Get the current briefing content based on the category
-  const currentBriefing = briefingContentByCategory[currentBriefingCategory];
+  // Get the cached briefing or use default content
+  const currentBriefing = briefingCache[currentBriefingCategory] || defaultContentByCategory[currentBriefingCategory];
 
-  // This will be used when integrating with Perplexity API
+  // Fetch content from Perplexity API
   const fetchBriefingContent = async (category: string) => {
     // If we already have cached data for this category, use it
     if (briefingCache[category]) {
@@ -141,28 +156,51 @@ const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQ
     setIsLoading(true);
     
     try {
-      // Here you would make the call to Perplexity API
-      // const response = await fetchFromPerplexity(category, companyName, jobDescription);
+      // Get the prompt for this category
+      const prompt = perplexityPromptsByCategory[category](companyName, companyWebsite);
       
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call Perplexity API through our Edge Function
+      const response = await fetch('/api/generate-briefing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          category,
+          companyName,
+          companyWebsite
+        }),
+      });
       
-      // In the real implementation, you'd store the response from Perplexity
-      const newBriefingData = { ...briefingContentByCategory[category] };
+      if (!response.ok) {
+        throw new Error('Falha ao buscar informações da empresa');
+      }
+      
+      const data = await response.json();
+      
+      // Parse and structure the response
+      const briefingData = {
+        overview: data.overview || defaultContentByCategory[category].overview,
+        highlights: data.highlights || defaultContentByCategory[category].highlights,
+        summary: data.summary || defaultContentByCategory[category].summary
+      };
       
       // Cache the result
       setBriefingCache(prev => ({
         ...prev,
-        [category]: newBriefingData
+        [category]: briefingData
       }));
       
       setIsLoading(false);
-      return newBriefingData;
+      return briefingData;
     } catch (error) {
-      console.error('Error fetching briefing content:', error);
+      console.error('Erro ao buscar informações da empresa:', error);
+      toast.error('Não foi possível carregar as informações da empresa. Usando dados padrão.');
       setIsLoading(false);
+      
       // Return default content if API call fails
-      return briefingContentByCategory[category];
+      return defaultContentByCategory[category];
     }
   };
 
@@ -172,20 +210,56 @@ const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQ
     setIsLoading(true);
     
     try {
-      // Here you would make a new call to Perplexity API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Get the prompt for this category
+      const prompt = perplexityPromptsByCategory[currentBriefingCategory](companyName, companyWebsite);
+      
+      // Call Perplexity API through our Edge Function with cache-busting parameter
+      const response = await fetch('/api/generate-briefing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          category: currentBriefingCategory,
+          companyName,
+          companyWebsite,
+          refresh: true // Signal to bypass any caching on the backend
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar informações da empresa');
+      }
+      
+      const data = await response.json();
+      
+      // Parse and structure the response
+      const briefingData = {
+        overview: data.overview || defaultContentByCategory[currentBriefingCategory].overview,
+        highlights: data.highlights || defaultContentByCategory[currentBriefingCategory].highlights,
+        summary: data.summary || defaultContentByCategory[currentBriefingCategory].summary
+      };
       
       // Update the cache with new data
-      const updatedBriefingCache = { ...briefingCache };
-      delete updatedBriefingCache[currentBriefingCategory]; // Remove from cache to force refresh
-      setBriefingCache(updatedBriefingCache);
+      setBriefingCache(prev => ({
+        ...prev,
+        [currentBriefingCategory]: briefingData
+      }));
       
+      toast.success('Análise atualizada com sucesso!');
       setIsLoading(false);
     } catch (error) {
-      console.error('Error refreshing analysis:', error);
+      console.error('Erro ao atualizar análise:', error);
+      toast.error('Não foi possível atualizar a análise. Tente novamente mais tarde.');
       setIsLoading(false);
     }
   };
+
+  // Fetch briefing content on initial render and when category changes
+  React.useEffect(() => {
+    fetchBriefingContent(currentBriefingCategory);
+  }, [currentBriefingCategory, companyName, companyWebsite]);
 
   return (
     <div className="h-full flex flex-col">
@@ -215,19 +289,19 @@ const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQ
       <CardContent className="flex-1 overflow-auto">
         <div className="space-y-4">
           <section>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2">{currentBriefing.title}</h3>
+            <h3 className="font-medium text-sm text-muted-foreground mb-2">{categoryTitles[currentBriefingCategory]}</h3>
             <p className="text-sm">
-              {currentBriefing.content(companyName)}
+              {currentBriefing.overview}
             </p>
           </section>
           
           <Separator />
           
           <section>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2">Cultura e Valores</h3>
+            <h3 className="font-medium text-sm text-muted-foreground mb-2">Pontos Principais</h3>
             <ul className="text-sm space-y-1 list-disc pl-5">
-              {currentBriefing.values.map((value, index) => (
-                <li key={index}>{value}</li>
+              {currentBriefing.highlights.map((highlight, index) => (
+                <li key={index}>{highlight}</li>
               ))}
             </ul>
           </section>
@@ -235,9 +309,9 @@ const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQ
           <Separator />
           
           <section>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2">Destaques do Propósito</h3>
+            <h3 className="font-medium text-sm text-muted-foreground mb-2">Análise de Contexto</h3>
             <p className="text-sm">
-              {currentBriefing.purpose}
+              {currentBriefing.summary}
             </p>
           </section>
         </div>

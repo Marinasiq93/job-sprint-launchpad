@@ -13,11 +13,11 @@ interface CultureQuestionsProps {
 
 // Define the questions for the Culture & Purpose phase
 const questions = [
-  "Por que você quer trabalhar nesta empresa especificamente? O que te atrai na cultura deles?",
-  "Quais valores da empresa se alinham com seus valores pessoais e profissionais?",
-  "Como você se vê contribuindo para a missão e visão da empresa?",
-  "O que você conhece sobre o setor/indústria em que a empresa atua?",
-  "Como sua experiência anterior se relaciona com a cultura desta empresa?"
+  "Você se sente alinhado com a cultura e os valores da empresa? Por quê?",
+  "Você se identifica com a missão da empresa? O que mais ressoou com você?",
+  "Você tem alguma conexão pessoal ou profissional com o produto, mercado ou público dessa empresa? Já trabalhou com algo parecido ou com esse perfil de cliente?",
+  "Você vê o time de liderança como alguém em quem confiaria e aprenderia? Por quê?",
+  "Algum pensamento ou conexão sobre a história da fundação da empresa? O que mais chamou sua atenção?"
 ];
 
 const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQuestionsProps) => {
@@ -77,7 +77,7 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQu
         </div>
         
         <div className="text-md font-medium mb-4">
-          {currentQuestion.replace("esta empresa", companyName).replace("nesta empresa", `na ${companyName}`)}
+          {currentQuestion.replace("da empresa", `da ${companyName}`).replace("dessa empresa", `da ${companyName}`)}
         </div>
         
         <div className="flex-grow">

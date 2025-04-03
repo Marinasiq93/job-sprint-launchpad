@@ -1,1 +1,15 @@
-project_id = "fafxauxyastwevzfvugw"
+
+project_id = "jobsprint"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+
+[functions]
+[functions.generate-briefing]
+verify_jwt = true
+
+[db]
+port = 54322
+shadow_port = 54320
