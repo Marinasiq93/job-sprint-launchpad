@@ -79,7 +79,7 @@ const mockBriefingResponse = (companyName: string, category: string): BriefingRe
   };
 };
 
-// Call Perplexity API to generate company briefing
+// Call Perplexity API to generate company briefing with MCP formatting
 const generateBriefingWithPerplexity = async (
   prompt: string,
   category: string,
@@ -91,27 +91,33 @@ const generateBriefingWithPerplexity = async (
   }
 
   try {
-    const message = `
-      ${prompt}
-      
-      Use the following JSON structure for your response:
-      {
-        "overview": "A comprehensive overview about the company, focusing on aspects relevant to ${category}",
-        "highlights": ["Key point 1", "Key point 2", "Key point 3", "Key point 4", "Key point 5"],
-        "summary": "A concluding analysis that offers deeper context or insights",
-        "sources": [
-          {"title": "Source Title 1", "url": "https://example.com/1"},
-          {"title": "Source Title 2", "url": "https://example.com/2"}
-        ]
-      }
-      
-      Include 3-5 sources with title and URL that you used to gather this information.
-      Only respond with valid JSON. Do not include any introductory text, explanations, or markdown formatting.
-    `;
+    // Implementing Model Context Protocol (MCP) structure for better interactions
+    const systemMessage = `<context>
+You are a company research specialist that analyzes organizations for job applicants.
+Your task is to provide structured insights focusing on category: ${category}.
+You must only respond with valid JSON in the exact format requested.
+</context>`;
 
-    console.log(`Fetching information for ${companyName} - Category: ${category}`);
+    const userMessage = `<input>
+${prompt}
 
-    // Using the correct model and proper formatting for request
+Please format your response as a valid JSON object with these exact fields:
+{
+  "overview": "A comprehensive paragraph overview focusing on ${category}",
+  "highlights": ["Key point 1", "Key point 2", "Key point 3", "Key point 4", "Key point 5"],
+  "summary": "A concluding analysis with deeper insights",
+  "sources": [
+    {"title": "Source Title 1", "url": "URL1"},
+    {"title": "Source Title 2", "url": "URL2"}
+  ]
+}
+
+Include 3-5 sources with title and URL. Do not include any explanatory text or Markdown.
+</input>`;
+
+    console.log(`Fetching information for ${companyName} - Category: ${category} with MCP formatting`);
+
+    // Using the correct model and proper MCP formatting for request
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -123,14 +129,14 @@ const generateBriefingWithPerplexity = async (
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that analyzes companies for job applicants. Provide structured insights about company culture, mission, products, leadership, and history to help candidates prepare for interviews. Include relevant sources for your information. Return only valid JSON as specified.'
+            content: systemMessage
           },
           {
             role: 'user',
-            content: message
+            content: userMessage
           }
         ],
-        temperature: 0.2,
+        temperature: 0.1, // Lower temperature for more deterministic responses
         max_tokens: 1000,
       }),
     });
@@ -139,24 +145,66 @@ const generateBriefingWithPerplexity = async (
       const responseText = await response.text();
       console.error(`Perplexity API error: ${response.status} - ${response.statusText}`);
       console.error(`Response body: ${responseText}`);
-      throw new Error(`Perplexity API responded with status: ${response.status}`);
+      throw new Error(`Perplexity API responded with status: ${response.status} - ${responseText.substring(0, 200)}`);
     }
 
     const data = await response.json();
     console.log('API response received successfully');
     
-    // Extract and parse the JSON response 
+    // Extract and parse the JSON response with improved error handling
     try {
       const contentText = data.choices[0].message.content;
-      console.log('Raw response content:', contentText.substring(0, 200) + '...');
+      console.log('Raw response content:', contentText.substring(0, 300) + '...');
       
-      // Try multiple approaches to extract JSON
-      const jsonMatch = contentText.match(/```json\s*([\s\S]*?)\s*```/) || 
-                        contentText.match(/```\s*([\s\S]*?)\s*```/) ||
-                        [null, contentText];
+      let parsedResponse;
       
-      const jsonString = jsonMatch[1] || contentText;
-      let parsedResponse = JSON.parse(jsonString.trim());
+      // More robust JSON extraction - looking for JSON patterns
+      const jsonRegexPatterns = [
+        /```json\s*([\s\S]*?)\s*```/, // JSON in code blocks
+        /```\s*([\s\S]*?)\s*```/,     // Any code block
+        /\{[\s\S]*"overview"[\s\S]*"highlights"[\s\S]*"summary"[\s\S]*\}/ // Raw JSON object
+      ];
+      
+      let extractedJson = null;
+      
+      // Try multiple regex patterns to extract the JSON
+      for (const pattern of jsonRegexPatterns) {
+        const match = contentText.match(pattern);
+        if (match && match[1]) {
+          extractedJson = match[1].trim();
+          break;
+        }
+      }
+      
+      // If no JSON extracted with regex, use the whole content
+      if (!extractedJson) {
+        extractedJson = contentText.trim();
+      }
+      
+      try {
+        parsedResponse = JSON.parse(extractedJson);
+      } catch (jsonError) {
+        // If first attempt fails, try a more aggressive approach
+        console.error("First JSON parse attempt failed:", jsonError);
+        
+        // Look for the first { and last } in the string
+        const firstBrace = extractedJson.indexOf('{');
+        const lastBrace = extractedJson.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          const jsonSubstring = extractedJson.substring(firstBrace, lastBrace + 1);
+          console.log("Attempting to parse JSON substring:", jsonSubstring.substring(0, 100) + "...");
+          parsedResponse = JSON.parse(jsonSubstring);
+        } else {
+          throw jsonError; // Re-throw if we couldn't find valid JSON delimiters
+        }
+      }
+      
+      // Ensure the response has all required fields
+      if (!parsedResponse.overview || !parsedResponse.highlights || !parsedResponse.summary) {
+        console.error("Parsed response is missing required fields");
+        throw new Error("The API response is missing required fields");
+      }
       
       // If the API returns sources directly, merge them
       if (data.choices[0].message.sources && data.choices[0].message.sources.length > 0) {
