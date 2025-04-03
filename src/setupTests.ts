@@ -2,8 +2,8 @@
 // This file contains setup for your tests
 import '@testing-library/jest-dom';
 
-// Add correct type definition for jest-dom
-import type {} from '@testing-library/jest-dom';
+// Import types properly - this fixes the TypeScript error
+import '@types/testing-library__jest-dom';
 
 // Silence React 18 console errors about ReactDOM.render being deprecated
 const originalConsoleError = console.error;

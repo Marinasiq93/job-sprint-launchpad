@@ -1,8 +1,8 @@
 
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-// Import types explicitly
-import type {} from '@testing-library/jest-dom';
+// Import types properly
+import '@types/testing-library__jest-dom';
 import BriefingContent from './BriefingContent';
 import { BriefingContent as BriefingContentType } from "./briefingService";
 import { describe, test, expect, vi } from 'vitest';
