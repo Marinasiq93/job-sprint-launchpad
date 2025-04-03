@@ -22,7 +22,8 @@ export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: st
           {
             role: 'system',
             content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
-            Forneça uma análise detalhada baseada em informações disponíveis online.`
+            Forneça uma análise detalhada baseada em informações disponíveis online.
+            IMPORTANTE: Concentre sua análise no site institucional da empresa sempre que possível.`
           },
           {
             role: 'user',
@@ -68,7 +69,8 @@ export const processPerplexityResponse = (content: string, companyName: string):
         overview: content || `Análise da empresa ${companyName}`,
         highlights: ["Informação obtida diretamente da API sem formatação específica"],
         summary: "Veja o conteúdo acima para a análise completa.",
-        sources: []
+        sources: [],
+        recentNews: []
       };
     }
     
@@ -141,11 +143,70 @@ export const processPerplexityResponse = (content: string, companyName: string):
       });
     }
     
+    // Try to extract recent news from the content
+    const recentNews: {title: string, date?: string, url?: string}[] = [];
+    
+    // Look for news sections
+    const newsRegex = /(?:notícias|novidades|recentes|últimas).*?\n(.*?)(?:\n\n|\n###)/gis;
+    const newsMatch = content.match(newsRegex);
+    
+    if (newsMatch) {
+      // Extract individual news items
+      const newsItems = newsMatch[0].split('\n').filter(line => 
+        line.trim().length > 0 && 
+        !line.match(/notícias|novidades|recentes|últimas/i)
+      );
+      
+      // Process each news item (up to 3)
+      for (let i = 0; i < Math.min(3, newsItems.length); i++) {
+        const item = newsItems[i];
+        
+        // Try to extract date if present
+        const dateRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4})|(\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{2,4})/i;
+        const dateMatch = item.match(dateRegex);
+        
+        recentNews.push({
+          title: item.replace(dateRegex, '').trim(),
+          date: dateMatch ? dateMatch[0] : undefined,
+          url: item.match(urlRegex)?.[0]
+        });
+      }
+    }
+    
+    // If no news found via regex, create generic ones
+    if (recentNews.length === 0) {
+      // Check if content mentions any news or events
+      const contentLower = content.toLowerCase();
+      const newsKeywords = ['lançou', 'anunciou', 'publicou', 'divulgou', 'recentemente', 'este ano', 'este mês'];
+      
+      if (newsKeywords.some(keyword => contentLower.includes(keyword))) {
+        // Extract sentences that might be news
+        const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
+        for (const sentence of sentences) {
+          if (newsKeywords.some(keyword => sentence.toLowerCase().includes(keyword)) && recentNews.length < 3) {
+            recentNews.push({
+              title: sentence.trim(),
+              date: undefined
+            });
+          }
+        }
+      }
+      
+      // Still no news, add generic placeholders
+      if (recentNews.length === 0) {
+        recentNews.push({
+          title: `Veja as últimas notícias sobre ${companyName}`,
+          url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+notícias&tbm=nws`
+        });
+      }
+    }
+    
     return {
       overview,
       highlights,
       summary,
-      sources
+      sources,
+      recentNews: recentNews.slice(0, 3) // Limit to 3 news items
     };
   } catch (error) {
     console.error("Error processing Perplexity response:", error);
@@ -158,6 +219,12 @@ export const processPerplexityResponse = (content: string, companyName: string):
         { 
           title: `Pesquisar ${companyName}`, 
           url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}`
+        }
+      ],
+      recentNews: [
+        {
+          title: `Veja notícias recentes sobre ${companyName}`,
+          url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+notícias&tbm=nws`
         }
       ]
     };

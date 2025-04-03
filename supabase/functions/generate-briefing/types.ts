@@ -8,6 +8,11 @@ export interface BriefingResponse {
     title: string;
     url: string;
   }>;
+  recentNews?: Array<{
+    title: string;
+    date?: string;
+    url?: string;
+  }>;
 }
 
 // Config for CORS headers

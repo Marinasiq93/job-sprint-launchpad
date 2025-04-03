@@ -2,8 +2,9 @@
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./briefingService";
 import { categoryTitles } from "./briefingConstants";
-import { ExternalLink, AlertCircle, Loader2 } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Newspaper } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 interface BriefingContentProps {
   currentBriefing: BriefingContentType;
@@ -63,6 +64,45 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           {currentBriefing.summary}
         </p>
       </section>
+      
+      {currentBriefing.recentNews && currentBriefing.recentNews.length > 0 && (
+        <>
+          <Separator />
+          
+          <section>
+            <h3 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-1">
+              <Newspaper className="h-4 w-4" />
+              Notícias Recentes
+              <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">Novo</Badge>
+            </h3>
+            <ul className="text-sm space-y-2">
+              {currentBriefing.recentNews.map((news, index) => (
+                <li key={index} className="border-l-2 border-blue-200 pl-3 py-1">
+                  <div className="flex flex-col">
+                    <div>
+                      {news.url ? (
+                        <a 
+                          href={news.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {news.title}
+                        </a>
+                      ) : (
+                        <span className="font-medium">{news.title}</span>
+                      )}
+                    </div>
+                    {news.date && (
+                      <span className="text-xs text-muted-foreground mt-1">{news.date}</span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
       
       {currentBriefing.sources && currentBriefing.sources.length > 0 && (
         <>
