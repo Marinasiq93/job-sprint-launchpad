@@ -2,7 +2,7 @@
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./briefingService";
 import { categoryTitles } from "./briefingConstants";
-import { ExternalLink, AlertCircle, Loader2, Newspaper } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
@@ -110,7 +110,10 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <Separator />
           
           <section>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2">Fontes de Informação</h3>
+            <h3 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-1">
+              <LinkIcon className="h-4 w-4" />
+              Fontes de Informação
+            </h3>
             <ul className="text-sm space-y-2">
               {currentBriefing.sources.map((source, index) => (
                 <li key={index} className="flex items-start">

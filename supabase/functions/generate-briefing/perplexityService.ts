@@ -123,15 +123,53 @@ export const processPerplexityResponse = (content: string, companyName: string):
     const summary = paragraphs[paragraphs.length - 1];
     
     // Look for URLs in the content to use as sources
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const urls = content.match(urlRegex) || [];
+    // Improved URL regex that handles various URL formats
+    const urlRegex = /(https?:\/\/[^\s\)\"\']+)/g;
+    const urls = [...new Set(content.match(urlRegex) || [])]; // Use Set to remove duplicates
     
-    const sources = urls.slice(0, 5).map(url => ({
-      title: `Fonte: ${url.split("//")[1]?.split("/")[0] || url}`,
-      url: url
-    }));
+    // Enhanced source extraction
+    const sources = [];
     
-    // If no URLs found, add generic sources
+    // Look for explicit mentions of sources
+    const sourceRegex = /(?:fonte|source|referência|referencia|link)s?:\s*(https?:\/\/[^\s\)\"\']+)/gi;
+    let sourceMatch;
+    
+    while ((sourceMatch = sourceRegex.exec(content)) !== null) {
+      const url = sourceMatch[1];
+      if (url && !sources.some(s => s.url === url)) {
+        sources.push({
+          title: `Fonte: ${url.split("//")[1]?.split("/")[0] || url}`,
+          url: url
+        });
+      }
+    }
+    
+    // If no explicit sources found, use all URLs in the content
+    if (sources.length === 0) {
+      urls.slice(0, 5).forEach(url => {
+        if (!sources.some(s => s.url === url)) {
+          // Try to extract domain name for better readability
+          const domain = url.split("//")[1]?.split("/")[0] || url;
+          let title = `${domain}`;
+          
+          // Try to identify common domains
+          if (domain.includes("linkedin.com")) {
+            title = `LinkedIn: ${companyName}`;
+          } else if (domain.includes("glassdoor")) {
+            title = `Glassdoor: Avaliações de ${companyName}`;
+          } else if (domain.includes(companyName.toLowerCase().replace(/\s+/g, ''))) {
+            title = `Site oficial: ${domain}`;
+          }
+          
+          sources.push({
+            title,
+            url
+          });
+        }
+      });
+    }
+    
+    // If still no sources found, add generic ones
     if (sources.length === 0) {
       sources.push({
         title: `Site oficial de ${companyName}`,
@@ -165,10 +203,13 @@ export const processPerplexityResponse = (content: string, companyName: string):
         const dateRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4})|(\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{2,4})/i;
         const dateMatch = item.match(dateRegex);
         
+        // Try to extract URL if present
+        const newsUrl = item.match(urlRegex)?.[0];
+        
         recentNews.push({
-          title: item.replace(dateRegex, '').trim(),
+          title: item.replace(dateRegex, '').replace(newsUrl || '', '').trim(),
           date: dateMatch ? dateMatch[0] : undefined,
-          url: item.match(urlRegex)?.[0]
+          url: newsUrl
         });
       }
     }
@@ -184,9 +225,13 @@ export const processPerplexityResponse = (content: string, companyName: string):
         const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
         for (const sentence of sentences) {
           if (newsKeywords.some(keyword => sentence.toLowerCase().includes(keyword)) && recentNews.length < 3) {
+            // Try to extract URL if present
+            const newsUrl = sentence.match(urlRegex)?.[0];
+            
             recentNews.push({
-              title: sentence.trim(),
-              date: undefined
+              title: sentence.replace(newsUrl || '', '').trim(),
+              date: undefined,
+              url: newsUrl
             });
           }
         }

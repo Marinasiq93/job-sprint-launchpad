@@ -193,7 +193,8 @@ export const fetchBriefingContent = async (
           overview: data.overview,
           highlights: data.highlights,
           summary: data.summary,
-          sources: data.sources || []
+          sources: data.sources || [],
+          recentNews: data.recentNews || []
         };
       }
       throw new Error(data.error);
@@ -203,7 +204,8 @@ export const fetchBriefingContent = async (
       overview: data.overview,
       highlights: data.highlights,
       summary: data.summary,
-      sources: data.sources || []
+      sources: data.sources || [],
+      recentNews: data.recentNews || []
     };
   } catch (error) {
     console.error('Erro ao buscar informações da empresa:', error);
