@@ -9,7 +9,7 @@ export const extractHighlights = (content: string): string[] => {
   
   // Try to find sections that typically contain highlights
   const valuesSectionRegex = /(?:valores|princípios|cultura|values|principles)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n##|\n\d\.|\n$)/i;
-  const highlightSectionRegex = /(?:principais pontos|destaques|highlights)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n##|\n\d\.|\n$)/i;
+  const highlightSectionRegex = /(?:principais pontos|destaques|highlights|key points)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n##|\n\d\.|\n$)/i;
   
   // First try to find a dedicated values section
   const valuesSection = content.match(valuesSectionRegex);
@@ -36,6 +36,16 @@ export const extractHighlights = (content: string): string[] => {
           highlights.push(bulletMatch[1].trim());
         }
       }
+
+      // Also look for numbered points if no bullets found
+      if (highlights.length === 0) {
+        let numberedMatch;
+        while ((numberedMatch = numberedRegex.exec(sectionContent)) !== null) {
+          if (numberedMatch[1].trim().length > 0) {
+            highlights.push(numberedMatch[1].trim());
+          }
+        }
+      }
     }
   }
   
@@ -50,6 +60,21 @@ export const extractHighlights = (content: string): string[] => {
     }
   }
   
+  // If still no highlights, look for numbered lists throughout the content
+  if (highlights.length === 0) {
+    let numberedMatch;
+    while ((numberedMatch = numberedRegex.exec(content)) !== null) {
+      const point = numberedMatch[1].trim();
+      // Skip if it looks like a news item (contains date patterns)
+      if (point.length > 0 && 
+          !point.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/) && 
+          !point.match(/\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?/) &&
+          !highlights.some(h => h.toLowerCase().includes(point.toLowerCase().substring(0, 20)))) {
+        highlights.push(point);
+      }
+    }
+  }
+  
   // Extract any quoted text as potential highlights if we still don't have enough
   if (highlights.length < 3) {
     const quoteRegex = /"([^"]+)"|"([^"]+)"|'([^']+)'/g;
@@ -58,7 +83,9 @@ export const extractHighlights = (content: string): string[] => {
       const quote = quoteMatch[1] || quoteMatch[2] || quoteMatch[3];
       if (quote && quote.length > 10 && quote.length < 150 && 
           !highlights.some(h => h.includes(quote.substring(0, 20)))) {
-        highlights.push(`"${quote}"`);
+        // Clean up quotes that might have translation annotations
+        const cleanQuote = quote.replace(/\]\s*\([^)]+\)$/, '');
+        highlights.push(`"${cleanQuote}"`);
       }
     }
   }
@@ -74,6 +101,8 @@ export const extractHighlights = (content: string): string[] => {
         if (sentences.length > 0) {
           const keyPoint = sentences[0].trim();
           if (keyPoint.length > 20 && keyPoint.length < 150 && 
+              !keyPoint.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/) && // Skip dates
+              !keyPoint.match(/http/) && // Skip URLs
               !highlights.some(h => h.toLowerCase().includes(keyPoint.toLowerCase().substring(0, 20)))) {
             highlights.push(keyPoint);
             if (highlights.length >= 5) break;

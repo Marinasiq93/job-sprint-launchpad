@@ -14,21 +14,24 @@ export const extractSources = (content: string, companyName: string): Array<{tit
   const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
   
   // Look for explicit mentions of sources
-  const sourceSectionRegex = /(?:fontes|sources|referências|referencias|links)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n##|\n\d\.|\n$)/i;
+  const sourceSectionRegex = /(?:fontes|sources|referências|referencias|links|fonte|source)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n##|\n\d\.|\n$)/i;
   const sourceSection = content.match(sourceSectionRegex);
   
   if (sourceSection && sourceSection[1]) {
     const sectionContent = sourceSection[1];
     
     // Look for formatted sources with titles
-    const formattedSourceRegex = /(?:[-•*]|\d+\.)\s+(.+?)(?::|-)?\s*(https?:\/\/[^\s\)\"\'\]]+)/g;
+    const formattedSourceRegex = /(?:[-•*]|\d+\.)\s+(?:\[?([^\]:\n]+)\]?:?)?\s*(https?:\/\/[^\s\)\"\'\]]+)/g;
     let formattedMatch;
     
     while ((formattedMatch = formattedSourceRegex.exec(sectionContent)) !== null) {
-      if (formattedMatch[1] && formattedMatch[2]) {
+      const title = formattedMatch[1] ? formattedMatch[1].trim() : getDomainName(formattedMatch[2]);
+      const url = formattedMatch[2].trim();
+      
+      if (url && !sources.some(s => s.url === url)) {
         sources.push({
-          title: formattedMatch[1].trim(),
-          url: formattedMatch[2].trim()
+          title,
+          url
         });
       }
     }
@@ -50,7 +53,23 @@ export const extractSources = (content: string, companyName: string): Array<{tit
     }
   }
   
-  // Look for URLs throughout the content if we don't have enough
+  // Look for URLs in the FONTE: format throughout the content
+  if (sources.length < 2) {
+    const sourceFormatRegex = /(?:fonte|source|referência|link):\s*(https?:\/\/[^\s\)\"\'\]]+)/gi;
+    let sourceFormatMatch;
+    
+    while ((sourceFormatMatch = sourceFormatRegex.exec(content)) !== null) {
+      const url = sourceFormatMatch[1];
+      if (url && !sources.some(s => s.url === url)) {
+        sources.push({
+          title: getDomainName(url),
+          url
+        });
+      }
+    }
+  }
+  
+  // Look for any remaining URLs throughout the content if we don't have enough
   if (sources.length < 2) {
     const urls = [...new Set(content.match(urlRegex) || [])];
     urls.slice(0, 5).forEach(url => {
@@ -73,7 +92,7 @@ export const extractSources = (content: string, companyName: string): Array<{tit
         }
         
         // Clean up title if it's just a fragment
-        if (title.length < 5) {
+        if (title.length < 5 || title === domain) {
           if (domain.includes("linkedin")) {
             title = `LinkedIn: ${companyName}`;
           } else if (domain.includes(companyName.toLowerCase().replace(/\s+/g, ''))) {
@@ -105,3 +124,6 @@ export const extractSources = (content: string, companyName: string): Array<{tit
   
   return sources;
 };
+
+// Export the utility function
+export { getDomainName };
