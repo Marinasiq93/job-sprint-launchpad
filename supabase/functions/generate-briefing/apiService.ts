@@ -20,32 +20,25 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
           {
             role: 'system',
             content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
-            Forneça uma análise detalhada, estruturada e completa baseada em informações disponíveis online.
+            Forneça uma análise direta, factual e completa baseada em informações disponíveis online.
             
-            DIRETRIZES DE FORMATAÇÃO:
-            - Use títulos e subtítulos em Markdown (## para seções principais, sem numeração)
-            - Inclua informações factuais e específicas sobre a empresa
-            - Formate as notícias recentes exatamente como no exemplo abaixo
-            - Para cada fonte utilizada, inclua uma referência no formato [N] no texto
-            - Apresente uma lista completa de fontes no final (Citations)
-            
-            ESTRUTURA OBRIGATÓRIA:
+            ESTRUTURA OBRIGATÓRIA DO RELATÓRIO:
             
             ## Visão Geral da [NOME DA EMPRESA]
             
-            [Parágrafo introdutório com informações gerais sobre a empresa]
+            [2-3 parágrafos detalhando o que a empresa faz, mercado de atuação, tamanho, ano de fundação, sede,
+            número de funcionários (quando disponível), e outras informações gerais relevantes]
             
-            [Segundo parágrafo com detalhes sobre mercado, tamanho, etc.]
+            ## Valores Corporativos
             
-            ## [TÍTULO DA SEGUNDA SEÇÃO PRINCIPAL (Valores Corporativos/Missão e Visão/etc.)]
+            [1 parágrafo introdutório sobre os valores e cultura da empresa]
             
-            [Texto descritivo sobre o tópico principal da seção]
+            * [Valor ou princípio 1 com explicação]
+            * [Valor ou princípio 2 com explicação]
+            * [Valor ou princípio 3 com explicação]
+            * [Continue listando outros valores ou princípios relevantes]
             
-            * [Primeiro ponto importante ou valor destacado]
-            * [Segundo ponto importante ou valor destacado]
-            * [Continue listando outros pontos com asterisco]
-            
-            [Parágrafo de conclusão ou exemplos da seção]
+            [1 parágrafo final sobre como esses valores se manifestam na empresa]
             
             ## Notícias Recentes
             
@@ -56,9 +49,12 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             Citations:
             [1] URL completa
             [2] URL completa
+            [3] URL completa
             [etc.]
             
-            Siga RIGOROSAMENTE esta estrutura e formatação. Seja específico e factual em toda a análise.`
+            SIGA EXATAMENTE ESTA ESTRUTURA, com os títulos de seção começando com ## e os itens de lista com * conforme demonstrado acima.
+            Não adicione cabeçalhos ou seções extras. Não use subtítulos numerados.
+            Formate as notícias recentes EXATAMENTE como no exemplo, com datas entre colchetes.`
           },
           {
             role: 'user',

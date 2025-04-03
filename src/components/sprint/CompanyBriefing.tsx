@@ -50,7 +50,7 @@ const CompanyBriefing = ({
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              A API Perplexity não está disponível. Mostrando conteúdo de demonstração.
+              A API Perplexity não está disponível ou configurada. Mostrando conteúdo de demonstração.
             </AlertDescription>
           </Alert>
         )}

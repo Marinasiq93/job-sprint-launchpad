@@ -13,32 +13,31 @@ export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: st
 // Process the raw Perplexity API response into our expected format
 export const processPerplexityResponse = (content: string, companyName: string): BriefingResponse => {
   try {
+    console.log("Processing raw response: " + content.substring(0, 200) + "...");
+    
     // Split the response by sections marked with ## (markdown headers)
     const sections = content.split(/##\s+/).filter(section => section.trim().length > 0);
     
-    // First section is typically the overview or might not have a header
+    // Get the company overview (first section after "Visão Geral")
     let overview = '';
-    if (sections.length > 0) {
-      if (content.startsWith('##')) {
-        // If the content starts with ##, then the first item is the first section
-        overview = sections[0];
-      } else {
-        // If there's content before the first ##, use that as overview
-        const beforeFirstSection = content.split(/##\s+/)[0];
-        if (beforeFirstSection && beforeFirstSection.trim().length > 0) {
-          overview = beforeFirstSection;
-        } else {
-          overview = sections[0];
-        }
-      }
+    const overviewSectionIndex = sections.findIndex(section => 
+      section.toLowerCase().includes('visão geral') || 
+      section.toLowerCase().includes('overview')
+    );
+    
+    if (overviewSectionIndex !== -1) {
+      overview = sections[overviewSectionIndex];
+    } else if (sections.length > 0) {
+      // If no Visão Geral section, use the first section
+      overview = sections[0];
     } else {
-      // If no sections are found, use the whole content
+      // If no sections were identified, use the entire content
       overview = content;
     }
     
-    // Extract highlights (bullet points with * from all sections)
+    // Extract all bullet points from all sections for highlights
     let highlights: string[] = [];
-    const entireContentBulletRegex = /(?:^|\n)\s*\*\s+([^\n]+)/g;
+    const entireContentBulletRegex = /(?:^|\n)\s*[•\*-]\s+([^\n]+)/g;
     let match;
     
     while ((match = entireContentBulletRegex.exec(content)) !== null) {
@@ -48,17 +47,17 @@ export const processPerplexityResponse = (content: string, companyName: string):
       }
     }
     
-    // If no highlights found, extract from any section that might contain values or key points
-    if (highlights.length === 0) {
+    // If no highlights found, look for values in the second section
+    if (highlights.length === 0 && sections.length > 1) {
       const valuesSectionIndex = sections.findIndex(s => 
         s.toLowerCase().includes('valores') || 
         s.toLowerCase().includes('missão') ||
-        s.toLowerCase().includes('pontos')
+        s.toLowerCase().includes('princípios')
       );
       
       if (valuesSectionIndex !== -1) {
         const valuesSection = sections[valuesSectionIndex];
-        const bulletRegex = /(?:^|\n)\s*[-•*]\s+([^\n]+)/g;
+        const bulletRegex = /(?:^|\n)\s*[•\*-]\s+([^\n]+)/g;
         
         while ((match = bulletRegex.exec(valuesSection)) !== null) {
           const highlight = cleanText(match[1]);
@@ -69,38 +68,80 @@ export const processPerplexityResponse = (content: string, companyName: string):
       }
     }
     
-    // Default highlights if none found
-    if (highlights.length === 0) {
-      highlights = [
-        `Consulte as informações completas sobre ${companyName} acima`,
-        "Visite o site oficial da empresa para mais detalhes"
-      ];
-    }
-    
-    // Find a good summary paragraph from the content
-    let summary = '';
-    const paragraphs = content.split(/\n{2,}/);
-    // Try to get a paragraph from the end of a non-news section
-    for (let i = paragraphs.length - 1; i >= 0; i--) {
-      const paragraph = paragraphs[i].trim();
-      if (paragraph.length > 50 && 
-          !paragraph.toLowerCase().includes('notícias recentes') &&
-          !paragraph.toLowerCase().includes('citations') &&
-          !paragraph.match(/^\d+\.\s+\[/)) {
-        summary = cleanText(paragraph);
-        break;
+    // If still no highlights, extract sentences from the values section (if it exists)
+    if (highlights.length === 0 && sections.length > 1) {
+      const valuesSectionIndex = sections.findIndex(s => 
+        s.toLowerCase().includes('valores') || 
+        s.toLowerCase().includes('missão') ||
+        s.toLowerCase().includes('princípios')
+      );
+      
+      if (valuesSectionIndex !== -1) {
+        const valuesSection = sections[valuesSectionIndex];
+        const sentences = valuesSection.split(/\.\s+/);
+        
+        for (const sentence of sentences) {
+          const cleanSentence = cleanText(sentence);
+          if (cleanSentence && cleanSentence.length > 20 && cleanSentence.length < 200) {
+            highlights.push(cleanSentence);
+            if (highlights.length >= 5) break;
+          }
+        }
       }
     }
     
-    // If no summary found, use a simple default
-    if (!summary) {
-      summary = `Consulte a análise completa da empresa ${companyName} acima.`;
+    // Default highlights if none found
+    if (highlights.length === 0) {
+      highlights = [
+        `Consulte as informações completas sobre ${companyName} no site oficial`,
+        "Visite o LinkedIn da empresa para mais detalhes sobre sua cultura e valores",
+        "Explore notícias recentes para entender o posicionamento atual da empresa"
+      ];
     }
     
-    // Extract news directly using the extractor
+    // Find a summary paragraph from the content
+    let summary = '';
+    
+    // Try to get the last paragraph of a values section if it exists
+    const valuesSectionIndex = sections.findIndex(s => 
+      s.toLowerCase().includes('valores') || 
+      s.toLowerCase().includes('missão') ||
+      s.toLowerCase().includes('princípios')
+    );
+    
+    if (valuesSectionIndex !== -1) {
+      const valuesSection = sections[valuesSectionIndex];
+      const paragraphs = valuesSection.split(/\n{2,}/);
+      
+      if (paragraphs.length > 0) {
+        const lastParagraph = paragraphs[paragraphs.length - 1].trim();
+        if (lastParagraph.length > 50) {
+          summary = cleanText(lastParagraph);
+        }
+      }
+    }
+    
+    // If no summary found from values section, use a paragraph from the overview
+    if (!summary && overview) {
+      const paragraphs = overview.split(/\n{2,}/);
+      for (const paragraph of paragraphs) {
+        const cleaned = cleanText(paragraph);
+        if (cleaned.length > 50 && cleaned.length < 300) {
+          summary = cleaned;
+          break;
+        }
+      }
+    }
+    
+    // If still no summary, use a default one
+    if (!summary) {
+      summary = `${companyName} é uma empresa que oferece soluções inovadoras para seus clientes. Consulte o site oficial para mais informações.`;
+    }
+    
+    // Extract news directly using the news extractor
     const recentNews = extractRecentNews(content, companyName);
     
-    // Extract sources using the extractor
+    // Extract sources using the source extractor
     const sources = extractSources(content);
     
     return {
@@ -113,14 +154,14 @@ export const processPerplexityResponse = (content: string, companyName: string):
   } catch (error) {
     console.error("Error processing Perplexity response:", error);
     
-    // Return a basic structure with the raw content
+    // Return a basic structure with error information
     return {
-      overview: content.substring(0, 400) + (content.length > 400 ? "..." : ""),
-      highlights: ["Veja a análise completa acima"],
-      summary: content.substring(content.length - 400) + (content.length > 400 ? "..." : ""),
+      overview: `Não foi possível processar completamente a resposta para ${companyName}. Erro: ${error.message}`,
+      highlights: ["Visite o site oficial da empresa para informações precisas"],
+      summary: "Ocorreu um erro ao processar a análise da empresa. Tente novamente ou consulte diretamente o site da empresa.",
       sources: [{ 
-        title: `Pesquisar ${companyName}`, 
-        url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}`
+        title: `Site oficial de ${companyName}`, 
+        url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+site+oficial`
       }],
       recentNews: []
     };

@@ -36,10 +36,11 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
-  // Process the overview content to handle markdown formatting
+  // Clean and process the overview content to handle markdown formatting
   const processedOverview = currentBriefing.overview
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>');
+    .replace(/## [^\n]+\n/, '') // Remove the header if it exists
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
+    .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>'); // Citations
 
   return (
     <div className="space-y-4">
