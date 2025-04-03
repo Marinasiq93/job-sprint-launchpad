@@ -1,12 +1,7 @@
 
 import { BriefingResponse } from "./types.ts";
 import { callPerplexityAPI } from "./apiService.ts";
-import { 
-  extractHighlights, 
-  extractSources, 
-  extractRecentNews,
-  cleanText
-} from "./contentExtractors.ts";
+import { cleanText } from "./utils/textUtils.ts";
 
 // Call Perplexity API to get the analysis
 export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: string): Promise<string> => {
@@ -16,41 +11,54 @@ export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: st
 // Process the raw Perplexity API response into our expected format
 export const processPerplexityResponse = (content: string, companyName: string): BriefingResponse => {
   try {
-    // Parse content paragraph by paragraph and extract key information
+    // Split the response into paragraphs
     const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
     
-    // If we don't have enough content, fall back to a default structure
-    if (paragraphs.length < 2) {
-      return {
-        overview: content || `Análise da empresa ${companyName}`,
-        highlights: ["Informação obtida diretamente da API sem formatação específica"],
-        summary: "Veja o conteúdo acima para a análise completa.",
-        sources: [],
-        recentNews: []
-      };
-    }
+    // Extract the first paragraph as overview
+    const overview = paragraphs.length > 0 ? cleanText(paragraphs[0]) : `Análise da empresa ${companyName}`;
     
-    // Always take first paragraph as overview (company description)
-    const overview = cleanText(paragraphs[0]);
+    // Extract potential highlights (bullet points or numbered items)
+    const highlightRegex = /\n([-•*]|\d+\.)\s+([^\n]+)/g;
+    const matches = [...content.matchAll(highlightRegex)];
+    const highlights = matches.map(match => cleanText(match[2]));
     
-    // Identify potential highlight points
-    const highlights = extractHighlights(content);
-    
-    // If still no highlights, create generic ones
+    // Default highlights if none found
     const defaultHighlights = [
-      `Informações sobre ${companyName} extraídas de fontes online`,
-      "Consulte o site oficial da empresa para mais detalhes",
-      "Procure reviews no Glassdoor para insights de funcionários",
-      "Verifique o LinkedIn da empresa para atualizações recentes",
-      "Pesquise notícias recentes para contexto atual da empresa"
+      `Informações sobre ${companyName}`,
+      "Consulte o site oficial da empresa para mais detalhes"
     ];
     
-    // Take last paragraph or second half of content as summary
-    const summary = cleanText(paragraphs[paragraphs.length - 1]);
+    // Last paragraph as summary
+    const summary = paragraphs.length > 1 ? cleanText(paragraphs[paragraphs.length - 1]) : "Veja a análise completa acima.";
     
-    // Extract sources and news from the content
-    const sources = extractSources(content, companyName);
-    const recentNews = extractRecentNews(content, companyName);
+    // Simple extraction of potential URLs as sources
+    const sourceRegex = /(https?:\/\/[^\s)]+)/g;
+    const sourceMatches = [...content.matchAll(sourceRegex)];
+    const sources = Array.from(new Set(sourceMatches.map(match => match[1]))).map(url => {
+      return {
+        title: getDomainName(url),
+        url: url
+      };
+    });
+    
+    // Try to find news by looking for date patterns
+    const newsRegex = /(\d{1,2}\/\d{1,2}\/\d{4})\s*[-–—]\s*([^\n-–—]+)(?:\s*[-–—]\s*([^\n]+))?/g;
+    const newsMatches = [...content.matchAll(newsRegex)];
+    const recentNews = newsMatches.map(match => {
+      const date = match[1] || '';
+      const title = cleanText(match[2]) || '';
+      const source = match[3] || '';
+      
+      // Extract URL from source if available
+      const urlMatch = source.match(/(https?:\/\/[^\s)]+)/);
+      const url = urlMatch ? urlMatch[1] : '';
+      
+      return {
+        title,
+        date,
+        url
+      };
+    });
     
     return {
       overview,
@@ -61,23 +69,27 @@ export const processPerplexityResponse = (content: string, companyName: string):
     };
   } catch (error) {
     console.error("Error processing Perplexity response:", error);
+    
     // Return a basic structure with the raw content
     return {
-      overview: content.slice(0, 200) + "...",
+      overview: content.substring(0, 400) + (content.length > 400 ? "..." : ""),
       highlights: ["Veja a análise completa acima"],
-      summary: content.slice(-200),
+      summary: content.substring(content.length - 400) + (content.length > 400 ? "..." : ""),
       sources: [
         { 
           title: `Pesquisar ${companyName}`, 
           url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}`
         }
       ],
-      recentNews: [
-        {
-          title: `Veja notícias recentes sobre ${companyName}`,
-          url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+notícias&tbm=nws`
-        }
-      ]
+      recentNews: []
     };
   }
 };
+
+function getDomainName(url: string): string {
+  try {
+    return url.split("//")[1]?.split("/")[0] || url;
+  } catch {
+    return url;
+  }
+}
