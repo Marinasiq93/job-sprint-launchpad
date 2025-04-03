@@ -1,4 +1,3 @@
-
 // Define content categories for briefings
 export const BRIEFING_CATEGORIES = {
   CULTURE_VALUES: 'culture_values',
@@ -31,57 +30,32 @@ export const categoryTitles = {
 export const defaultContentByCategory = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: {
     overview: "Carregando informações sobre a cultura e valores da empresa...",
-    highlights: [
-      "Valores e princípios organizacionais",
-      "Ambiente de trabalho e cultura interna",
-      "Práticas e políticas de colaboração",
-      "Compromissos sociais e ambientais",
-      "Testimunhos de funcionários"
-    ],
-    summary: "A cultura de uma empresa define como as pessoas trabalham juntas e quais comportamentos são valorizados no dia a dia."
+    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
+    summary: "Carregando análise de contexto...",
+    sources: []
   },
   [BRIEFING_CATEGORIES.MISSION_VISION]: {
     overview: "Carregando informações sobre a missão e visão da empresa...",
-    highlights: [
-      "Propósito e objetivos de longo prazo",
-      "Impacto pretendido no mercado e sociedade",
-      "Compromissos com stakeholders",
-      "Metas de crescimento e expansão",
-      "Valores que guiam a tomada de decisão"
-    ],
-    summary: "A missão expressa o propósito principal da empresa, enquanto a visão descreve onde ela pretende chegar no futuro."
+    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
+    summary: "Carregando análise de contexto...",
+    sources: []
   },
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: {
-    overview: "Carregando informações sobre os produtos, serviços e mercado...",
-    highlights: [
-      "Principais produtos e serviços oferecidos",
-      "Público-alvo e necessidades atendidas",
-      "Diferenciação competitiva no mercado",
-      "Tendências do setor e oportunidades",
-      "Concorrentes diretos e indiretos"
-    ],
-    summary: "Compreender o posicionamento de mercado e o valor oferecido aos clientes ajuda a contextualizar sua contribuição potencial."
+    overview: "Carregando informações sobre produtos e mercado da empresa...",
+    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
+    summary: "Carregando análise de contexto...",
+    sources: []
   },
   [BRIEFING_CATEGORIES.LEADERSHIP]: {
-    overview: "Carregando informações sobre o time de liderança da empresa...",
-    highlights: [
-      "Fundadores e história de fundação",
-      "Experiência e trajetória dos executivos",
-      "Estilo de liderança e comunicação",
-      "Visão estratégica para o negócio",
-      "Presença pública e comunicação externa"
-    ],
-    summary: "A liderança define o tom e a direção da empresa, influenciando diretamente sua cultura e resultados."
+    overview: "Carregando informações sobre a liderança da empresa...",
+    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
+    summary: "Carregando análise de contexto...",
+    sources: []
   },
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: {
-    overview: "Carregando informações sobre a história e origem da empresa...",
-    highlights: [
-      "Contexto da fundação e motivação inicial",
-      "Desafios enfrentados nos primeiros anos",
-      "Marcos significativos de crescimento",
-      "Pivôs e mudanças estratégicas importantes",
-      "Evolução da proposta de valor ao longo do tempo"
-    ],
-    summary: "Conhecer a história da empresa oferece insights valiosos sobre seus valores e prioridades atuais."
+    overview: "Carregando informações sobre a história da empresa...",
+    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
+    summary: "Carregando análise de contexto...",
+    sources: []
   }
 };

@@ -42,6 +42,10 @@ export interface BriefingContent {
   overview: string;
   highlights: string[];
   summary: string;
+  sources?: Array<{
+    title: string;
+    url: string;
+  }>;
 }
 
 // Fetch content from Perplexity API
@@ -79,7 +83,8 @@ export const fetchBriefingContent = async (
     return {
       overview: data.overview,
       highlights: data.highlights,
-      summary: data.summary
+      summary: data.summary,
+      sources: data.sources || []
     };
   } catch (error) {
     console.error('Erro ao buscar informações da empresa:', error);

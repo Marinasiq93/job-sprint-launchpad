@@ -14,6 +14,10 @@ interface BriefingResponse {
   overview: string;
   highlights: string[];
   summary: string;
+  sources?: Array<{
+    title: string;
+    url: string;
+  }>;
 }
 
 // Create a fallback response when things don't work
@@ -26,7 +30,8 @@ const createFallbackResponse = (errorMessage: string): BriefingResponse => ({
     "Considere buscar informações manualmente no site da empresa",
     "Consulte perfis da empresa em redes sociais"
   ],
-  summary: `Houve um problema técnico: ${errorMessage}. Tente atualizar a análise novamente.`
+  summary: `Houve um problema técnico: ${errorMessage}. Tente atualizar a análise novamente.`,
+  sources: []
 });
 
 // Call Perplexity API to generate company briefing
@@ -46,9 +51,14 @@ const generateBriefingWithPerplexity = async (
     {
       "overview": "A comprehensive overview about the company, focusing on aspects relevant to ${category}",
       "highlights": ["Key point 1", "Key point 2", "Key point 3", "Key point 4", "Key point 5"],
-      "summary": "A concluding analysis that offers deeper context or insights"
+      "summary": "A concluding analysis that offers deeper context or insights",
+      "sources": [
+        {"title": "Source Title 1", "url": "https://example.com/1"},
+        {"title": "Source Title 2", "url": "https://example.com/2"}
+      ]
     }
     
+    Include 3-5 sources with title and URL that you used to gather this information.
     Only respond with valid JSON. Do not include any introductory text, explanations, or markdown formatting.
   `;
 
@@ -65,7 +75,7 @@ const generateBriefingWithPerplexity = async (
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that analyzes companies for job applicants. Provide structured insights about company culture, mission, products, leadership, and history to help candidates prepare for interviews. Return only valid JSON as specified.'
+          content: 'You are a helpful assistant that analyzes companies for job applicants. Provide structured insights about company culture, mission, products, leadership, and history to help candidates prepare for interviews. Include relevant sources for your information. Return only valid JSON as specified.'
         },
         {
           role: 'user',
@@ -77,6 +87,7 @@ const generateBriefingWithPerplexity = async (
       max_tokens: 1000,
       return_images: false,
       return_related_questions: false,
+      return_sources: true,
       search_domain_filter: ['perplexity.ai'],
     }),
   });
@@ -97,7 +108,24 @@ const generateBriefingWithPerplexity = async (
                       [null, contentText];
     
     const jsonString = jsonMatch[1] || contentText;
-    return JSON.parse(jsonString);
+    let parsedResponse = JSON.parse(jsonString);
+    
+    // If Perplexity returns sources directly in its response object, merge them
+    if (data.choices[0].message.sources && data.choices[0].message.sources.length > 0) {
+      const apiSources = data.choices[0].message.sources.map((source: any) => ({
+        title: source.title || 'Source',
+        url: source.url
+      }));
+      
+      // If the response already has sources, combine them, otherwise add them
+      if (parsedResponse.sources && Array.isArray(parsedResponse.sources)) {
+        parsedResponse.sources = [...parsedResponse.sources, ...apiSources];
+      } else {
+        parsedResponse.sources = apiSources;
+      }
+    }
+    
+    return parsedResponse;
   } catch (parseError) {
     console.error("Failed to parse Perplexity response as JSON:", parseError);
     console.log("Raw response:", data.choices[0].message.content);
