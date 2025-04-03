@@ -105,17 +105,7 @@ const getPerplexityAnalysis = async (prompt: string): Promise<any> => {
           {
             role: 'system',
             content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
-            Organize sua resposta para ser parseada como JSON com a seguinte estrutura:
-            {
-              "overview": "Visão geral da empresa e detalhes principais",
-              "highlights": ["Ponto 1", "Ponto 2", "Ponto 3", "Ponto 4", "Ponto 5"],
-              "summary": "Resumo conciso para o candidato",
-              "sources": [
-                {"title": "Fonte 1", "url": "url1"},
-                {"title": "Fonte 2", "url": "url2"}
-              ]
-            }
-            Mantenha os highlights limitados a 5 itens importantes, e fontes entre 2 e 5.`
+            Forneça uma análise detalhada baseada em informações disponíveis online.`
           },
           {
             role: 'user',
@@ -142,54 +132,118 @@ const getPerplexityAnalysis = async (prompt: string): Promise<any> => {
       throw new Error("No content in Perplexity API response");
     }
     
-    // Try to parse the JSON from the content
-    try {
-      // Find JSON in the content (it might be wrapped in text or markdown)
-      const jsonMatch = content.match(/```json\s*({[\s\S]*?})\s*```/) || 
-                         content.match(/{[\s\S]*"overview"[\s\S]*"highlights"[\s\S]*"summary"[\s\S]*}/);
-      
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[1] || jsonMatch[0]);
-      }
-      
-      // If no JSON found using regex, try to parse the whole content
-      return JSON.parse(content);
-    } catch (parseError) {
-      console.error("Error parsing JSON from Perplexity response:", parseError);
-      console.log("Raw content:", content);
-      throw new Error("Failed to parse JSON from Perplexity response");
-    }
+    return content;
   } catch (error) {
     console.error("Error calling Perplexity API:", error);
     throw error;
   }
 };
 
-// Process the Perplexity API response into our expected format
-const processPerplexityResponse = (data: any, companyName: string): BriefingResponse => {
+// Process the raw Perplexity API response into our expected format
+const processPerplexityResponse = (content: string, companyName: string): BriefingResponse => {
   try {
-    // Validate the required fields
-    if (!data.overview || !Array.isArray(data.highlights) || !data.summary) {
-      throw new Error("Perplexity response is missing required fields");
+    // Parse content paragraph by paragraph and extract key information
+    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+    
+    // If we don't have enough content, fall back to a default structure
+    if (paragraphs.length < 2) {
+      return {
+        overview: content || `Análise da empresa ${companyName}`,
+        highlights: ["Informação obtida diretamente da API sem formatação específica"],
+        summary: "Veja o conteúdo acima para a análise completa.",
+        sources: []
+      };
     }
     
-    // Create a valid response object
+    // Take first paragraph as overview
+    const overview = paragraphs[0];
+    
+    // Identify potential highlight points (sentences or bullet points)
+    let highlights: string[] = [];
+    
+    // Look for bullet points or numbered lists
+    const bulletRegex = /[•\-*]\s+([^\n]+)/g;
+    const numberedRegex = /\d+\.\s+([^\n]+)/g;
+    let bulletMatch;
+    let numberedMatch;
+    
+    while ((bulletMatch = bulletRegex.exec(content)) !== null) {
+      highlights.push(bulletMatch[1]);
+    }
+    
+    while ((numberedMatch = numberedRegex.exec(content)) !== null) {
+      highlights.push(numberedMatch[1]);
+    }
+    
+    // If no bullet points, extract some sentences from the middle of the content
+    if (highlights.length === 0) {
+      const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
+      // Skip first few and last few sentences (likely intro and conclusion)
+      if (sentences.length > 6) {
+        highlights = sentences.slice(2, 7).map(s => s.trim());
+      } else if (sentences.length > 0) {
+        highlights = sentences.slice(0, Math.min(5, sentences.length)).map(s => s.trim());
+      }
+    }
+    
+    // Limit to 5 highlights
+    highlights = highlights.slice(0, 5);
+    
+    // If still no highlights, create generic ones
+    if (highlights.length === 0) {
+      highlights = [
+        `Informações sobre ${companyName} extraídas de fontes online`,
+        "Consulte o site oficial da empresa para mais detalhes",
+        "Procure reviews no Glassdoor para insights de funcionários",
+        "Verifique o LinkedIn da empresa para atualizações recentes",
+        "Pesquise notícias recentes para contexto atual da empresa"
+      ];
+    }
+    
+    // Take last paragraph or second half of content as summary
+    const summary = paragraphs[paragraphs.length - 1];
+    
+    // Look for URLs in the content to use as sources
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urls = content.match(urlRegex) || [];
+    
+    const sources = urls.slice(0, 5).map(url => ({
+      title: `Fonte: ${url.split("//")[1]?.split("/")[0] || url}`,
+      url: url
+    }));
+    
+    // If no URLs found, add generic sources
+    if (sources.length === 0) {
+      sources.push({
+        title: `Site oficial de ${companyName}`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+site+oficial`
+      });
+      sources.push({
+        title: `${companyName} no LinkedIn`,
+        url: `https://www.linkedin.com/company/${encodeURIComponent(companyName.toLowerCase().replace(/\s+/g, '-'))}`
+      });
+    }
+    
     return {
-      overview: data.overview || `Análise da empresa ${companyName}`,
-      highlights: Array.isArray(data.highlights) ? 
-        data.highlights.slice(0, 5) : 
-        ["Nenhum destaque disponível"],
-      summary: data.summary || "Resumo não disponível",
-      sources: Array.isArray(data.sources) ? 
-        data.sources.map((source: any) => ({
-          title: source.title || "Fonte",
-          url: source.url || "#"
-        })) : 
-        [{ title: `Informações sobre ${companyName}`, url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}` }]
+      overview,
+      highlights,
+      summary,
+      sources
     };
   } catch (error) {
     console.error("Error processing Perplexity response:", error);
-    throw error;
+    // Return a basic structure with the raw content
+    return {
+      overview: content.slice(0, 200) + "...",
+      highlights: ["Veja a análise completa acima"],
+      summary: content.slice(-200),
+      sources: [
+        { 
+          title: `Pesquisar ${companyName}`, 
+          url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}`
+        }
+      ]
+    };
   }
 };
 
@@ -226,8 +280,11 @@ serve(async (req) => {
     }
     
     try {
-      // Try to get data from Perplexity API
+      // Try to get data from Perplexity API (now getting raw text)
       const perplexityResponse = await getPerplexityAnalysis(prompt);
+      console.log("Raw API response excerpt:", perplexityResponse.substring(0, 100) + "...");
+      
+      // Process the raw text into our expected structure
       const processedResponse = processPerplexityResponse(perplexityResponse, companyName);
       
       return new Response(JSON.stringify(processedResponse), {
@@ -256,3 +313,4 @@ serve(async (req) => {
     });
   }
 });
+
