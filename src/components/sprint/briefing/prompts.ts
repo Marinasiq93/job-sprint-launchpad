@@ -1,4 +1,3 @@
-
 import { BRIEFING_CATEGORIES } from "./briefingConstants";
 
 // Perplexity prompts for each category
@@ -12,8 +11,6 @@ export const perplexityPromptsByCategory = {
     Em seguida, FOQUE A MAIOR PARTE da sua análise nos VALORES CORPORATIVOS da empresa:
     * Quais são os princípios e VALORES EXPLICITAMENTE DECLARADOS no site da empresa?
     * Como esses valores se traduzem na cultura organizacional?
-    * Busque informações específicas sobre valores como: inovação, diversidade, sustentabilidade, 
-      transparência, trabalho em equipe, foco no cliente, etc.
     * Mencione exemplos concretos de como esses valores são aplicados na prática.
     * Extraia CITAÇÕES DIRETAS do site sobre valores, se disponíveis.
     
@@ -92,4 +89,3 @@ export const perplexityPromptsByCategory = {
     
     Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), incluindo data e fonte.`
 };
-
