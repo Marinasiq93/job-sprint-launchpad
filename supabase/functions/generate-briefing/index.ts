@@ -44,42 +44,7 @@ const createFallbackResponse = (companyName: string, errorMessage: string): Brie
   ]
 });
 
-// Mock the API response for now - this will be used if the API key is not set
-const mockBriefingResponse = (companyName: string, category: string): BriefingResponse => {
-  const categoryTitles = {
-    'culture_values': 'Cultura e Valores',
-    'mission_vision': 'Missão e Visão',
-    'product_market': 'Produto e Mercado',
-    'leadership': 'Time de Liderança',
-    'company_history': 'História da Empresa'
-  };
-  
-  const categoryTitle = categoryTitles[category as keyof typeof categoryTitles] || 'Empresa';
-  
-  return {
-    overview: `A ${companyName} é uma empresa com presença global conhecida por suas soluções inovadoras. Este é um conteúdo de demonstração já que o acesso à API Perplexity não está configurado corretamente.`,
-    highlights: [
-      `A ${companyName} tem uma presença significativa no mercado`,
-      `Valores como inovação e colaboração são importantes para a ${companyName}`,
-      `Mais informações podem ser encontradas no site oficial da empresa`,
-      `Recomendamos visitar o LinkedIn e Glassdoor para perspectivas adicionais`,
-      `Este é um conteúdo gerado sem acesso à API Perplexity`
-    ],
-    summary: `Para obter uma análise completa sobre ${companyName} e seu ${categoryTitle}, configure corretamente a chave de API Perplexity no ambiente do Supabase Edge Function.`,
-    sources: [
-      {
-        title: `Site oficial de ${companyName}`,
-        url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+site+oficial`
-      },
-      {
-        title: `${companyName} no LinkedIn`,
-        url: `https://www.linkedin.com/company/${encodeURIComponent(companyName.toLowerCase().replace(/\s+/g, '-'))}`
-      }
-    ]
-  };
-};
-
-// Generate sample demo content without API call
+// Generate demo content without API call
 const generateDemoContent = (companyName: string, category: string, companyWebsite: string): BriefingResponse => {
   // Generate appropriate content based on company name, website and category
   const categoryLabels = {
@@ -119,6 +84,115 @@ const generateDemoContent = (companyName: string, category: string, companyWebsi
   };
 };
 
+// Call Perplexity API to get the analysis
+const getPerplexityAnalysis = async (prompt: string): Promise<any> => {
+  if (!perplexityApiKey) {
+    throw new Error("PERPLEXITY_API_KEY is not set in the environment");
+  }
+  
+  console.log("Calling Perplexity API...");
+  
+  try {
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${perplexityApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-sonar-small-128k-online',
+        messages: [
+          {
+            role: 'system',
+            content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
+            Organize sua resposta para ser parseada como JSON com a seguinte estrutura:
+            {
+              "overview": "Visão geral da empresa e detalhes principais",
+              "highlights": ["Ponto 1", "Ponto 2", "Ponto 3", "Ponto 4", "Ponto 5"],
+              "summary": "Resumo conciso para o candidato",
+              "sources": [
+                {"title": "Fonte 1", "url": "url1"},
+                {"title": "Fonte 2", "url": "url2"}
+              ]
+            }
+            Mantenha os highlights limitados a 5 itens importantes, e fontes entre 2 e 5.`
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Perplexity API error:", errorData);
+      throw new Error(`API responded with status ${response.status}: ${errorData}`);
+    }
+    
+    const data = await response.json();
+    console.log("Perplexity API response:", JSON.stringify(data).substring(0, 200) + "...");
+    
+    // Extract the content from the response
+    const content = data.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in Perplexity API response");
+    }
+    
+    // Try to parse the JSON from the content
+    try {
+      // Find JSON in the content (it might be wrapped in text or markdown)
+      const jsonMatch = content.match(/```json\s*({[\s\S]*?})\s*```/) || 
+                         content.match(/{[\s\S]*"overview"[\s\S]*"highlights"[\s\S]*"summary"[\s\S]*}/);
+      
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      }
+      
+      // If no JSON found using regex, try to parse the whole content
+      return JSON.parse(content);
+    } catch (parseError) {
+      console.error("Error parsing JSON from Perplexity response:", parseError);
+      console.log("Raw content:", content);
+      throw new Error("Failed to parse JSON from Perplexity response");
+    }
+  } catch (error) {
+    console.error("Error calling Perplexity API:", error);
+    throw error;
+  }
+};
+
+// Process the Perplexity API response into our expected format
+const processPerplexityResponse = (data: any, companyName: string): BriefingResponse => {
+  try {
+    // Validate the required fields
+    if (!data.overview || !Array.isArray(data.highlights) || !data.summary) {
+      throw new Error("Perplexity response is missing required fields");
+    }
+    
+    // Create a valid response object
+    return {
+      overview: data.overview || `Análise da empresa ${companyName}`,
+      highlights: Array.isArray(data.highlights) ? 
+        data.highlights.slice(0, 5) : 
+        ["Nenhum destaque disponível"],
+      summary: data.summary || "Resumo não disponível",
+      sources: Array.isArray(data.sources) ? 
+        data.sources.map((source: any) => ({
+          title: source.title || "Fonte",
+          url: source.url || "#"
+        })) : 
+        [{ title: `Informações sobre ${companyName}`, url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}` }]
+    };
+  } catch (error) {
+    console.error("Error processing Perplexity response:", error);
+    throw error;
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -141,13 +215,31 @@ serve(async (req) => {
 
     console.log(`Processing briefing request for ${companyName}, category: ${category}`);
     
-    // For now, return demo content instead of calling Perplexity API
-    // This avoids the 400 errors until the API integration can be fixed properly
-    const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
+    // Check if API key is available
+    if (!perplexityApiKey) {
+      console.log("PERPLEXITY_API_KEY not set, returning demo content");
+      const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
+      return new Response(JSON.stringify(briefingData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
-    return new Response(JSON.stringify(briefingData), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    try {
+      // Try to get data from Perplexity API
+      const perplexityResponse = await getPerplexityAnalysis(prompt);
+      const processedResponse = processPerplexityResponse(perplexityResponse, companyName);
+      
+      return new Response(JSON.stringify(processedResponse), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (apiError) {
+      console.error("Error from Perplexity API, falling back to demo content:", apiError);
+      // Fallback to demo content if API call fails
+      const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
+      return new Response(JSON.stringify(briefingData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   } catch (error) {
     console.error('Error in generate-briefing function:', error);
     
