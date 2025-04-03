@@ -19,7 +19,6 @@ port = 54324
 enabled = true
 
 [functions]
-enabled = true
 
 [functions.generate-briefing]
 verify_jwt = true
