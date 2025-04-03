@@ -25,7 +25,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
       };
     }
     
-    // Take first paragraph as overview
+    // Always take first paragraph as overview (company description)
     const overview = paragraphs[0];
     
     // Identify potential highlight points

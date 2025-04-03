@@ -92,3 +92,4 @@ export const perplexityPromptsByCategory = {
     
     Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), incluindo data e fonte.`
 };
+
