@@ -2,14 +2,28 @@
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./briefingService";
 import { categoryTitles } from "./briefingConstants";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface BriefingContentProps {
   currentBriefing: BriefingContentType;
   currentCategory: string;
+  error?: string;
 }
 
-const BriefingContent = ({ currentBriefing, currentCategory }: BriefingContentProps) => {
+const BriefingContent = ({ currentBriefing, currentCategory, error }: BriefingContentProps) => {
+  // If there's an error, show an error message
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4 mr-2" />
+        <AlertDescription className="text-sm">
+          {error}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <section>

@@ -13,6 +13,7 @@ interface UseBriefingProps {
 export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex }: UseBriefingProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [briefingCache, setBriefingCache] = useState<Record<string, BriefingContent>>({});
+  const [error, setError] = useState<string | null>(null);
 
   // Get the current briefing category based on the question index
   const currentBriefingCategory = questionToBriefingMap[currentQuestionIndex] || questionToBriefingMap[0];
@@ -28,6 +29,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     }
 
     setIsLoading(true);
+    setError(null);
     
     try {
       const briefingData = await fetchBriefingContent(category, companyName, companyWebsite);
@@ -39,6 +41,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
       }));
     } catch (error) {
       console.error('Error loading briefing content:', error);
+      setError("Não foi possível carregar informações da empresa. O serviço de análise pode estar indisponível no momento.");
       // Default content will be used from the currentBriefing variable
     } finally {
       setIsLoading(false);
@@ -48,6 +51,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
   // Handle refresh button click
   const handleRefreshAnalysis = async () => {
     setIsLoading(true);
+    setError(null);
     
     try {
       const briefingData = await fetchBriefingContent(
@@ -65,7 +69,8 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
       
       toast.success('Análise atualizada com sucesso!');
     } catch (error) {
-      // Error is already handled in fetchBriefingContent
+      setError("Não foi possível atualizar a análise. O serviço de análise pode estar indisponível no momento.");
+      toast.error('Não foi possível atualizar a análise. O serviço de análise pode estar indisponível no momento.');
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +85,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     isLoading,
     currentBriefing,
     currentBriefingCategory,
-    handleRefreshAnalysis
+    handleRefreshAnalysis,
+    error
   };
 };

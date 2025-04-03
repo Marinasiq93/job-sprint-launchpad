@@ -48,6 +48,35 @@ export interface BriefingContent {
   }>;
 }
 
+const createRichCompanyBriefing = (companyName: string): BriefingContent => {
+  // Create a rich default content with company name
+  return {
+    overview: `Estamos analisando informações sobre ${companyName}. No momento, estamos enfrentando dificuldades técnicas para conectar com nossa API de análise.`,
+    highlights: [
+      `Recomendamos visitar o site oficial de ${companyName} para obter informações atualizadas`,
+      "Consulte o LinkedIn da empresa para entender sua cultura e valores",
+      "Verifique reviews no Glassdoor para perspectivas de funcionários",
+      "Busque notícias recentes para compreender o contexto atual da empresa",
+      "Analise perfis de líderes da empresa nas redes sociais"
+    ],
+    summary: `Para uma análise mais completa sobre ${companyName}, tente novamente mais tarde quando nosso serviço de análise estiver disponível. Você também pode pesquisar manualmente no Google, LinkedIn, e outras fontes.`,
+    sources: [
+      {
+        title: `Site oficial de ${companyName}`,
+        url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+site+oficial`
+      },
+      {
+        title: `${companyName} no LinkedIn`,
+        url: `https://www.linkedin.com/company/${encodeURIComponent(companyName.toLowerCase().replace(/\s+/g, '-'))}`
+      },
+      {
+        title: `${companyName} no Glassdoor`,
+        url: `https://www.glassdoor.com.br/Avalia%C3%A7%C3%B5es/${encodeURIComponent(companyName)}-Avalia%C3%A7%C3%B5es`
+      }
+    ]
+  };
+};
+
 // Fetch content from Perplexity API
 export const fetchBriefingContent = async (
   category: string,
@@ -75,10 +104,30 @@ export const fetchBriefingContent = async (
     });
     
     if (!response.ok) {
+      // If we get a 404, it means the edge function is not deployed properly
+      if (response.status === 404) {
+        console.warn('Edge function not found, using fallback content');
+        return createRichCompanyBriefing(companyName);
+      }
       throw new Error('Falha ao buscar informações da empresa');
     }
     
     const data = await response.json();
+    
+    // Check if the response contains an error message
+    if (data.error) {
+      console.error('API returned an error:', data.error);
+      // Use the fallback data if there's an API error but also some content
+      if (data.overview && data.highlights && data.summary) {
+        return {
+          overview: data.overview,
+          highlights: data.highlights,
+          summary: data.summary,
+          sources: data.sources || []
+        };
+      }
+      throw new Error(data.error);
+    }
     
     return {
       overview: data.overview,
@@ -91,6 +140,8 @@ export const fetchBriefingContent = async (
     if (refresh) {
       toast.error('Não foi possível atualizar a análise. Tente novamente mais tarde.');
     }
-    throw error;
+    
+    // Return custom rich fallback content
+    return createRichCompanyBriefing(companyName);
   }
 };

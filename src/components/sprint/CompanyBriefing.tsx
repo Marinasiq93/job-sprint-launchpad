@@ -21,7 +21,8 @@ const CompanyBriefing = ({
     isLoading, 
     currentBriefing, 
     currentBriefingCategory, 
-    handleRefreshAnalysis 
+    handleRefreshAnalysis,
+    error
   } = useBriefing({
     companyName,
     companyWebsite,
@@ -38,6 +39,7 @@ const CompanyBriefing = ({
         <BriefingContent 
           currentBriefing={currentBriefing}
           currentCategory={currentBriefingCategory}
+          error={error || undefined}
         />
       </CardContent>
     </div>
