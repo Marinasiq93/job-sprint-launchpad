@@ -28,8 +28,8 @@ export default defineConfig(({ mode }) => ({
   },
   // Add test-specific configuration
   test: {
-    environment: 'jsdom',
     globals: true,
+    environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
     watch: false, // Disable watching during tests by default
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
