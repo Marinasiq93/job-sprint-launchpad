@@ -1,6 +1,6 @@
-
 import { toast } from "@/lib/toast";
 import { BRIEFING_CATEGORIES } from "./briefingConstants";
+import { supabase } from "@/integrations/supabase/client";
 
 // Perplexity prompts for each category
 export const perplexityPromptsByCategory = {
@@ -88,31 +88,21 @@ export const fetchBriefingContent = async (
     // Get the prompt for this category
     const prompt = perplexityPromptsByCategory[category](companyName, companyWebsite);
     
-    // Call Perplexity API through our Edge Function
-    const response = await fetch('/api/generate-briefing', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // Call Perplexity API through Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('generate-briefing', {
+      body: {
         prompt,
         category,
         companyName,
         companyWebsite,
         refresh // Signal to bypass any caching on the backend
-      }),
+      },
     });
     
-    if (!response.ok) {
-      // If we get a 404, it means the edge function is not deployed properly
-      if (response.status === 404) {
-        console.warn('Edge function not found, using fallback content');
-        return createRichCompanyBriefing(companyName);
-      }
-      throw new Error('Falha ao buscar informações da empresa');
+    if (error) {
+      console.error('Supabase Edge Function error:', error);
+      throw new Error('Falha ao buscar informações da empresa: ' + error.message);
     }
-    
-    const data = await response.json();
     
     // Check if the response contains an error message
     if (data.error) {
