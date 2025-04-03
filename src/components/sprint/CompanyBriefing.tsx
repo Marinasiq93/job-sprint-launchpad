@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -257,7 +257,7 @@ const CompanyBriefing = ({ companyName, companyWebsite, jobDescription, currentQ
   };
 
   // Fetch briefing content on initial render and when category changes
-  React.useEffect(() => {
+  useEffect(() => {
     fetchBriefingContent(currentBriefingCategory);
   }, [currentBriefingCategory, companyName, companyWebsite]);
 
