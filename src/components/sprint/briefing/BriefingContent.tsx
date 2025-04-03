@@ -2,16 +2,27 @@
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./briefingService";
 import { categoryTitles } from "./briefingConstants";
-import { ExternalLink, AlertCircle } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface BriefingContentProps {
   currentBriefing: BriefingContentType;
   currentCategory: string;
   error?: string;
+  isLoading?: boolean;
 }
 
-const BriefingContent = ({ currentBriefing, currentCategory, error }: BriefingContentProps) => {
+const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }: BriefingContentProps) => {
+  // If loading, show a loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+        <Loader2 className="h-10 w-10 animate-spin mb-4" />
+        <p>Analisando informações da empresa...</p>
+      </div>
+    );
+  }
+
   // If there's an error, show an error message
   if (error) {
     return (

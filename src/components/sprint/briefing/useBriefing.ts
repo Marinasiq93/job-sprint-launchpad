@@ -14,6 +14,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
   const [isLoading, setIsLoading] = useState(false);
   const [briefingCache, setBriefingCache] = useState<Record<string, BriefingContent>>({});
   const [error, setError] = useState<string | null>(null);
+  const [isApiAvailable, setIsApiAvailable] = useState<boolean | undefined>(undefined);
 
   // Get the current briefing category based on the question index
   const currentBriefingCategory = questionToBriefingMap[currentQuestionIndex] || questionToBriefingMap[0];
@@ -34,6 +35,15 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     try {
       const briefingData = await fetchBriefingContent(category, companyName, companyWebsite);
       
+      // Check if this is a demo response
+      if (briefingData.overview?.includes('Demonstração:') || 
+          briefingData.overview?.includes('demo') || 
+          briefingData.overview?.includes('Esta é uma versão de demonstração')) {
+        setIsApiAvailable(false);
+      } else {
+        setIsApiAvailable(true);
+      }
+      
       // Cache the result
       setBriefingCache(prev => ({
         ...prev,
@@ -42,6 +52,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     } catch (error) {
       console.error('Error loading briefing content:', error);
       setError("Não foi possível carregar informações da empresa. O serviço de análise pode estar indisponível no momento.");
+      setIsApiAvailable(false);
       // Default content will be used from the currentBriefing variable
     } finally {
       setIsLoading(false);
@@ -61,15 +72,25 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
         true // Force refresh
       );
       
+      // Check if this is a demo response
+      if (briefingData.overview?.includes('Demonstração:') || 
+          briefingData.overview?.includes('demo') || 
+          briefingData.overview?.includes('Esta é uma versão de demonstração')) {
+        setIsApiAvailable(false);
+        toast.info('Modo de demonstração: API não disponível. Configure a API Perplexity para análise completa.');
+      } else {
+        setIsApiAvailable(true);
+        toast.success('Análise atualizada com sucesso!');
+      }
+      
       // Update the cache with new data
       setBriefingCache(prev => ({
         ...prev,
         [currentBriefingCategory]: briefingData
       }));
-      
-      toast.success('Análise atualizada com sucesso!');
     } catch (error) {
       setError("Não foi possível atualizar a análise. O serviço de análise pode estar indisponível no momento.");
+      setIsApiAvailable(false);
       toast.error('Não foi possível atualizar a análise. O serviço de análise pode estar indisponível no momento.');
     } finally {
       setIsLoading(false);
@@ -86,6 +107,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     currentBriefing,
     currentBriefingCategory,
     handleRefreshAnalysis,
-    error
+    error,
+    isApiAvailable
   };
 };
