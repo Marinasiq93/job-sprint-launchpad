@@ -1,6 +1,6 @@
 
 // This file contains setup for your tests
-// You can add global mocks, polyfills, or other setup code here
+import '@testing-library/jest-dom';
 
 // Silence React 18 console errors about ReactDOM.render being deprecated
 const originalConsoleError = console.error;

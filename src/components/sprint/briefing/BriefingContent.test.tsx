@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import BriefingContent from './BriefingContent';
 import { BriefingContent as BriefingContentType } from "./briefingService";
+import { describe, test, expect } from 'vitest';
 
 // Mock data
 const mockBriefing: BriefingContentType = {
