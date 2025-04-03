@@ -8,9 +8,14 @@ export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Me dê um overview da empresa ${companyName}: o que ela faz, seu tamanho, mercado, e principais produtos. 
-    Em seguida, aprofunde sobre sua cultura organizacional e valores. Inclua informações do site oficial, 
-    entrevistas com fundadores ou funcionários, e reviews públicos como Glassdoor. 
-    Há algo que indique o que essa empresa valoriza no dia a dia e como isso se traduz em práticas internas?`,
+    Em seguida, dedique a maior parte da sua análise aos VALORES CORPORATIVOS da empresa. Quais são os 
+    princípios e valores explicitamente declarados? Como esses valores influenciam a cultura organizacional?
+    Busque informações específicas sobre valores como: inovação, diversidade, sustentabilidade, 
+    transparência, trabalho em equipe, foco no cliente, etc. Mencione exemplos concretos de como 
+    esses valores são aplicados na prática, se houver informação disponível.
+    Inclua informações do site oficial, entrevistas com fundadores ou funcionários, 
+    e reviews públicos como Glassdoor. Se possível, destaque qualquer valor que a empresa 
+    demonstre priorizar acima dos outros.`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.

@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, InfoIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface BriefingHeaderProps {
@@ -18,9 +18,19 @@ const BriefingHeader = ({ onRefresh, isLoading, isApiAvailable }: BriefingHeader
         <div className="flex items-center gap-2">
           <CardTitle className="text-lg font-medium">Análise da Empresa</CardTitle>
           {isApiAvailable === false && (
-            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-              Demo
-            </Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 flex items-center gap-1">
+                    <InfoIcon className="h-3 w-3" /> 
+                    Demo
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Conteúdo de demonstração. Configure a API Perplexity para análises detalhadas.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
         <TooltipProvider>
