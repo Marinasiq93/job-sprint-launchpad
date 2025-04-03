@@ -44,9 +44,9 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
             {categoryTitles[currentCategory]}
           </Badge>
         </h3>
-        <p className="text-sm">
+        <div className="text-sm mb-2 leading-relaxed">
           {currentBriefing.overview}
-        </p>
+        </div>
       </section>
       
       <Separator />
@@ -54,7 +54,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       <section>
         <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
           <Check className="h-4 w-4 text-emerald-500" />
-          Pontos Principais
+          Pontos-Chave
         </h3>
         <ul className="text-sm space-y-2">
           {currentBriefing.highlights.map((highlight, index) => (
@@ -73,8 +73,8 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       <Separator />
       
       <section>
-        <h3 className="font-medium text-sm text-gray-700 mb-2">Análise de Contexto</h3>
-        <div className="text-sm bg-gray-50 p-3 rounded-md border border-gray-100">
+        <h3 className="font-medium text-sm text-gray-700 mb-2">Resumo</h3>
+        <div className="text-sm bg-gray-50 p-3 rounded-md border border-gray-100 leading-relaxed">
           {currentBriefing.summary}
         </div>
       </section>
@@ -130,7 +130,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <section>
             <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
               <LinkIcon className="h-4 w-4 text-gray-600" />
-              Fontes de Informação
+              Fontes
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {currentBriefing.sources.map((source, index) => (

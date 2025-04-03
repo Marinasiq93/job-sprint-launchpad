@@ -29,8 +29,14 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             - Inclua citações diretas quando disponíveis (entre aspas)
             - Seja específico e factual, evitando generalizações
             - Inclua URLs específicas de suas fontes sempre que possível
+            - EVITE REPETIÇÕES DE INFORMAÇÕES EM DIFERENTES SEÇÕES
             - Para notícias, use o formato: [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE com URL]
-            - Formate notícias em lista numerada 1., 2., 3.`
+            - Formate as notícias recentes (máximo 3 notícias) da seguinte forma:
+            
+            NOTÍCIAS RECENTES:
+            1. [DATA] - [TÍTULO] - [FONTE: URL]
+            2. [DATA] - [TÍTULO] - [FONTE: URL]
+            3. [DATA] - [TÍTULO] - [FONTE: URL]`
           },
           {
             role: 'user',
@@ -38,7 +44,7 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
           }
         ],
         temperature: 0.2,
-        max_tokens: 1000
+        max_tokens: 1500
       })
     });
     
