@@ -4,103 +4,59 @@ export const extractRecentNews = (content: string, companyName: string): Array<{
   const recentNews: Array<{title: string, date?: string, url?: string}> = [];
   const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
   
-  // First look for the NOTÍCIAS RECENTES section
-  const newsSectionRegex = /(?:NOTÍCIAS RECENTES|RECENT NEWS|NOTÍCIAS|NEWS):?\s*([\s\S]*?)(?:\n\n|\n##|\n$)/i;
+  // Look for the NOTÍCIAS RECENTES section
+  const newsSectionRegex = /(?:##\s+)?(?:NOTÍCIAS RECENTES|RECENT NEWS|NOTÍCIAS|NEWS):?\s*([\s\S]*?)(?:\n\n|\n##|\n?Citations:|\n?$)/i;
   const newsSection = content.match(newsSectionRegex);
   
   if (newsSection && newsSection[1]) {
-    // Process dedicated NEWS section
-    const newsItems = newsSection[1].split(/\n+/).filter(line => line.trim().length > 0);
+    // Look for the numbered news items in format: 1. [DATE] - TITLE - SOURCE: URL
+    const newsItemRegex = /\d+\.\s+\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?\s*[-–]\s*([^-\n]+)(?:[-–]\s*(?:[Ff]onte:?\s*)?(.*?))?(?:\n|$)/g;
+    let match;
     
-    for (const item of newsItems) {
-      // Try to parse in format: NUMBER. [DATE] - TITLE - SOURCE: URL
-      const newsItemMatch = item.match(/(?:\d+\.?\s+)?(?:\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?)?\s*[-–]?\s*([^-\n]+)(?:[-–]\s*(?:[Ff]onte:?\s*)?(.+?))?$/);
+    while ((match = newsItemRegex.exec(newsSection[1])) !== null) {
+      const date = match[1]?.trim();
+      const title = match[2]?.trim();
+      const source = match[3]?.trim();
       
-      if (newsItemMatch) {
-        const date = newsItemMatch[1] ? newsItemMatch[1].trim() : undefined;
-        const title = newsItemMatch[2] ? newsItemMatch[2].trim() : "";
-        const source = newsItemMatch[3] ? newsItemMatch[3].trim() : undefined;
-        
-        // Extract URL if it exists in the source
-        const urlMatch = source ? source.match(urlRegex) : null;
-        const url = urlMatch ? urlMatch[0] : undefined;
-        
-        if (title && title.length > 10) {
-          recentNews.push({
-            title,
-            date,
-            url
-          });
-        }
-      }
-    }
-  }
-  
-  // Look for numbered list items with dates that might be news
-  if (recentNews.length === 0) {
-    const dateNewsRegex = /(\d+)\.\s+(?:\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?)?\s*[-–]?\s*([^-\n]+)(?:[-–]\s*(?:[Ff]onte:?\s*)?(.+?))?(?:\n|$)/g;
-    let newsMatch;
-    
-    while ((newsMatch = dateNewsRegex.exec(content)) !== null && recentNews.length < 3) {
-      const date = newsMatch[2] ? newsMatch[2].trim() : undefined;
-      const title = newsMatch[3] ? newsMatch[3].trim() : "";
-      const source = newsMatch[4] ? newsMatch[4].trim() : undefined;
+      // Extract URL if it exists in the source
+      const urlMatch = source ? source.match(urlRegex) : null;
+      const url = urlMatch ? urlMatch[0] : undefined;
       
-      // Extract URL if it exists in the source or title
-      const sourceUrlMatch = source ? source.match(urlRegex) : null;
-      const titleUrlMatch = title ? title.match(urlRegex) : null;
-      const url = sourceUrlMatch ? sourceUrlMatch[0] : (titleUrlMatch ? titleUrlMatch[0] : undefined);
-      
-      // Clean title to remove any URLs
-      const cleanTitle = title.replace(urlRegex, '').trim();
-      
-      if (cleanTitle && cleanTitle.length > 10 && date) {
+      if (title && title.length > 0) {
         recentNews.push({
-          title: cleanTitle,
+          title,
           date,
           url
         });
       }
+      
+      if (recentNews.length >= 3) break;
     }
   }
   
-  // If we still have no news items, scan the whole content for any sentences with dates
+  // If no news items found with the above format, try an alternative format
   if (recentNews.length === 0) {
-    const fullContent = content.replace(/\n+/g, ' ');
-    const datePatterns = [
-      /(\d{1,2}\/\d{1,2}\/\d{2,4})/,  // DD/MM/YYYY
-      /(\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)/  // DD de Month [de YYYY]
-    ];
+    const alternativeNewsRegex = /(?:^|\n)(\d+)\.\s+(?:\*\*)?(\[?(?:\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?)\s*[-–]\s*([^\n]*?)(?:\s*[-–]\s*(.*?))?(?:\n|$)/g;
+    let match;
     
-    for (const datePattern of datePatterns) {
-      const dateRegex = new RegExp(`${datePattern.source}[\\s\\-:]*([^.\\n]{10,100})`, 'g');
-      let dateMatch;
+    while ((match = alternativeNewsRegex.exec(content)) !== null) {
+      const date = match[2]?.trim();
+      const title = match[3]?.trim();
+      const source = match[4]?.trim();
       
-      while ((dateMatch = dateRegex.exec(fullContent)) !== null && recentNews.length < 3) {
-        const date = dateMatch[1].trim();
-        const title = dateMatch[2].trim();
-        
-        // Look for a URL near this date/title
-        const contextRegex = new RegExp(`.{0,100}${dateMatch[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.{0,100}`, 'g');
-        const contextMatch = contextRegex.exec(fullContent);
-        let url;
-        
-        if (contextMatch) {
-          const urlMatch = contextMatch[0].match(urlRegex);
-          url = urlMatch ? urlMatch[0] : undefined;
-        }
-        
-        if (title && !title.match(/^https?:\/\//) && 
-            !recentNews.some(news => news.title.includes(title.substring(0, 20)))) {
-          recentNews.push({
-            title,
-            date,
-            url
-          });
-        }
+      // Extract URL if it exists in the source
+      const urlMatch = source ? source.match(urlRegex) : null;
+      const url = urlMatch ? urlMatch[0] : undefined;
+      
+      if (title && title.length > 0) {
+        recentNews.push({
+          title,
+          date,
+          url
+        });
       }
       
-      if (recentNews.length > 0) break;
+      if (recentNews.length >= 3) break;
     }
   }
   

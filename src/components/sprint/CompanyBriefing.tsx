@@ -36,6 +36,8 @@ const CompanyBriefing = ({
     currentQuestionIndex
   });
 
+  const showApiWarning = !isApiAvailable && !isLoading && !error;
+
   return (
     <div className="h-full flex flex-col">
       <BriefingHeader 
@@ -44,7 +46,7 @@ const CompanyBriefing = ({
         isApiAvailable={isApiAvailable}
       />
       <CardContent className="flex-1 overflow-auto pb-6">
-        {!isApiAvailable && (
+        {showApiWarning && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -52,6 +54,7 @@ const CompanyBriefing = ({
             </AlertDescription>
           </Alert>
         )}
+        
         <BriefingContent 
           currentBriefing={currentBriefing}
           currentCategory={currentBriefingCategory}

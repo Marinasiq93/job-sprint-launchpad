@@ -36,6 +36,11 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
+  // Process the overview content to handle markdown formatting
+  const processedOverview = currentBriefing.overview
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>');
+
   return (
     <div className="space-y-4">
       <section>
@@ -44,31 +49,36 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
             {categoryTitles[currentCategory]}
           </Badge>
         </h3>
-        <div className="text-sm mb-2 leading-relaxed">
-          {currentBriefing.overview}
-        </div>
+        <div 
+          className="text-sm mb-2 leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: processedOverview }}
+        />
       </section>
       
-      <Separator />
-      
-      <section>
-        <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
-          <Check className="h-4 w-4 text-emerald-500" />
-          Pontos-Chave
-        </h3>
-        <ul className="text-sm space-y-2">
-          {currentBriefing.highlights.map((highlight, index) => (
-            <li key={index} className="flex items-start">
-              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium mr-2 flex-shrink-0">
-                {index + 1}
-              </span>
-              <span className={highlight.startsWith('"') ? "italic" : ""}>
-                {highlight}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {currentBriefing.highlights.length > 0 && (
+        <>
+          <Separator />
+          
+          <section>
+            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-emerald-500" />
+              Pontos-Chave
+            </h3>
+            <ul className="text-sm space-y-2">
+              {currentBriefing.highlights.map((highlight, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium mr-2 flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <span className={highlight.startsWith('"') ? "italic" : ""}>
+                    {highlight}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
       
       <Separator />
       

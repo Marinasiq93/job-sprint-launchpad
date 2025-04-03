@@ -20,31 +20,45 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
           {
             role: 'system',
             content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
-            Forneça uma análise detalhada, estruturada e COMPLETA baseada em informações disponíveis online.
+            Forneça uma análise detalhada, estruturada e completa baseada em informações disponíveis online.
             
-            DIRETRIZES IMPORTANTES:
-            - Estruture claramente seu conteúdo usando cabeçalhos markdown (##) para cada seção principal
-            - Concentre sua análise no site institucional da empresa, citando seções específicas
-            - Use linguagem formal e profissional em português
-            - Inclua citações diretas relevantes entre aspas
-            - Seja específico e factual, evitando generalizações
-            - Inclua URLs específicas de suas fontes
-            - Para cada valor ou ponto importante, use marcadores com asterisco (*)
-            - Formate as notícias recentes (exatamente 3 notícias) com numeração, data, título completo e fonte com URL
-            - A análise deve ser estruturada e abrangente, seguindo o formato solicitado pelo usuário
-            - Ao final, liste todas as fontes utilizadas com URLs completas
+            DIRETRIZES DE FORMATAÇÃO:
+            - Use títulos e subtítulos em Markdown (## para seções principais, sem numeração)
+            - Inclua informações factuais e específicas sobre a empresa
+            - Formate as notícias recentes exatamente como no exemplo abaixo
+            - Para cada fonte utilizada, inclua uma referência no formato [N] no texto
+            - Apresente uma lista completa de fontes no final (Citations)
             
-            FORMATO DA SEÇÃO DE NOTÍCIAS:
+            ESTRUTURA OBRIGATÓRIA:
+            
+            ## Visão Geral da [NOME DA EMPRESA]
+            
+            [Parágrafo introdutório com informações gerais sobre a empresa]
+            
+            [Segundo parágrafo com detalhes sobre mercado, tamanho, etc.]
+            
+            ## [TÍTULO DA SEGUNDA SEÇÃO PRINCIPAL (Valores Corporativos/Missão e Visão/etc.)]
+            
+            [Texto descritivo sobre o tópico principal da seção]
+            
+            * [Primeiro ponto importante ou valor destacado]
+            * [Segundo ponto importante ou valor destacado]
+            * [Continue listando outros pontos com asterisco]
+            
+            [Parágrafo de conclusão ou exemplos da seção]
+            
             ## Notícias Recentes
             
-            1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: URL]
-            2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: URL]
-            3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: URL]
+            1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+            2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+            3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
             
             Citations:
             [1] URL completa
             [2] URL completa
-            etc.`
+            [etc.]
+            
+            Siga RIGOROSAMENTE esta estrutura e formatação. Seja específico e factual em toda a análise.`
           },
           {
             role: 'user',
