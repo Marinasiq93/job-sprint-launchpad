@@ -1,3 +1,4 @@
+
 import { toast } from "@/lib/toast";
 import { BRIEFING_CATEGORIES } from "./briefingConstants";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,9 +86,12 @@ export const fetchBriefingContent = async (
   refresh = false
 ): Promise<BriefingContent> => {
   try {
+    console.log(`Fetching briefing for category "${category}" and company "${companyName}"`);
+
     // Get the prompt for this category
     const prompt = perplexityPromptsByCategory[category](companyName, companyWebsite);
     
+    console.log('Calling Supabase Edge Function: generate-briefing');
     // Call Perplexity API through Supabase Edge Function
     const { data, error } = await supabase.functions.invoke('generate-briefing', {
       body: {
@@ -103,6 +107,8 @@ export const fetchBriefingContent = async (
       console.error('Supabase Edge Function error:', error);
       throw new Error('Falha ao buscar informações da empresa: ' + error.message);
     }
+    
+    console.log('Edge function response received:', data);
     
     // Check if the response contains an error message
     if (data.error) {
