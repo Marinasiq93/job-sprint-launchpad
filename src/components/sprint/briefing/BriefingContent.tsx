@@ -85,9 +85,10 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
                           href={news.url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center"
                         >
-                          {news.title}
+                          <span>{news.title}</span>
+                          <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
                         </a>
                       ) : (
                         <span className="font-medium">{news.title}</span>
