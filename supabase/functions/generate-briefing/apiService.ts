@@ -20,16 +20,24 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
           {
             role: 'system',
             content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
-            Forneça uma análise detalhada baseada em informações disponíveis online.
-            IMPORTANTE: Concentre sua análise no site institucional da empresa sempre que possível.
-            Comece SEMPRE com um breve parágrafo descrevendo o que a empresa faz, seu mercado e produtos/serviços principais.`
+            Forneça uma análise detalhada e ESTRUTURADA baseada em informações disponíveis online.
+            
+            DIRETRIZES IMPORTANTES:
+            - Concentre sua análise no site institucional da empresa, citando seções específicas
+            - Use linguagem formal e profissional
+            - Organize o conteúdo claramente com seções bem definidas
+            - Inclua citações diretas quando disponíveis (entre aspas)
+            - Seja específico e factual, evitando generalizações
+            - Inclua URLs específicas de suas fontes sempre que possível
+            - Para notícias, use o formato: [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE com URL]
+            - Formate notícias em lista numerada 1., 2., 3.`
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 1000
       })
     });

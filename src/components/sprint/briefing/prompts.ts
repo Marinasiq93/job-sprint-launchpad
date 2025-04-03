@@ -1,3 +1,4 @@
+
 import { BRIEFING_CATEGORIES } from "./briefingConstants";
 
 // Perplexity prompts for each category
@@ -19,7 +20,12 @@ export const perplexityPromptsByCategory = {
     * Entrevistas com fundadores ou executivos que mencionem valores
     * Reviews de funcionários no Glassdoor sobre a cultura
     
-    Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), incluindo data e fonte.`,
+    ESTRUTURE SUA RESPOSTA COM:
+    1. Overview da empresa (1 parágrafo)
+    2. Valores Explícitos (em lista com bullets)
+    3. Como esses valores se aplicam (2-3 parágrafos)
+    4. Citações relevantes sobre a cultura (em itálico)
+    5. Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato: [DATA] - [TÍTULO] - [FONTE/URL]`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -35,7 +41,12 @@ export const perplexityPromptsByCategory = {
     Busque essas informações prioritariamente no site institucional da empresa, em seções como "Sobre Nós", 
     "Quem Somos", "Missão e Visão", ou similares.
     
-    Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), incluindo data e fonte.`,
+    ESTRUTURE SUA RESPOSTA COM:
+    1. Overview da empresa (1 parágrafo)
+    2. Missão Oficial (preferencialmente com citação direta)
+    3. Visão de Futuro (preferencialmente com citação direta)
+    4. Propósito e Impacto Social (se mencionado)
+    5. Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato: [DATA] - [TÍTULO] - [FONTE/URL]`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -51,7 +62,12 @@ export const perplexityPromptsByCategory = {
     
     Consulte o site oficial da empresa, páginas de produtos, casos de uso, e depoimentos de clientes.
     
-    Finalize com 3 NOTÍCIAS RECENTES sobre a empresa ou seus produtos (dos últimos 6 meses), incluindo data e fonte.`,
+    ESTRUTURE SUA RESPOSTA COM:
+    1. Overview do Produto/Serviço (1 parágrafo)
+    2. Perfil dos Usuários/Clientes (lista com bullets)
+    3. Setores e Aplicações (2-3 parágrafos)
+    4. Mercado e Competidores (mencione 3-5 principais concorrentes)
+    5. Finalize com 3 NOTÍCIAS RECENTES sobre o produto/serviço (dos últimos 6 meses), no formato: [DATA] - [TÍTULO] - [FONTE/URL]`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -69,7 +85,12 @@ export const perplexityPromptsByCategory = {
     Busque essas informações no site da empresa (seção "Equipe", "Liderança", "Sobre Nós"), LinkedIn, 
     e entrevistas públicas.
     
-    Finalize com 3 NOTÍCIAS RECENTES sobre a empresa ou sua liderança (dos últimos 6 meses), incluindo data e fonte.`,
+    ESTRUTURE SUA RESPOSTA COM:
+    1. Overview da Empresa (1 parágrafo)
+    2. Fundadores e História de Fundação (1-2 parágrafos)
+    3. Principais Executivos (lista com nome, cargo e breve background)
+    4. Estilo de Liderança e Cultura (baseado em entrevistas/declarações)
+    5. Finalize com 3 NOTÍCIAS RECENTES sobre a liderança/empresa (dos últimos 6 meses), no formato: [DATA] - [TÍTULO] - [FONTE/URL]`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -87,5 +108,10 @@ export const perplexityPromptsByCategory = {
     Busque essa cronologia no site da empresa (seção "História", "Sobre Nós", "Nossa Jornada"), 
     releases de imprensa, e plataformas como Crunchbase.
     
-    Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), incluindo data e fonte.`
+    ESTRUTURE SUA RESPOSTA COM:
+    1. Overview da Empresa Hoje (1 parágrafo)
+    2. Fundação (quando, onde, por quem, motivação inicial)
+    3. Linha do Tempo (liste cronologicamente 5-7 marcos importantes, com anos)
+    4. Crescimento e Investimentos (mencione rodadas de funding, aquisições)
+    5. Finalize com 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato: [DATA] - [TÍTULO] - [FONTE/URL]`
 };

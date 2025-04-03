@@ -2,7 +2,7 @@
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./briefingService";
 import { categoryTitles } from "./briefingConstants";
-import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
@@ -39,7 +39,11 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
   return (
     <div className="space-y-4">
       <section>
-        <h3 className="font-medium text-sm text-muted-foreground mb-2">{categoryTitles[currentCategory]}</h3>
+        <h3 className="font-semibold text-sm flex items-center gap-1.5 text-gray-700 mb-2">
+          <Badge variant="outline" className="bg-gray-50 text-gray-800 border-gray-200">
+            {categoryTitles[currentCategory]}
+          </Badge>
+        </h3>
         <p className="text-sm">
           {currentBriefing.overview}
         </p>
@@ -48,10 +52,20 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       <Separator />
       
       <section>
-        <h3 className="font-medium text-sm text-muted-foreground mb-2">Pontos Principais</h3>
-        <ul className="text-sm space-y-1 list-disc pl-5">
+        <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
+          <Check className="h-4 w-4 text-emerald-500" />
+          Pontos Principais
+        </h3>
+        <ul className="text-sm space-y-2">
           {currentBriefing.highlights.map((highlight, index) => (
-            <li key={index}>{highlight}</li>
+            <li key={index} className="flex items-start">
+              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium mr-2 flex-shrink-0">
+                {index + 1}
+              </span>
+              <span className={highlight.startsWith('"') ? "italic" : ""}>
+                {highlight}
+              </span>
+            </li>
           ))}
         </ul>
       </section>
@@ -59,10 +73,10 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       <Separator />
       
       <section>
-        <h3 className="font-medium text-sm text-muted-foreground mb-2">Análise de Contexto</h3>
-        <p className="text-sm">
+        <h3 className="font-medium text-sm text-gray-700 mb-2">Análise de Contexto</h3>
+        <div className="text-sm bg-gray-50 p-3 rounded-md border border-gray-100">
           {currentBriefing.summary}
-        </p>
+        </div>
       </section>
       
       {currentBriefing.recentNews && currentBriefing.recentNews.length > 0 && (
@@ -70,14 +84,16 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <Separator />
           
           <section>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-1">
-              <Newspaper className="h-4 w-4" />
+            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
+              <Newspaper className="h-4 w-4 text-blue-600" />
               Notícias Recentes
-              <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">Novo</Badge>
+              <Badge variant="outline" className="ml-1 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                Atualizado
+              </Badge>
             </h3>
-            <ul className="text-sm space-y-2">
+            <ul className="text-sm space-y-2.5">
               {currentBriefing.recentNews.map((news, index) => (
-                <li key={index} className="border-l-2 border-blue-200 pl-3 py-1">
+                <li key={index} className="border-l-2 border-blue-200 pl-3 py-1 hover:border-blue-400 transition-colors">
                   <div className="flex flex-col">
                     <div>
                       {news.url ? (
@@ -95,7 +111,9 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
                       )}
                     </div>
                     {news.date && (
-                      <span className="text-xs text-muted-foreground mt-1">{news.date}</span>
+                      <span className="text-xs text-muted-foreground mt-1 font-medium">
+                        {news.date}
+                      </span>
                     )}
                   </div>
                 </li>
@@ -110,25 +128,24 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <Separator />
           
           <section>
-            <h3 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-1">
-              <LinkIcon className="h-4 w-4" />
+            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
+              <LinkIcon className="h-4 w-4 text-gray-600" />
               Fontes de Informação
             </h3>
-            <ul className="text-sm space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {currentBriefing.sources.map((source, index) => (
-                <li key={index} className="flex items-start">
-                  <ExternalLink className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                  <a 
-                    href={source.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {source.title || source.url}
-                  </a>
-                </li>
+                <a 
+                  key={index}
+                  href={source.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm flex items-center bg-gray-50 p-2 rounded-md hover:bg-gray-100 transition-colors text-blue-600 hover:text-blue-800"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                  <span className="truncate text-xs">{source.title || source.url}</span>
+                </a>
               ))}
-            </ul>
+            </div>
           </section>
         </>
       )}

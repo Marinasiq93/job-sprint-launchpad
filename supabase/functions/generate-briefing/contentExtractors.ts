@@ -8,25 +8,63 @@ export const extractHighlights = (content: string): string[] => {
   // Look for bullet points or numbered lists
   const bulletRegex = /[•\-*]\s+([^\n]+)/g;
   const numberedRegex = /\d+\.\s+([^\n]+)/g;
-  let bulletMatch;
-  let numberedMatch;
+  const highlightSectionRegex = /(?:principais pontos|destaques|valores|princípios|características)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n###|$)/i;
   
-  while ((bulletMatch = bulletRegex.exec(content)) !== null) {
-    highlights.push(bulletMatch[1]);
+  // First try to find a dedicated highlights section
+  const highlightSection = content.match(highlightSectionRegex);
+  if (highlightSection && highlightSection[1]) {
+    const sectionContent = highlightSection[1];
+    
+    let bulletMatch;
+    while ((bulletMatch = bulletRegex.exec(sectionContent)) !== null) {
+      if (bulletMatch[1].trim().length > 0) {
+        highlights.push(bulletMatch[1].trim());
+      }
+    }
+    
+    let numberedMatch;
+    while ((numberedMatch = numberedRegex.exec(sectionContent)) !== null) {
+      if (numberedMatch[1].trim().length > 0) {
+        highlights.push(numberedMatch[1].trim());
+      }
+    }
   }
   
-  while ((numberedMatch = numberedRegex.exec(content)) !== null) {
-    highlights.push(numberedMatch[1]);
+  // If no highlights found in specific section, look throughout the content
+  if (highlights.length === 0) {
+    let bulletMatch;
+    while ((bulletMatch = bulletRegex.exec(content)) !== null) {
+      if (bulletMatch[1].trim().length > 0) {
+        highlights.push(bulletMatch[1].trim());
+      }
+    }
   }
   
-  // If no bullet points, extract some sentences from the middle of the content
+  // Extract any quoted text as potential highlights
+  if (highlights.length < 3) {
+    const quoteRegex = /"([^"]+)"|"([^"]+)"|'([^']+)'/g;
+    let quoteMatch;
+    while ((quoteMatch = quoteRegex.exec(content)) !== null && highlights.length < 5) {
+      const quote = quoteMatch[1] || quoteMatch[2] || quoteMatch[3];
+      if (quote && quote.length > 10 && quote.length < 150) {
+        highlights.push(`"${quote}"`);
+      }
+    }
+  }
+  
+  // If still no highlights, extract key sentences from the middle of the content
   if (highlights.length === 0) {
     const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
     // Skip first few and last few sentences (likely intro and conclusion)
     if (sentences.length > 6) {
-      highlights = sentences.slice(2, 7).map(s => s.trim());
+      highlights = sentences.slice(2, 7)
+        .map(s => s.trim())
+        .filter(s => s.length > 20 && s.length < 150); // Filter out very short or long sentences
     } else if (sentences.length > 0) {
-      highlights = sentences.slice(0, Math.min(5, sentences.length)).map(s => s.trim());
+      highlights = sentences
+        .slice(0, Math.min(5, sentences.length))
+        .map(s => s.trim())
+        .filter(s => s.length > 20 && s.length < 150);
     }
   }
   
@@ -39,38 +77,74 @@ export const extractHighlights = (content: string): string[] => {
 // Extract sources from content
 export const extractSources = (content: string, companyName: string): Array<{title: string, url: string}> => {
   const sources: Array<{title: string, url: string}> = [];
-  const urlRegex = /(https?:\/\/[^\s\)\"\']+)/g;
+  const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
   const urls = [...new Set(content.match(urlRegex) || [])]; // Use Set to remove duplicates
   
   // Look for explicit mentions of sources
-  const sourceRegex = /(?:fonte|source|referência|referencia|link)s?:\s*(https?:\/\/[^\s\)\"\']+)/gi;
-  let sourceMatch;
+  const sourceSectionRegex = /(?:fontes|sources|referências|referencias|links)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n###|$)/i;
+  const sourceSection = content.match(sourceSectionRegex);
   
-  while ((sourceMatch = sourceRegex.exec(content)) !== null) {
-    const url = sourceMatch[1];
-    if (url && !sources.some(s => s.url === url)) {
-      sources.push({
-        title: `Fonte: ${url.split("//")[1]?.split("/")[0] || url}`,
-        url: url
+  if (sourceSection && sourceSection[1]) {
+    const sectionContent = sourceSection[1];
+    
+    // Look for formatted sources with titles
+    const formattedSourceRegex = /(?:[-•*]|\d+\.)\s+([^:]+):\s*(https?:\/\/[^\s\)\"\'\]]+)/g;
+    let formattedMatch;
+    
+    while ((formattedMatch = formattedSourceRegex.exec(sectionContent)) !== null) {
+      if (formattedMatch[1] && formattedMatch[2]) {
+        sources.push({
+          title: formattedMatch[1].trim(),
+          url: formattedMatch[2].trim()
+        });
+      }
+    }
+    
+    // If no formatted sources found, extract all URLs from the section
+    if (sources.length === 0) {
+      const sectionUrls = [...new Set(sectionContent.match(urlRegex) || [])];
+      sectionUrls.forEach(url => {
+        if (!sources.some(s => s.url === url)) {
+          // Try to find any text preceding the URL
+          const titleRegex = new RegExp(`([^\\n.]+)\\s*${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+          const titleMatch = sectionContent.match(titleRegex);
+          
+          sources.push({
+            title: titleMatch ? titleMatch[1].trim() : getDomainName(url),
+            url: url
+          });
+        }
       });
     }
   }
   
-  // If no explicit sources found, use all URLs in the content
+  // If no explicit sources found, look for URLs throughout the content
   if (sources.length === 0) {
     urls.slice(0, 5).forEach(url => {
       if (!sources.some(s => s.url === url)) {
         // Try to extract domain name for better readability
-        const domain = url.split("//")[1]?.split("/")[0] || url;
-        let title = `${domain}`;
+        const domain = getDomainName(url);
+        let title = domain;
         
         // Try to identify common domains
         if (domain.includes("linkedin.com")) {
           title = `LinkedIn: ${companyName}`;
         } else if (domain.includes("glassdoor")) {
           title = `Glassdoor: Avaliações de ${companyName}`;
-        } else if (domain.includes(companyName.toLowerCase().replace(/\s+/g, ''))) {
+        } else if (companyName && domain.includes(companyName.toLowerCase().replace(/\s+/g, ''))) {
           title = `Site oficial: ${domain}`;
+        } else {
+          // Try to find context around the URL
+          const contextRegex = new RegExp(`.{0,50}${url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.{0,30}`, 'i');
+          const contextMatch = content.match(contextRegex);
+          if (contextMatch) {
+            // Extract potential title from context
+            const beforeUrl = contextMatch[0].split(url)[0].trim();
+            if (beforeUrl && beforeUrl.length > 5) {
+              const lastSentence = beforeUrl.split(/[.!?]\s+/).pop() || beforeUrl;
+              title = lastSentence;
+            }
+          }
         }
         
         sources.push({
@@ -96,71 +170,97 @@ export const extractSources = (content: string, companyName: string): Array<{tit
   return sources;
 };
 
+// Helper function to get domain name from URL
+const getDomainName = (url: string): string => {
+  try {
+    return url.split("//")[1]?.split("/")[0] || url;
+  } catch {
+    return url;
+  }
+};
+
 // Extract news items from content
 export const extractRecentNews = (content: string, companyName: string): Array<{title: string, date?: string, url?: string}> => {
   const recentNews: Array<{title: string, date?: string, url?: string}> = [];
-  const urlRegex = /(https?:\/\/[^\s\)\"\']+)/g;
+  const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
   
-  // Look for news sections
-  const newsRegex = /(?:notícias|novidades|recentes|últimas).*?\n(.*?)(?:\n\n|\n###)/gis;
-  const newsMatch = content.match(newsRegex);
+  // Look for a dedicated news section
+  const newsSectionRegex = /(?:notícias|novidades|recentes|últimas)(?:[:\n]+)([\s\S]*?)(?:\n\n|\n###|$)/i;
+  const newsSection = content.match(newsSectionRegex);
   
-  if (newsMatch) {
-    // Extract individual news items
-    const newsItems = newsMatch[0].split('\n').filter(line => 
-      line.trim().length > 0 && 
-      !line.match(/notícias|novidades|recentes|últimas/i)
-    );
-    
-    // Process each news item (up to 3)
-    for (let i = 0; i < Math.min(3, newsItems.length); i++) {
-      const item = newsItems[i];
+  // First pattern: [DATE] - [TITLE] - [SOURCE/URL]
+  const newsPatternRegex = /(?:[-•*]|\d+\.)\s*(?:\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?)?\s*[-–]\s*([^-–\n]+)(?:[-–]\s*(.+?))?(?:\n|$)/gi;
+  
+  if (newsSection && newsSection[1]) {
+    let newsMatch;
+    // Try to parse using the specified format first
+    while ((newsMatch = newsPatternRegex.exec(newsSection[1])) !== null && recentNews.length < 3) {
+      const date = newsMatch[1] ? newsMatch[1].trim() : undefined;
+      const title = newsMatch[2] ? newsMatch[2].trim() : "";
+      const sourceOrUrl = newsMatch[3] ? newsMatch[3].trim() : undefined;
       
-      // Try to extract date if present
-      const dateRegex = /(\d{1,2}\/\d{1,2}\/\d{2,4})|(\d{1,2}\s+de\s+[a-zç]+\s+de\s+\d{2,4})/i;
-      const dateMatch = item.match(dateRegex);
+      // Extract URL if it exists in the source
+      const urlMatch = sourceOrUrl ? sourceOrUrl.match(urlRegex) : null;
+      const url = urlMatch ? urlMatch[0] : undefined;
       
-      // Try to extract URL if present
-      const newsUrl = item.match(urlRegex)?.[0];
-      
-      recentNews.push({
-        title: item.replace(dateRegex, '').replace(newsUrl || '', '').trim(),
-        date: dateMatch ? dateMatch[0] : undefined,
-        url: newsUrl
-      });
+      if (title) {
+        recentNews.push({
+          title,
+          date,
+          url
+        });
+      }
     }
   }
   
-  // If no news found via regex, create generic ones
+  // If no news found using the pattern, try numbered list (often returned by the API)
   if (recentNews.length === 0) {
-    // Check if content mentions any news or events
-    const contentLower = content.toLowerCase();
-    const newsKeywords = ['lançou', 'anunciou', 'publicou', 'divulgou', 'recentemente', 'este ano', 'este mês'];
+    const numberedNewsRegex = /(\d+)\.\s+(?:\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?)?\s*[-–]?\s*([^\n]+)/g;
+    let numberedMatch;
     
-    if (newsKeywords.some(keyword => contentLower.includes(keyword))) {
-      // Extract sentences that might be news
-      const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
-      for (const sentence of sentences) {
-        if (newsKeywords.some(keyword => sentence.toLowerCase().includes(keyword)) && recentNews.length < 3) {
-          // Try to extract URL if present
-          const newsUrl = sentence.match(urlRegex)?.[0];
-          
-          recentNews.push({
-            title: sentence.replace(newsUrl || '', '').trim(),
-            date: undefined,
-            url: newsUrl
-          });
-        }
+    while ((numberedMatch = numberedNewsRegex.exec(content)) !== null && recentNews.length < 3) {
+      const date = numberedMatch[2] ? numberedMatch[2].trim() : undefined;
+      const title = numberedMatch[3] ? numberedMatch[3].trim() : "";
+      
+      // Extract URL if it exists in the title
+      const urlMatch = title ? title.match(urlRegex) : null;
+      const url = urlMatch ? urlMatch[0] : undefined;
+      const cleanTitle = url ? title.replace(url, '').trim() : title;
+      
+      if (cleanTitle) {
+        recentNews.push({
+          title: cleanTitle,
+          date,
+          url
+        });
       }
     }
+  }
+  
+  // If still no news, check if content mentions any news with dates
+  if (recentNews.length === 0) {
+    const dateNewsRegex = /(?:\b(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?))[^\n.]*?([^.\n]{10,100})/g;
+    let dateMatch;
     
-    // Still no news, add generic placeholders
-    if (recentNews.length === 0) {
-      recentNews.push({
-        title: `Veja as últimas notícias sobre ${companyName}`,
-        url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+notícias&tbm=nws`
-      });
+    while ((dateMatch = dateNewsRegex.exec(content)) !== null && recentNews.length < 3) {
+      const date = dateMatch[1];
+      const title = dateMatch[2].trim();
+      
+      if (title) {
+        recentNews.push({
+          title,
+          date
+        });
+      }
     }
+  }
+  
+  // Still no news, add generic placeholders
+  if (recentNews.length === 0) {
+    recentNews.push({
+      title: `Veja as últimas notícias sobre ${companyName}`,
+      url: `https://www.google.com/search?q=${encodeURIComponent(companyName)}+notícias&tbm=nws`
+    });
   }
   
   return recentNews.slice(0, 3); // Limit to 3 news items

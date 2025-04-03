@@ -1,3 +1,4 @@
+
 // Define content categories for briefings
 export const BRIEFING_CATEGORIES = {
   CULTURE_VALUES: 'culture_values',
@@ -19,41 +20,41 @@ export const questionToBriefingMap = [
 
 // Category titles for UI display
 export const categoryTitles = {
-  [BRIEFING_CATEGORIES.CULTURE_VALUES]: "Cultura e Valores",
-  [BRIEFING_CATEGORIES.MISSION_VISION]: "Missão e Visão",
+  [BRIEFING_CATEGORIES.CULTURE_VALUES]: "Valores e Cultura",
+  [BRIEFING_CATEGORIES.MISSION_VISION]: "Propósito e Visão",
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: "Produto e Mercado",
-  [BRIEFING_CATEGORIES.LEADERSHIP]: "Time de Liderança",
-  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: "História da Empresa"
+  [BRIEFING_CATEGORIES.LEADERSHIP]: "Liderança e Gestão",
+  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: "História e Trajetória"
 };
 
 // Store default fallback content by category (used before API fetch or on error)
 export const defaultContentByCategory = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: {
-    overview: "Carregando informações sobre a cultura e valores da empresa...",
+    overview: "Carregando informações sobre os valores e cultura da empresa...",
     highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
     summary: "Carregando análise de contexto...",
     sources: []
   },
   [BRIEFING_CATEGORIES.MISSION_VISION]: {
-    overview: "Carregando informações sobre a missão e visão da empresa...",
+    overview: "Carregando informações sobre o propósito e visão da empresa...",
     highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
     summary: "Carregando análise de contexto...",
     sources: []
   },
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: {
-    overview: "Carregando informações sobre produtos e mercado da empresa...",
+    overview: "Carregando informações sobre produto e mercado da empresa...",
     highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
     summary: "Carregando análise de contexto...",
     sources: []
   },
   [BRIEFING_CATEGORIES.LEADERSHIP]: {
-    overview: "Carregando informações sobre a liderança da empresa...",
+    overview: "Carregando informações sobre a liderança e gestão da empresa...",
     highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
     summary: "Carregando análise de contexto...",
     sources: []
   },
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: {
-    overview: "Carregando informações sobre a história da empresa...",
+    overview: "Carregando informações sobre a história e trajetória da empresa...",
     highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
     summary: "Carregando análise de contexto...",
     sources: []
