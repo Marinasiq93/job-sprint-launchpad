@@ -1,11 +1,11 @@
 
-import { defineConfig, ConfigEnv } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }: ConfigEnv) => ({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
@@ -32,5 +32,6 @@ export default defineConfig(({ mode }: ConfigEnv) => ({
     globals: true,
     setupFiles: ['./src/setupTests.ts'],
     watch: false, // Disable watching during tests by default
+    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   },
 }));
