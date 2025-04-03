@@ -63,7 +63,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <section>
             <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
               <Check className="h-4 w-4 text-emerald-500" />
-              Pontos-Chave
+              Informações Relevantes
             </h3>
             <ul className="text-sm space-y-2">
               {currentBriefing.highlights.map((highlight, index) => (
@@ -84,7 +84,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       <Separator />
       
       <section>
-        <h3 className="font-medium text-sm text-gray-700 mb-2">Resumo</h3>
+        <h3 className="font-medium text-sm text-gray-700 mb-2">Análise Geral</h3>
         <div className="text-sm bg-gray-50 p-3 rounded-md border border-gray-100 leading-relaxed">
           {currentBriefing.summary}
         </div>
