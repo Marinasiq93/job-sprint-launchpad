@@ -16,10 +16,10 @@ port = 54323
 port = 54324
 
 [storage]
-port = 54325
+enabled = true
 
 [functions]
-port = 54326
+enabled = true
 
 [functions.generate-briefing]
 verify_jwt = true
