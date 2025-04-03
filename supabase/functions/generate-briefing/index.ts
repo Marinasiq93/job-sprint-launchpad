@@ -90,7 +90,7 @@ const getPerplexityAnalysis = async (prompt: string): Promise<any> => {
     throw new Error("PERPLEXITY_API_KEY is not set in the environment");
   }
   
-  console.log("Calling Perplexity API...");
+  console.log("Calling Perplexity API with key:", perplexityApiKey ? "API key is set" : "No API key");
   
   try {
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
@@ -134,7 +134,7 @@ const getPerplexityAnalysis = async (prompt: string): Promise<any> => {
     }
     
     const data = await response.json();
-    console.log("Perplexity API response:", JSON.stringify(data).substring(0, 200) + "...");
+    console.log("Perplexity API response received");
     
     // Extract the content from the response
     const content = data.choices[0]?.message?.content;
@@ -214,6 +214,7 @@ serve(async (req) => {
     }
 
     console.log(`Processing briefing request for ${companyName}, category: ${category}`);
+    console.log(`API key present: ${!!perplexityApiKey}`);
     
     // Check if API key is available
     if (!perplexityApiKey) {
