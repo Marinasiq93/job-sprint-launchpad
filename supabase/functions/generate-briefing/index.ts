@@ -111,7 +111,7 @@ const generateBriefingWithPerplexity = async (
 
     console.log(`Fetching information for ${companyName} - Category: ${category}`);
 
-    // Updated to use the correct model name and format
+    // Using the correct model and proper formatting for request
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -119,7 +119,7 @@ const generateBriefingWithPerplexity = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online', // Updated model name
+        model: 'llama-3.1-sonar-small-online', // Using the most compatible model
         messages: [
           {
             role: 'system',
