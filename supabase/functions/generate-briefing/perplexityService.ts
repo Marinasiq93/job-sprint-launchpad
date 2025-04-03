@@ -1,7 +1,12 @@
 
 import { BriefingResponse } from "./types.ts";
 import { callPerplexityAPI } from "./apiService.ts";
-import { extractHighlights, extractSources, extractRecentNews } from "./contentExtractors.ts";
+import { 
+  extractHighlights, 
+  extractSources, 
+  extractRecentNews,
+  cleanText
+} from "./contentExtractors.ts";
 
 // Call Perplexity API to get the analysis
 export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: string): Promise<string> => {
@@ -26,7 +31,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
     }
     
     // Always take first paragraph as overview (company description)
-    const overview = paragraphs[0];
+    const overview = cleanText(paragraphs[0]);
     
     // Identify potential highlight points
     const highlights = extractHighlights(content);
@@ -41,7 +46,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
     ];
     
     // Take last paragraph or second half of content as summary
-    const summary = paragraphs[paragraphs.length - 1];
+    const summary = cleanText(paragraphs[paragraphs.length - 1]);
     
     // Extract sources and news from the content
     const sources = extractSources(content, companyName);
