@@ -5,144 +5,185 @@ import { BRIEFING_CATEGORIES } from "./briefingConstants";
 export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite especificamente o site institucional da empresa ${companyWebsite} para esta análise.
+    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um breve overview da empresa ${companyName}: o que ela faz, seu tamanho, mercado, e principais produtos.
+    ## Visão Geral da ${companyName}
     
-    Em seguida, FOQUE A MAIOR PARTE da sua análise nos VALORES CORPORATIVOS da empresa:
-    * Extraia e liste os valores e princípios EXPLICITAMENTE DECLARADOS no site da empresa
-    * Para cada valor identificado, explique brevemente como ele se manifesta na cultura
-    * Extraia CITAÇÕES DIRETAS do site sobre valores e cultura, se disponíveis
-    * EVITE REPETIR as mesmas informações em diferentes pontos da análise
+    Comece com um resumo abrangente da empresa: o que ela faz, tamanho, mercado, principais produtos, e posicionamento no setor.
+    Inclua dados factuais como ano de fundação, sede, número aproximado de funcionários quando disponível.
     
-    Inclua também:
-    * Informações do site oficial (seção "Sobre Nós", "Missão/Visão/Valores", "Cultura", etc.)
-    * Entrevistas com fundadores ou executivos que mencionem valores
-    * Reviews de funcionários no Glassdoor sobre a cultura
+    ## Valores Corporativos
     
-    ESTRUTURE SUA RESPOSTA COM:
-    1. Overview da empresa (1 parágrafo)
-    2. Valores Explícitos (em lista com bullets, sem repetições)
-    3. Como esses valores se aplicam (sem repetir os valores, apenas explicar como se aplicam)
-    4. Citações relevantes sobre a cultura (em itálico)
+    Detalhe os valores e princípios da empresa com CITAÇÕES DIRETAS quando possível:
+    * Liste cada valor corporativo EXPLICITAMENTE DECLARADO no site
+    * Para cada valor, explique como ele se manifesta na cultura 
+    * Inclua exemplos concretos de como esses valores são aplicados
+    * Mencione programas internos ou iniciativas que reflitam esses valores
     
-    Finalize com NOTÍCIAS RECENTES:
+    Busque essas informações em seções como "Sobre Nós", "Missão/Visão/Valores", "Cultura", "Carreiras".
+    
+    ## Notícias Recentes
+    
     Liste 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    2. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    3. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]`,
+    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    
+    Citations:
+    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
+    [1] URL completa
+    [2] URL completa
+    etc.`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite especificamente o site institucional da empresa ${companyWebsite} para esta análise.
+    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Primeiro, traga um resumo geral da empresa ${companyName}: setor de atuação, produtos, e posicionamento no mercado. 
+    ## Visão Geral da ${companyName}
     
-    Depois, detalhe com CITAÇÕES DIRETAS quando possível:
-    * MISSÃO: O propósito declarado da empresa (por que ela existe)
-    * VISÃO: Onde a empresa deseja chegar no futuro
+    Comece com um resumo abrangente da empresa: o que ela faz, tamanho, mercado, principais produtos, e posicionamento no setor.
+    Inclua dados factuais como ano de fundação, sede, número aproximado de funcionários quando disponível.
+    
+    ## Missão e Visão
+    
+    Detalhe com CITAÇÕES DIRETAS quando possível:
+    * MISSÃO OFICIAL: O propósito declarado da empresa (por que ela existe)
+    * VISÃO OFICIAL: Onde a empresa deseja chegar no futuro
     * PROPÓSITO: Causa maior ou impacto social que a empresa busca gerar
     
-    EVITE REPETIR as mesmas informações em diferentes partes da análise.
+    Se a missão e visão não estiverem explicitamente declaradas, analise o conteúdo do site para inferir o propósito e direção da empresa.
+    Inclua citações diretas do CEO ou liderança sobre o propósito da empresa.
     
-    Busque essas informações prioritariamente no site institucional da empresa, em seções como "Sobre Nós", 
-    "Quem Somos", "Missão e Visão", ou similares.
+    Busque essas informações em seções como "Sobre Nós", "Quem Somos", "Missão e Visão", ou similares.
     
-    ESTRUTURE SUA RESPOSTA COM:
-    1. Overview da empresa (1 parágrafo)
-    2. Missão Oficial (com citação direta se disponível)
-    3. Visão de Futuro (com citação direta se disponível)
-    4. Propósito e Impacto Social (se mencionado)
+    ## Notícias Recentes
     
-    Finalize com NOTÍCIAS RECENTES:
     Liste 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    2. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    3. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]`,
+    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    
+    Citations:
+    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
+    [1] URL completa
+    [2] URL completa
+    etc.`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite especificamente o site institucional da empresa ${companyWebsite} para esta análise.
+    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um panorama da empresa ${companyName}: produtos e serviços oferecidos, público-alvo, e contexto de mercado. 
+    ## Visão Geral dos Produtos e Mercado
     
-    Em seguida, explique detalhadamente:
-    * Perfil típico dos usuários/clientes da empresa
-    * Setores e indústrias onde seus produtos são mais utilizados
-    * Casos de uso e aplicações principais dos produtos
-    * Concorrentes diretos no mercado
+    Comece com um panorama abrangente da empresa ${companyName}: produtos e serviços oferecidos, público-alvo, e contexto de mercado.
+    Inclua dados factuais sobre o tamanho do mercado e posicionamento competitivo quando disponíveis.
     
-    EVITE REPETIR as mesmas informações em diferentes partes da análise.
+    ## Perfil do Cliente e Aplicações
     
-    Consulte o site oficial da empresa, páginas de produtos, casos de uso, e depoimentos de clientes.
+    Detalhe com exemplos concretos:
+    * Perfil típico dos usuários/clientes da empresa (indústrias, tamanho de empresa, etc.)
+    * Principais casos de uso e aplicações dos produtos/serviços
+    * Problemas específicos que a solução resolve para os clientes
+    * Depoimentos ou casos de sucesso de clientes reais (com citações quando disponíveis)
     
-    ESTRUTURE SUA RESPOSTA COM:
-    1. Overview do Produto/Serviço (1 parágrafo)
-    2. Perfil dos Usuários/Clientes (lista com bullets sem repetições)
-    3. Setores e Aplicações (sem repetir as informações anteriores)
-    4. Mercado e Competidores (mencione 3-5 principais concorrentes)
+    ## Mercado e Competição
     
-    Finalize com NOTÍCIAS RECENTES:
-    Liste 3 NOTÍCIAS RECENTES sobre o produto/serviço ou empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    2. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    3. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]`,
+    * Tamanho e crescimento do mercado em que a empresa atua (com dados quando disponíveis)
+    * 3-5 principais concorrentes diretos no mercado
+    * Diferenciais competitivos da empresa (com base no que é declarado no site)
+    * Tendências de mercado relevantes para o setor
+    
+    ## Notícias Recentes
+    
+    Liste 3 NOTÍCIAS RECENTES sobre os produtos/serviços ou empresa (dos últimos 6 meses), no formato:
+    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    
+    Citations:
+    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
+    [1] URL completa
+    [2] URL completa
+    etc.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite especificamente o site institucional da empresa ${companyWebsite} para esta análise.
+    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Forneça uma visão geral da empresa ${companyName}: o que ela faz, em que estágio está (startup, scale-up, enterprise) 
-    e qual seu posicionamento no setor. 
+    ## Visão Geral da ${companyName}
     
-    Em seguida, descreva detalhadamente o time de liderança:
-    * Quem são os fundadores, CEO, CPO, CTO, etc. (com nomes e cargos)
-    * Background profissional resumido dessas pessoas
-    * Citações ou posicionamentos públicos dos líderes sobre negócio, cultura ou gestão
+    Comece com um resumo abrangente da empresa: o que ela faz, estágio de desenvolvimento (startup, scale-up, empresa estabelecida), 
+    e posicionamento no mercado.
     
-    EVITE REPETIR as mesmas informações em diferentes partes da análise.
+    ## Liderança e Fundadores
     
-    Busque essas informações no site da empresa (seção "Equipe", "Liderança", "Sobre Nós"), LinkedIn, 
-    e entrevistas públicas.
+    Detalhe com informações específicas:
+    * Fundadores: nomes, backgrounds profissionais, e história da fundação da empresa
+    * CEO atual e equipe executiva principal: nomes e cargos exatos
+    * Experiência profissional prévia dos principais líderes
+    * Citações diretas dos líderes sobre a empresa, visão ou cultura (quando disponíveis)
     
-    ESTRUTURE SUA RESPOSTA COM:
-    1. Overview da Empresa (1 parágrafo)
-    2. Fundadores e História de Fundação (sem repetir informações do overview)
-    3. Principais Executivos (lista com nome, cargo e breve background)
-    4. Estilo de Liderança e Cultura (baseado em entrevistas/declarações)
+    Busque informações tanto no site da empresa (seção "Equipe", "Liderança", "Sobre Nós") quanto em fontes como LinkedIn e entrevistas.
     
-    Finalize com NOTÍCIAS RECENTES:
+    ## Cultura de Liderança
+    
+    * Estilo de liderança evidenciado por declarações ou políticas da empresa
+    * Valores que a liderança promove internamente
+    * Iniciativas ou programas liderados pela equipe executiva
+    * Como a liderança aborda inovação, diversidade, ou outros temas relevantes
+    
+    ## Notícias Recentes
+    
     Liste 3 NOTÍCIAS RECENTES sobre a liderança/empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    2. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    3. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]`,
+    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    
+    Citations:
+    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
+    [1] URL completa
+    [2] URL completa
+    etc.`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite especificamente o site institucional da empresa ${companyWebsite} para esta análise.
+    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Dê primeiro um resumo sobre a empresa ${companyName}: mercado, produto e tamanho atual. 
+    ## Visão Geral da ${companyName}
     
-    Em seguida, conte a história da empresa de forma cronológica:
-    * Ano e contexto de fundação da empresa
-    * Fundadores e motivação inicial para criar a empresa
-    * Marcos históricos importantes (lançamentos, expansões, pivôs)
-    * Rodadas de investimento e crescimento financeiro
+    Comece com um resumo abrangente da empresa atualmente: mercado, produtos principais, tamanho e alcance geográfico.
     
-    EVITE REPETIR as mesmas informações em diferentes partes da análise.
+    ## História da Fundação
     
-    Busque essa cronologia no site da empresa (seção "História", "Sobre Nós", "Nossa Jornada"), 
-    releases de imprensa, e plataformas como Crunchbase.
+    Detalhe com precisão:
+    * Ano e local exato de fundação
+    * Nomes completos dos fundadores e seus backgrounds
+    * Contexto de mercado no momento da fundação
+    * Motivação original para a criação da empresa (com citações dos fundadores quando disponíveis)
+    * Modelo de negócio inicial e como ele evoluiu
     
-    ESTRUTURE SUA RESPOSTA COM:
-    1. Overview da Empresa Hoje (1 parágrafo)
-    2. Fundação (quando, onde, por quem, motivação inicial)
-    3. Linha do Tempo (liste cronologicamente 5-7 marcos importantes, com anos)
-    4. Crescimento e Investimentos (sem repetir informações anteriores)
+    ## Marcos Históricos
     
-    Finalize com NOTÍCIAS RECENTES:
+    Liste cronologicamente 5-7 eventos significativos na história da empresa:
+    * Lançamentos de produtos importantes
+    * Expansões geográficas
+    * Rodadas de investimento significativas
+    * Aquisições ou fusões
+    * Pivôs estratégicos no modelo de negócio
+    * Conquistas e prêmios importantes
+    
+    Utilize um formato claro com anos específicos para cada marco.
+    
+    ## Notícias Recentes
+    
     Liste 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    2. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]
-    3. [DATA DD/MM/AAAA] - [TÍTULO] - [FONTE: URL completo da notícia]`
+    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    
+    Citations:
+    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
+    [1] URL completa
+    [2] URL completa
+    etc.`
 };

@@ -43,7 +43,7 @@ const CompanyBriefing = ({
         isLoading={isLoading}
         isApiAvailable={isApiAvailable}
       />
-      <CardContent className="flex-1 overflow-auto">
+      <CardContent className="flex-1 overflow-auto pb-6">
         {!isApiAvailable && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
