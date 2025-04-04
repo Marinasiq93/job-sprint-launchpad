@@ -4,8 +4,7 @@ import { BRIEFING_CATEGORIES } from "./briefingConstants";
 // Perplexity prompts for each category
 export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: (companyName: string, companyWebsite: string) => 
-    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
+    `Analise a empresa ${companyName} (${companyWebsite}).
     
     Comece com um overview da empresa ${companyName}: quem ela é, quando foi fundada, e qual seu posicionamento no mercado.
     
@@ -17,8 +16,7 @@ export const perplexityPromptsByCategory = {
     Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
-    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
+    `Analise a empresa ${companyName} (${companyWebsite}).
     
     Foque exclusivamente na missão, visão e propósito da empresa ${companyName}:
     - Apresente a missão oficial da empresa (por que ela existe)
@@ -30,8 +28,7 @@ export const perplexityPromptsByCategory = {
     como projetos específicos alinhados ao propósito declarado e iniciativas de impacto que refletem os valores.`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
-    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
+    `Analise a empresa ${companyName} (${companyWebsite}).
     
     Comece com um breve panorama dos produtos e serviços da empresa ${companyName}.
     
@@ -57,8 +54,7 @@ export const perplexityPromptsByCategory = {
     foque apenas no que realmente distingue a empresa dos concorrentes sem repetir características já mencionadas.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
-    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite o site institucional da empresa ${companyWebsite} e pesquise especificamente sobre a liderança e fundadores.
+    `Analise a empresa ${companyName} (${companyWebsite}).
     
     Forneça uma visão concisa e objetiva sobre as pessoas por trás da empresa ${companyName}.
     Não inclua informações gerais sobre a empresa, produtos ou valores que já foram abordados em outras perguntas.
@@ -80,8 +76,7 @@ export const perplexityPromptsByCategory = {
     ou informações desnecessárias sobre a empresa em si.`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
-    `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a história da empresa.
+    `Analise a empresa ${companyName} (${companyWebsite}).
     
     Sem repetir informações já abordadas em outros tópicos, foque exclusivamente na trajetória histórica da empresa:
     

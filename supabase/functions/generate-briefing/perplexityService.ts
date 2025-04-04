@@ -40,6 +40,10 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Only remove the source section since we extract it separately
     let processedContent = content;
     
+    // Remove any "visit the website" instructions that might have been echoed back
+    const visitWebsiteRegex = /Visite o site (institucional |oficial )?(da empresa|de|do) [^:]+: https?:\/\/[^\s]+\/?/gi;
+    processedContent = processedContent.replace(visitWebsiteRegex, '');
+    
     // Look for source sections with different possible headings and formats
     const sourceSectionRegex = /(?:^|\n)(?:Sources|Fontes|References|Referências|Fonte)(?::|)\s*\n?((?:.|\n)*$)/i;
     const sourceSectionMatch = processedContent.match(sourceSectionRegex);

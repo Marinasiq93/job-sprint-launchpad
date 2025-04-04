@@ -32,6 +32,7 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
 8. Formate listas sempre com • para bullets (não use - para bullets)
 9. Quando falar sobre a liderança, não repita informações sobre fundadores na seção da equipe executiva
 10. Na seção de Fundadores, sempre mencione seus cargos atuais (se ainda estiverem na empresa)
+11. Não repita URLs ou instruções de visita a sites na sua resposta
 `;
 
     // Use the Perplexity API to generate a response
