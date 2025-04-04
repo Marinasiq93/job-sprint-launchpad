@@ -38,34 +38,38 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
   const formatContent = (content: string) => {
     if (!content) return '';
     
-    // Process the content to enhance readability but preserve structure
-    return content
-      // Add paragraph spacing
-      .replace(/\n\n+/g, '</p><p class="mb-4">')
+    // Create a temporary element to hold the content
+    const tempDiv = document.createElement('div');
+    
+    // Replace markdown headers with HTML elements (without applying classes in the regex)
+    let formatted = content
+      // Replace headers with HTML tags (without classes)
+      .replace(/#{4,}\s+([^\n]+)/g, '<h4>$1</h4>')
+      .replace(/#{3}\s+([^\n]+)/g, '<h3>$1</h3>') 
+      .replace(/#{2}\s+([^\n]+)/g, '<h2>$1</h2>')
+      .replace(/#{1}\s+([^\n]+)/g, '<h1>$1</h1>')
       
-      // Format headings properly
-      .replace(/#{4,}\s+([^\n]+)/g, '<h4 class="text-lg font-semibold mt-5 mb-2">$1</h4>') // h4
-      .replace(/#{3}\s+([^\n]+)/g, '<h3 class="text-xl font-semibold mt-6 mb-3">$1</h3>') // h3
-      .replace(/#{2}\s+([^\n]+)/g, '<h2 class="text-2xl font-bold mt-8 mb-3 border-b pb-2">$1</h2>') // h2
-      .replace(/#{1}\s+([^\n]+)/g, '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>') // h1
-      
-      // Format bold text
+      // Format bold and italic text
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      
-      // Format italic text
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       .replace(/_([^_]+)_/g, '<em>$1</em>')
       
-      // Format lists (very basic)
-      .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-5 my-1.5 list-disc">$1</li>')
-      .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li class="ml-5 my-1.5 list-decimal">$2</li>')
-      
-      // Format section titles that aren't using Markdown headers
-      .replace(/^([A-Z][A-Z\s]{2,}:)(.+)$/gm, '<h3 class="text-xl font-semibold mt-6 mb-3">$1$2</h3>')
-      .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(.+)$/gm, '<h4 class="text-lg font-semibold mt-4 mb-2">$1$2</h4>')
+      // Handle paragraphs
+      .replace(/\n\n+/g, '</p><p>')
       
       // Convert URLs to links
-      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+      
+      // Format lists
+      .replace(/^[-–•]\s+(.+)$/gm, '<li>$1</li>')
+      .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li>$2</li>')
+      
+      // Format capitalized sections
+      .replace(/^([A-Z][A-Z\s]{2,}:)(.+)$/gm, '<h3>$1$2</h3>')
+      .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(.+)$/gm, '<h4>$1$2</h4>');
+    
+    // Wrap in paragraph tags if needed
+    return `<p>${formatted}</p>`;
   };
   
   // Format the content
@@ -75,8 +79,8 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     <div className="space-y-6 px-1">
       <section>
         <div 
-          className="prose prose-sm max-w-none text-sm leading-relaxed prose-headings:my-4 prose-p:my-2 prose-li:my-0.5"
-          dangerouslySetInnerHTML={{ __html: `<p class="mb-4">${formattedContent}</p>` }}
+          className="prose prose-sm max-w-none text-sm leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: formattedContent }}
         />
       </section>
       
