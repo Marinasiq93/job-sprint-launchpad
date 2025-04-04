@@ -25,27 +25,26 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             ORIENTAÇÕES IMPORTANTES:
             
             - Utilize dados factuais e específicos em vez de generalidades
-            - Cite DIRETAMENTE valores, missão e visão quando disponíveis
-            - Use o formato markdown com ## para títulos de seções
-            - Use * para marcadores de lista
-            - Sempre inclua URLs completas em suas citações
+            - Escreva em linguagem natural, fluida, como se estivesse conversando com o usuário
+            - Use formato markdown quando útil (## para títulos, * para listas)
+            - Sempre inclua URLs completas ao mencionar fontes
             - Prefira informações do site oficial da empresa e fontes confiáveis
             
             Ao fim da sua resposta, liste todas as fontes utilizadas no formato:
             
-            Citations:
+            Sources:
             [1] URL completa
             [2] URL completa
             [etc.]
             
-            IMPORTANTE: Siga a estrutura geral solicitada pelo usuário, mas mantenha uma linguagem natural e informativa.`
+            IMPORTANTE: Mantenha uma linguagem natural e informativa, sem seguir uma estrutura excessivamente rígida.`
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.1,
+        temperature: 0.3,
         max_tokens: 2500,
         top_p: 0.95
       })

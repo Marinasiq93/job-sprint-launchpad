@@ -2,7 +2,7 @@
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./types";
 import { categoryTitles, BRIEFING_CATEGORIES } from "./briefingConstants";
-import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon, Check, Target } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
@@ -36,59 +36,10 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
-  // Clean and process the overview content to handle markdown formatting and remove the "Visão Geral da [COMPANY]" text
+  // Clean and process the overview content to handle markdown formatting
   const processedOverview = currentBriefing.overview
-    .replace(/## Visão Geral d[aeo]s? [^\n]+\n?/i, '') // Remove the header if it exists
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
     .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>'); // Citations
-
-  // Customize section titles based on category
-  const getHighlightTitle = () => {
-    switch(currentCategory) {
-      case BRIEFING_CATEGORIES.CULTURE_VALUES:
-        return "Valores da Empresa";
-      case BRIEFING_CATEGORIES.MISSION_VISION:
-        return "Propósito e Direção";
-      case BRIEFING_CATEGORIES.LEADERSHIP:
-        return "Equipe de Liderança";
-      case BRIEFING_CATEGORIES.PRODUCT_MARKET:
-        return "Perfil do Produto e Cliente";
-      case BRIEFING_CATEGORIES.COMPANY_HISTORY:
-        return "Marcos Históricos";
-      default:
-        return "Destaques";
-    }
-  };
-
-  // Customize summary title based on category
-  const getSummaryTitle = () => {
-    switch(currentCategory) {
-      case BRIEFING_CATEGORIES.MISSION_VISION:
-        return "Realizações e Impacto";
-      case BRIEFING_CATEGORIES.CULTURE_VALUES:
-        return "Análise de Cultura";
-      case BRIEFING_CATEGORIES.PRODUCT_MARKET:
-        return "Posição no Mercado";
-      case BRIEFING_CATEGORIES.LEADERSHIP:
-        return "Estilo de Liderança";
-      case BRIEFING_CATEGORIES.COMPANY_HISTORY:
-        return "Trajetória Empresarial";
-      default:
-        return "Análise Geral";
-    }
-  };
-
-  // Icon for highlights section based on category
-  const getHighlightIcon = () => {
-    switch(currentCategory) {
-      case BRIEFING_CATEGORIES.MISSION_VISION:
-        return <Target className="h-4 w-4 text-purple-600" />;
-      case BRIEFING_CATEGORIES.CULTURE_VALUES:
-        return <Check className="h-4 w-4 text-emerald-500" />;
-      default:
-        return <Check className="h-4 w-4 text-emerald-500" />;
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -99,56 +50,39 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           </Badge>
         </h3>
         <div 
-          className="text-sm mb-2 leading-relaxed"
+          className="text-sm mb-2 leading-relaxed prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{ __html: processedOverview }}
         />
       </section>
       
-      {currentBriefing.highlights && currentBriefing.highlights.length > 0 && (
+      {currentBriefing.summary && (
         <>
           <Separator />
-          
           <section>
-            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
-              {getHighlightIcon()}
-              {getHighlightTitle()}
-            </h3>
-            <ul className="text-sm space-y-2">
-              {currentBriefing.highlights.map((highlight, index) => (
+            <div className="text-sm leading-relaxed">
+              {currentBriefing.summary}
+            </div>
+          </section>
+        </>
+      )}
+
+      {currentCategory === BRIEFING_CATEGORIES.MISSION_VISION && currentBriefing.additionalPoints && currentBriefing.additionalPoints.length > 0 && (
+        <>
+          <Separator />
+          <section>
+            <ul className="text-sm space-y-1.5">
+              {currentBriefing.additionalPoints.map((point, index) => (
                 <li key={index} className="flex items-start">
-                  <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium mr-2 flex-shrink-0">
+                  <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium mr-2 flex-shrink-0">
                     {index + 1}
                   </span>
-                  <span className={highlight.startsWith('"') ? "italic" : ""}>
-                    {highlight}
-                  </span>
+                  <span>{point}</span>
                 </li>
               ))}
             </ul>
           </section>
         </>
       )}
-      
-      <Separator />
-      
-      <section>
-        <h3 className="font-medium text-sm text-gray-700 mb-2">{getSummaryTitle()}</h3>
-        <div className="text-sm bg-gray-50 p-3 rounded-md border border-gray-100 leading-relaxed">
-          {currentBriefing.summary}
-        </div>
-        {currentCategory === BRIEFING_CATEGORIES.MISSION_VISION && currentBriefing.additionalPoints && (
-          <ul className="text-sm space-y-1.5 mt-3">
-            {currentBriefing.additionalPoints.map((point, index) => (
-              <li key={index} className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium mr-2 flex-shrink-0">
-                  {index + 1}
-                </span>
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
       
       {currentBriefing.sources && currentBriefing.sources.length > 0 && (
         <>
