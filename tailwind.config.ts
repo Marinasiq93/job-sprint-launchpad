@@ -19,6 +19,40 @@ export default {
 			}
 		},
 		extend: {
+			typography: {
+				DEFAULT: {
+					css: {
+						'h1, h2, h3, h4': {
+							fontWeight: '600',
+							marginTop: '1.5em',
+							marginBottom: '0.75em',
+						},
+						'h1': {
+							fontSize: '1.875rem',
+						},
+						'h2': {
+							fontSize: '1.5rem',
+						},
+						'h3': {
+							fontSize: '1.25rem',
+						},
+						'h4': {
+							fontSize: '1.125rem',
+						},
+						'p': {
+							marginTop: '0.75em',
+							marginBottom: '0.75em',
+						},
+						'ul, ol': {
+							marginTop: '0.75em',
+							marginBottom: '1em',
+						},
+						'li': {
+							marginBottom: '0.25em',
+						}
+					}
+				}
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

@@ -24,13 +24,15 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             
             ORIENTAÇÕES DE FORMATAÇÃO:
             
-            - Estruture sua resposta em seções claras com parágrafos bem organizados
-            - Use negrito (**texto**) para destacar informações importantes
-            - Use marcadores (- item) para listas de itens relacionados 
-            - Use subtópicos quando necessário para organizar informações complexas
-            - Cada tópico importante deve começar com um parágrafo introdutório
-            - Mantenha informações similares agrupadas em seções lógicas
-            - Use espaçamento consistente entre parágrafos e seções
+            - Estruture sua resposta em seções claras com títulos principais em formato markdown (## Título Principal)
+            - Use subtítulos para subcategorias (### Subtítulo)
+            - Deixe sempre uma linha em branco entre o título e o conteúdo
+            - Use negrito (**texto**) para destacar informações importantes como nomes, datas e números relevantes
+            - Use marcadores (- item) para listas de itens relacionados, com uma linha em branco antes da lista
+            - Cada novo tópico importante deve começar com um título em markdown e ter ao menos duas linhas em branco antes dele
+            - Use espaçamento duplo entre parágrafos para melhorar a legibilidade
+            - Inicie cada seção com um parágrafo introdutório antes de qualquer lista
+            - Garanta que informações similares estejam sempre agrupadas na mesma seção
             
             ORIENTAÇÕES DE CONTEÚDO:
             

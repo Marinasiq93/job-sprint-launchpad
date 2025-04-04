@@ -34,42 +34,58 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
-  // Format the content with minimal processing
+  // Format the content with enhanced styling for headers and spacing
   const formatContent = (content: string) => {
     if (!content) return '';
     
     // Create a temporary element to hold the content
     const tempDiv = document.createElement('div');
     
-    // Replace markdown headers with HTML elements (without applying classes in the regex)
+    // Replace markdown headers with HTML elements with added classes for better styling
     let formatted = content
-      // Replace headers with HTML tags (without classes)
-      .replace(/#{4,}\s+([^\n]+)/g, '<h4>$1</h4>')
-      .replace(/#{3}\s+([^\n]+)/g, '<h3>$1</h3>') 
-      .replace(/#{2}\s+([^\n]+)/g, '<h2>$1</h2>')
-      .replace(/#{1}\s+([^\n]+)/g, '<h1>$1</h1>')
+      // Replace headers with HTML tags with appropriate classes
+      .replace(/#{4,}\s+([^\n]+)/g, '<h4 class="text-lg font-semibold mt-6 mb-3">$1</h4>')
+      .replace(/#{3}\s+([^\n]+)/g, '<h3 class="text-xl font-semibold mt-8 mb-4">$1</h3>') 
+      .replace(/#{2}\s+([^\n]+)/g, '<h2 class="text-2xl font-semibold mt-10 mb-4">$1</h2>')
+      .replace(/#{1}\s+([^\n]+)/g, '<h1 class="text-3xl font-bold mt-10 mb-5">$1</h1>')
+      
+      // Format section headers in all caps with styling
+      .replace(/^([A-Z][A-Z\s]{2,}:?)(\s*)/gm, '<h3 class="text-xl font-semibold mt-8 mb-4">$1</h3>')
+      
+      // Format capitalized CamelCase headers (like ProductName:)
+      .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(\s*)/gm, '<h4 class="text-lg font-semibold mt-6 mb-3">$1</h4>')
       
       // Format bold and italic text
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       .replace(/_([^_]+)_/g, '<em>$1</em>')
       
-      // Handle paragraphs
-      .replace(/\n\n+/g, '</p><p>')
+      // Add spacing between paragraphs
+      .replace(/\n\n+/g, '</p><p class="mb-4">')
       
       // Convert URLs to links
-      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>')
       
-      // Format lists
-      .replace(/^[-–•]\s+(.+)$/gm, '<li>$1</li>')
-      .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li>$2</li>')
+      // Format bullet lists with proper spacing
+      .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-4 mb-2">$1</li>')
+      .replace(/(<li[^>]*>.*<\/li>\n)<li/g, '$1<li')  // Group list items
+      .replace(/(<li[^>]*>.*<\/li>\n)(?!<li)/g, '$1</ul>\n')  // Close list
+      .replace(/(?<!<ul>\n)(<li)/g, '<ul class="list-disc mb-4">\n$1')  // Open list
       
-      // Format capitalized sections
-      .replace(/^([A-Z][A-Z\s]{2,}:)(.+)$/gm, '<h3>$1$2</h3>')
-      .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(.+)$/gm, '<h4>$1$2</h4>');
+      // Format numbered lists
+      .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li class="ml-4 mb-2">$2</li>')
+      .replace(/(<li[^>]*>.*<\/li>\n)(?!<li)/g, '$1</ol>\n')  // Close numbered list
+      .replace(/(?<!<ol>\n)(<li)/g, '<ol class="list-decimal mb-4">\n$1');  // Open numbered list
     
     // Wrap in paragraph tags if needed
-    return `<p>${formatted}</p>`;
+    if (!formatted.startsWith('<')) {
+      formatted = '<p class="mb-4">' + formatted;
+    }
+    if (!formatted.endsWith('>')) {
+      formatted += '</p>';
+    }
+    
+    return formatted;
   };
   
   // Format the content
@@ -77,7 +93,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
 
   return (
     <div className="space-y-6 px-1">
-      <section>
+      <section className="overflow-auto">
         <div 
           className="prose prose-sm max-w-none text-sm leading-relaxed"
           dangerouslySetInnerHTML={{ __html: formattedContent }}
@@ -86,11 +102,11 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       
       {currentBriefing.sources && currentBriefing.sources.length > 0 && (
         <>
-          <Separator className="my-6" />
+          <Separator className="my-8" />
           
           <section>
-            <h3 className="text-lg font-semibold mb-4">Fontes</h3>
-            <div className="space-y-2">
+            <h3 className="text-xl font-semibold mb-5">Fontes</h3>
+            <div className="space-y-3">
               {currentBriefing.sources.map((source, index) => (
                 <div key={index} className="flex items-start">
                   <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-medium mr-2 flex-shrink-0">
@@ -114,10 +130,10 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
 
       {currentBriefing.recentNews && currentBriefing.recentNews.length > 0 && (
         <>
-          <Separator className="my-6" />
+          <Separator className="my-8" />
           
           <section>
-            <h3 className="text-lg font-semibold mb-4">Notícias Recentes</h3>
+            <h3 className="text-xl font-semibold mb-5">Notícias Recentes</h3>
             <div className="space-y-3">
               {currentBriefing.recentNews.map((news, index) => (
                 <div key={index} className="flex items-start">
