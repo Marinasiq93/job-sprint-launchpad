@@ -38,17 +38,17 @@ export const perplexityPromptsByCategory = {
     
     Divida sua análise nestas seções bem organizadas:
 
-    ### Produtos e Serviços:
+    ## Produtos e Serviços:
     - Descreva os principais produtos/serviços oferecidos
     - Explique suas características e diferenciais principais
     - Mencione tecnologias ou inovações relevantes usadas
     
-    ### Perfil dos Clientes:
+    ## Perfil dos Clientes:
     - Perfil típico dos usuários/clientes da empresa
     - Principais casos de uso e aplicações dos produtos/serviços
     - Problemas específicos que a solução resolve para os clientes
     
-    ### Mercado e Competição:
+    ## Mercado e Competição:
     - Tamanho e crescimento do mercado em que a empresa atua
     - Principais concorrentes diretos no mercado
     - Diferenciais competitivos da empresa
@@ -62,17 +62,17 @@ export const perplexityPromptsByCategory = {
     
     Organize sua análise em seções bem estruturadas:
     
-    ### Fundadores e Origem:
+    ## Fundadores e Origem:
     - Nomes dos fundadores e história da fundação
     - Backgrounds profissionais dos fundadores
     - Motivação e visão inicial para a empresa
     
-    ### Liderança Atual:
+    ## Liderança Atual:
     - CEO atual e equipe executiva principal
     - Experiência profissional prévia dos principais líderes
     - Citações relevantes dos líderes sobre a empresa ou visão
     
-    ### Cultura de Liderança:
+    ## Cultura de Liderança:
     - Estilo de liderança evidenciado na empresa
     - Valores que a liderança promove internamente
     - Iniciativas ou programas liderados pela equipe executiva

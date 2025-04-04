@@ -26,17 +26,17 @@ export const detectTextStructure = (text: string): string => {
   const hasMarkdownHeaders = text.match(/^#+\s+.+$/gm);
   if (hasMarkdownHeaders && hasMarkdownHeaders.length > 2) return "markdown";
   
-  // Check for capitalized headers
-  const hasCapitalizedHeaders = text.match(/^[A-Z][A-Z\s]+[A-Z]:?$/gm);
+  // Check for capitalized headers - must be full line in uppercase with at least 3 characters
+  const hasCapitalizedHeaders = text.match(/^[A-Z][A-Z\s]{2,}[A-Z](:|\s*$)/gm);
   if (hasCapitalizedHeaders && hasCapitalizedHeaders.length > 2) return "capitalized";
   
-  // Check for numbered lists
-  const hasNumberedLists = text.match(/^\d+\.\s+.+$/gm);
-  if (hasNumberedLists && hasNumberedLists.length > 4) return "numbered";
+  // Check for numbered lists - improved to catch different numbering styles
+  const hasNumberedLists = text.match(/^\d+[.):]\s+.+$/gm);
+  if (hasNumberedLists && hasNumberedLists.length > 2) return "numbered";
   
-  // Check for bullet lists
+  // Check for bullet lists - improved to catch different bullet styles
   const hasBulletLists = text.match(/^[-–•]\s+.+$/gm);
-  if (hasBulletLists && hasBulletLists.length > 4) return "bullets";
+  if (hasBulletLists && hasBulletLists.length > 2) return "bullets";
   
   return "paragraph"; // Default to paragraph mode
 };
@@ -67,7 +67,10 @@ export const preserveMarkdownStructure = (text: string): string => {
   
   // Ensure lists have consistent formatting
   preserved = preserved.replace(/([^\n])\n([-*•]\s+)/g, '$1\n\n$2');
-  preserved = preserved.replace(/([^\n])\n(\d+\.\s+)/g, '$1\n\n$2');
+  preserved = preserved.replace(/([^\n])\n(\d+[.):]\s+)/g, '$1\n\n$2');
+  
+  // Ensure consistent spacing after headers
+  preserved = preserved.replace(/(#+\s+[^\n]+)\n([^\n#])/g, '$1\n\n$2');
   
   return preserved;
 };
@@ -84,9 +87,11 @@ export const removeDuplicateHeaders = (text: string): string => {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     
-    // Check if it's a header (either markdown or capitalized)
+    // Check if it's a header (markdown format)
     const isMarkdownHeader = line.match(/^#+\s+(.+)$/);
-    const isCapitalizedHeader = line.match(/^([A-Z][A-Z\s]+[A-Z]):?\s*$/);
+    
+    // Check if it's a header (all caps format) - improved pattern matching
+    const isCapitalizedHeader = line.match(/^([A-Z][A-Z\s]{2,}[A-Z])(:|\s*$)/);
     
     if (isMarkdownHeader) {
       const headerText = isMarkdownHeader[1].toLowerCase();

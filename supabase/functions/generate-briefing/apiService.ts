@@ -24,15 +24,21 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             
             ORIENTAÇÕES DE FORMATAÇÃO:
             
-            - Estruture sua resposta em seções claras com títulos principais em formato markdown (## Título Principal)
-            - Use subtítulos para subcategorias (### Subtítulo)
+            - Estruture sua resposta em seções usando formato markdown (## Título) para seções principais
+            - Use apenas um nível de cabeçalho por seção (##)
+            - Sempre comece sua análise com um parágrafo introdutório antes de qualquer título de seção
             - Deixe sempre uma linha em branco entre o título e o conteúdo
-            - Use negrito (**texto**) para destacar informações importantes como nomes, datas e números relevantes
-            - Use marcadores (- item) para listas de itens relacionados, com uma linha em branco antes da lista
-            - Cada novo tópico importante deve começar com um título em markdown e ter ao menos duas linhas em branco antes dele
-            - Use espaçamento duplo entre parágrafos para melhorar a legibilidade
-            - Inicie cada seção com um parágrafo introdutório antes de qualquer lista
-            - Garanta que informações similares estejam sempre agrupadas na mesma seção
+            - Use negrito (**texto**) apenas para destacar dados importantes como nomes, datas e números
+            - Use marcadores para listas de itens relacionados no formato:
+               - Item 1
+               - Item 2
+            - Evite usar texto completamente em maiúsculas para títulos ou subtítulos
+            - Mantenha uma linha em branco antes de cada nova seção com título
+            - Para listas numeradas, use o formato:
+               1. Item primeiro
+               2. Item segundo
+            - Não crie seções com letras isoladas como "A P" ou "C I" 
+            - Evite usar termos como "VALORES:" - use títulos markdown em vez disso
             
             ORIENTAÇÕES DE CONTEÚDO:
             

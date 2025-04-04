@@ -49,8 +49,9 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       .replace(/#{2}\s+([^\n]+)/g, '<h2 class="text-2xl font-semibold mt-10 mb-4">$1</h2>')
       .replace(/#{1}\s+([^\n]+)/g, '<h1 class="text-3xl font-bold mt-10 mb-5">$1</h1>')
       
-      // Format section headers in all caps with styling
-      .replace(/^([A-Z][A-Z\s]{2,}:?)(\s*)/gm, '<h3 class="text-xl font-semibold mt-8 mb-4">$1</h3>')
+      // Format section headers in all caps with styling - be more specific to avoid false positives
+      // Only match lines that are ENTIRELY in uppercase with minimum 3 chars
+      .replace(/^([A-Z][A-Z\s]{2,}[A-Z]:?)$/gm, '<h3 class="text-xl font-semibold mt-8 mb-4">$1</h3>')
       
       // Format capitalized CamelCase headers (like ProductName:)
       .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(\s*)/gm, '<h4 class="text-lg font-semibold mt-6 mb-3">$1</h4>')
@@ -66,16 +67,72 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       // Convert URLs to links
       .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>')
       
-      // Format bullet lists with proper spacing
-      .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-4 mb-2">$1</li>')
-      .replace(/(<li[^>]*>.*<\/li>\n)<li/g, '$1<li')  // Group list items
-      .replace(/(<li[^>]*>.*<\/li>\n)(?!<li)/g, '$1</ul>\n')  // Close list
-      .replace(/(?<!<ul>\n)(<li)/g, '<ul class="list-disc mb-4">\n$1')  // Open list
+      // Improve bullet list formatting with proper spacing
+      .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
       
-      // Format numbered lists
-      .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li class="ml-4 mb-2">$2</li>')
-      .replace(/(<li[^>]*>.*<\/li>\n)(?!<li)/g, '$1</ol>\n')  // Close numbered list
-      .replace(/(?<!<ol>\n)(<li)/g, '<ol class="list-decimal mb-4">\n$1');  // Open numbered list
+      // Improve numbered list detection and formatting
+      // First wrap each numbered item in proper <li> with ordered styling
+      .replace(/^(\d+)[.):]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-decimal" value="$1">$2</li>')
+      
+      // Group list items together - both bullet and numbered
+      // Find sequences of list items and wrap them in appropriate container
+      .replace(/(<li class="ml-6 mb-2 list-disc">[^<]*<\/li>\n)(<li class="ml-6 mb-2 list-disc">[^<]*<\/li>)/g, '$1$2')
+      .replace(/(<li class="ml-6 mb-2 list-decimal"[^>]*>[^<]*<\/li>\n)(<li class="ml-6 mb-2 list-decimal"[^>]*>[^<]*<\/li>)/g, '$1$2');
+    
+    // Now wrap consecutive bullet list items in <ul> tags
+    let listProcessed = '';
+    let inBulletList = false;
+    let inNumberedList = false;
+    
+    // Split by lines to process lists properly
+    const lines = formatted.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Check if this line is a bullet list item
+      if (line.includes('<li class="ml-6 mb-2 list-disc">')) {
+        if (!inBulletList) {
+          // Start a new bullet list
+          listProcessed += '<ul class="my-4 space-y-2">\n';
+          inBulletList = true;
+        }
+        listProcessed += line + '\n';
+      } 
+      // Check if this line is a numbered list item
+      else if (line.includes('<li class="ml-6 mb-2 list-decimal"')) {
+        if (!inNumberedList) {
+          // Start a new numbered list
+          listProcessed += '<ol class="my-4 space-y-2">\n';
+          inNumberedList = true;
+        }
+        listProcessed += line + '\n';
+      }
+      // This line is not a list item
+      else {
+        // If we were in a bullet list, close it
+        if (inBulletList) {
+          listProcessed += '</ul>\n';
+          inBulletList = false;
+        }
+        // If we were in a numbered list, close it
+        if (inNumberedList) {
+          listProcessed += '</ol>\n';
+          inNumberedList = false;
+        }
+        listProcessed += line + '\n';
+      }
+    }
+    
+    // Close any open lists at the end
+    if (inBulletList) {
+      listProcessed += '</ul>\n';
+    }
+    if (inNumberedList) {
+      listProcessed += '</ol>\n';
+    }
+    
+    formatted = listProcessed;
     
     // Wrap in paragraph tags if needed
     if (!formatted.startsWith('<')) {
