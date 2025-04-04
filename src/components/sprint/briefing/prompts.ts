@@ -71,7 +71,7 @@ export const perplexityPromptsByCategory = {
     
     ## Equipe Executiva
     Se houver outros membros-chave da liderança além dos fundadores:
-    - Mencione apenas os principais executivos (C-level ou diretores)
+    - Mencione apenas os principais executivos (C-level ou diretores) que NÃO são fundadores (para evitar repetições)
     - Para cada um, inclua cargo atual, formação e experiência anterior relevante
     - Seja breve e objetivo, focando apenas em 3-5 executivos no máximo
     

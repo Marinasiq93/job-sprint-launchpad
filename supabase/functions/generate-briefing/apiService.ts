@@ -30,6 +30,7 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
 6. Inclua os nomes dos sites nas fontes antes das URLs quando possível
 7. Seja imparcial e objetivo, baseando-se em fatos verificáveis
 8. Formate listas sempre com • para bullets (não use - para bullets)
+9. Quando falar sobre a liderança, não repita informações sobre fundadores na seção da equipe executiva
 `;
 
     // Use the Perplexity API to generate a response

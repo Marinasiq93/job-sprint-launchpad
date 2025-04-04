@@ -51,7 +51,41 @@ export const processPerplexityResponse = (content: string, companyName: string):
     processedContent = preserveMarkdownStructure(processedContent);
     processedContent = removeDuplicateHeaders(processedContent);
     
-    console.log("Minimally processed content sample:", processedContent.substring(0, 200) + "...");
+    // Look for and fix any potential repetition of founders in executive section
+    const foundersSectionRegex = /##\s*Fundadores([\s\S]*?)(?=##|$)/i;
+    const executiveSectionRegex = /##\s*Equipe\s*Executiva([\s\S]*?)(?=##|$)/i;
+    
+    const foundersMatch = processedContent.match(foundersSectionRegex);
+    const executiveMatch = processedContent.match(executiveSectionRegex);
+    
+    if (foundersMatch && executiveMatch) {
+      console.log("Found both founders and executive sections, checking for repetitions");
+      // We have both sections, extract names from founders section to check for repetitions
+      const foundersText = foundersMatch[1];
+      const executiveText = executiveMatch[1];
+      
+      // Simple name extraction (looking for bold names or names followed by colon/dash)
+      const nameExtractor = /\*\*([^*]+)\*\*|(?:^|\n)([A-Z][a-zÀ-ÿ]+(?: [A-Z][a-zÀ-ÿ]+)+)(?=\s*[:-])/g;
+      const founderNames: string[] = [];
+      let match;
+      
+      while ((match = nameExtractor.exec(foundersText)) !== null) {
+        if (match[1]) founderNames.push(match[1].toLowerCase());
+        if (match[2]) founderNames.push(match[2].toLowerCase());
+      }
+      
+      // If we found founder names, add a note to executive section if needed
+      if (founderNames.length > 0 && !executiveText.includes("não inclui fundadores") && !executiveText.includes("sem os fundadores")) {
+        console.log("Adding clarification note about founders in executive section");
+        const updatedExecutiveSection = `## Equipe Executiva
+*(Nota: Esta seção lista apenas executivos que não são fundadores)*
+${executiveText.replace(/##\s*Equipe\s*Executiva\s*/i, '')}`;
+        
+        processedContent = processedContent.replace(executiveSectionRegex, updatedExecutiveSection);
+      }
+    }
+    
+    console.log("Processed content sample:", processedContent.substring(0, 200) + "...");
     
     // Return the processed content with minimal modifications
     return {
