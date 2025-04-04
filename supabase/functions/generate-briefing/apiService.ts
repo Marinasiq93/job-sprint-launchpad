@@ -1,3 +1,4 @@
+
 // Import required modules
 import { BriefingPrompt } from "./types.ts";
 
@@ -22,13 +23,13 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
    - Use • para listas com bullets (não use - para bullets de lista)
    - Use formatação **negrito** para conceitos importantes
 
-2. Organize sua resposta em seções claras
-3. Inclua dados, métricas e fatos objetivos quando disponíveis
-4. Liste suas fontes no final usando formato numerado [1] com URLs
-5. Seja imparcial e objetivo, baseando-se em fatos verificáveis
-6. Evite repetir as mesmas informações em seções diferentes
-7. Formate listas sempre com • para bullets (não use - para bullets)
-8. Não inclua introdução ou conclusão, vá direto ao ponto
+2. Organize sua resposta em seções claras com títulos
+3. Inclua um pequeno resumo no início da sua análise
+4. Inclua dados, métricas e fatos objetivos quando disponíveis
+5. Liste suas fontes no final usando formato numerado [1] com URLs completas
+6. Inclua os nomes dos sites nas fontes antes das URLs quando possível
+7. Seja imparcial e objetivo, baseando-se em fatos verificáveis
+8. Formate listas sempre com • para bullets (não use - para bullets)
 `;
 
     // Use the Perplexity API to generate a response
@@ -108,7 +109,7 @@ export const generatePrompt = (request: BriefingPrompt): string => {
     prompt += `\n\nResponda à pergunta: "Algum pensamento ou conexão sobre a história da fundação da empresa? O que mais chamou sua atenção?"`;
   }
   
-  prompt += `\n\nForneça uma análise concisa e direta, sem introdução ou conclusão.`;
+  prompt += `\n\nDivida sua resposta em seções claras com títulos e subtítulos. Inclua um breve resumo no início da sua análise. Liste suas fontes claramente no final.`;
   
   return prompt;
 };

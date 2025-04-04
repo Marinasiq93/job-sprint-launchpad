@@ -1,7 +1,7 @@
 
 import { BriefingResponse } from "./types.ts";
 import { callPerplexityAPI } from "./apiService.ts";
-import { extractSources } from "./extractors/sourceExtractor.ts";
+import { extractSources } from "./contentExtractors.ts";
 import { preserveMarkdownStructure, removeDuplicateHeaders } from "./utils/textUtils.ts";
 
 // Call Perplexity API to get the analysis
@@ -26,7 +26,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
   try {
     console.log("Processing raw response: " + content.substring(0, 200) + "...");
     
-    // Se o conteúdo explicitamente tem termos de demonstração, ele deve ser tratado como tal
+    // Check for demo content markers
     if (isDemoContent(content)) {
       console.log("Content contains demo markers, treating as demo content");
       throw new Error("Demo content detected");
@@ -35,26 +35,28 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Extract sources using the source extractor
     const sources = extractSources(content);
     
-    // Only perform minimal processing to maintain the original format from Perplexity
-    let processedContent = content
-      // Normalize line breaks for consistent processing
-      .replace(/\r\n/g, '\n');
+    // Preserve the original format as much as possible
+    // Only remove the source section since we extract it separately
+    let processedContent = content;
     
-    // Remove source section since we extract it separately
     const sourceSectionMatch = processedContent.match(/(?:Sources|Fontes|References|Referências)(?::|)\s*\n((?:.|\n)*$)/i);
     if (sourceSectionMatch) {
       processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
     }
     
+    // Apply minimal formatting to preserve structure
+    processedContent = preserveMarkdownStructure(processedContent);
+    processedContent = removeDuplicateHeaders(processedContent);
+    
     console.log("Minimally processed content sample:", processedContent.substring(0, 200) + "...");
     
     // Return the processed content with minimal modifications
     return {
-      overview: processedContent, // Use the minimally processed content as overview
-      highlights: [],    // We're not using highlights anymore
-      summary: "",       // We're not using summary anymore
-      sources: sources,  // Still extract sources for reference links
-      recentNews: []     // We're not using recentNews anymore
+      overview: processedContent,   // Keep the main content with minimal processing
+      highlights: [],               // We're not extracting highlights separately anymore
+      summary: "",                  // We're not extracting summary separately anymore
+      sources: sources,             // Include extracted sources
+      recentNews: []                // We're not extracting news separately anymore
     };
   } catch (error) {
     console.error("Error processing Perplexity response:", error);

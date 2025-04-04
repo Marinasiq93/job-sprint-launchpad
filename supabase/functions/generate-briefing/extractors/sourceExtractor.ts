@@ -9,36 +9,27 @@ export const extractSources = (content: string): Array<{title: string, url: stri
   const sourcesSection = content.match(sourcesSectionRegex);
   
   if (sourcesSection && sourcesSection[1]) {
-    // Try extracting numbered citations first (e.g., [1] http://example.com)
-    const numberedSourceRegex = /(?:\[(\d+)\]|\(\d+\)|\d+[\.\)])\s+(https?:\/\/[^\s\n]+)/g;
+    // Try extracting numbered citations with titles first (e.g., [1] Title: http://example.com)
+    const numberedSourceWithTitleRegex = /(?:\[(\d+)\]|\(\d+\)|\d+[\.\)])\s+(.*?)(?::|)\s+(https?:\/\/[^\s\n]+)/g;
     let match;
     
-    while ((match = numberedSourceRegex.exec(sourcesSection[1])) !== null) {
-      const url = match[2]?.trim();
+    while ((match = numberedSourceWithTitleRegex.exec(sourcesSection[1])) !== null) {
+      const title = match[2]?.trim();
+      const url = match[3]?.trim();
       if (url) {
-        try {
-          // Extract domain name for title
-          let domain = getDomainName(url);
-          
-          sources.push({
-            title: domain,
-            url
-          });
-        } catch (e) {
-          // Fallback if URL parsing fails
-          sources.push({
-            title: url,
-            url
-          });
-        }
+        sources.push({
+          title: title || getDomainName(url),
+          url
+        });
       }
     }
     
-    // If no numbered sources found, look for URLs on separate lines
+    // If no sources with titles found, try numbered citations without titles
     if (sources.length === 0) {
-      const lineByLineRegex = /^(https?:\/\/[^\s\n]+)$/gm;
-      while ((match = lineByLineRegex.exec(sourcesSection[1])) !== null) {
-        const url = match[1]?.trim();
+      const numberedSourceRegex = /(?:\[(\d+)\]|\(\d+\)|\d+[\.\)])\s+(https?:\/\/[^\s\n]+)/g;
+      
+      while ((match = numberedSourceRegex.exec(sourcesSection[1])) !== null) {
+        const url = match[2]?.trim();
         if (url) {
           sources.push({
             title: getDomainName(url),
@@ -48,14 +39,15 @@ export const extractSources = (content: string): Array<{title: string, url: stri
       }
     }
     
-    // If still no sources found, extract all URLs in the section
+    // If still no sources found, look for URLs on separate lines
     if (sources.length === 0) {
-      const generalUrlRegex = /(https?:\/\/[^\s\n]+)/g;
-      while ((match = generalUrlRegex.exec(sourcesSection[1])) !== null) {
-        const url = match[1]?.trim();
-        if (url && !sources.some(s => s.url === url)) {
+      const lineByLineRegex = /^(?:(?:\[?\d+\]?\.?\s+)?(?:(.*?)(?::|)\s+)?)?(https?:\/\/[^\s\n]+)$/gm;
+      while ((match = lineByLineRegex.exec(sourcesSection[1])) !== null) {
+        const title = match[1]?.trim();
+        const url = match[2]?.trim();
+        if (url) {
           sources.push({
-            title: getDomainName(url),
+            title: title || getDomainName(url),
             url
           });
         }
@@ -110,3 +102,6 @@ const getDomainName = (url: string): string => {
     return domainMatch ? domainMatch[1] : url;
   }
 };
+
+// Export the getDomainName function for use in other files
+export { getDomainName };
