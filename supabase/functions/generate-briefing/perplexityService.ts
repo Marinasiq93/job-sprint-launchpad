@@ -20,9 +20,16 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // This pattern will match the section header and all content until the next section header or end of content
     const cleanedContent = content.replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '');
     
+    // Add appropriate spacing between paragraphs
+    const formattedContent = cleanedContent
+      // Ensure sections have proper spacing
+      .replace(/\n([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,})(?:\s*da\s+|\s+de\s+|\s+do\s+|\s+dos\s+|\s+das\s+)?([A-Z][A-Za-z0-9áàâãéèêíïóôõöúçñ\s]+)$/gm, '\n\n$1$2')
+      // Add proper spacing before section headers
+      .replace(/\n([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,}):$/gm, '\n\n$1:');
+    
     // Return the raw content with minimal processing
     return {
-      overview: cleanedContent, // Use the cleaned content as overview
+      overview: formattedContent, // Use the formatted content as overview
       highlights: [],    // We're not using highlights anymore
       summary: "",       // We're not using summary anymore
       sources: sources,  // Still extract sources for reference links
