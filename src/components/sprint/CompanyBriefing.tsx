@@ -36,7 +36,8 @@ const CompanyBriefing = ({
     currentQuestionIndex
   });
 
-  const showApiWarning = !isApiAvailable && !isLoading && !error;
+  // Só mostrar o aviso de API quando realmente for uma resposta demo e não houver erro
+  const showApiWarning = isApiAvailable === false && !isLoading && !error;
 
   return (
     <div className="h-full flex flex-col">

@@ -22,6 +22,21 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
   // Get the cached briefing or use default content
   const currentBriefing = briefingCache[currentBriefingCategory] || defaultContentByCategory[currentBriefingCategory];
 
+  // Verifica se o conteúdo é de demonstração
+  const isContentDemo = (content: string | undefined): boolean => {
+    if (!content) return true;
+    
+    // Melhorada a detecção de conteúdo demo com termos específicos
+    const demoTerms = [
+      'demonstração:', 
+      'esta é uma versão de demonstração',
+      'esta é uma análise de demonstração',
+      'modo de demonstração'
+    ];
+    
+    return demoTerms.some(term => content.toLowerCase().includes(term.toLowerCase()));
+  };
+
   // Load briefing content
   const loadBriefingContent = async (category: string) => {
     // If we already have cached data for this category, use it
@@ -35,10 +50,8 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     try {
       const briefingData = await fetchBriefingContent(category, companyName, companyWebsite);
       
-      // Check if this is a demo response
-      if (briefingData.overview?.includes('Demonstração:') || 
-          briefingData.overview?.includes('demo') || 
-          briefingData.overview?.includes('Esta é uma versão de demonstração')) {
+      // Verifica se é uma resposta de demonstração com lógica melhorada
+      if (isContentDemo(briefingData.overview)) {
         setIsApiAvailable(false);
       } else {
         setIsApiAvailable(true);
@@ -72,10 +85,8 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
         true // Force refresh
       );
       
-      // Check if this is a demo response
-      if (briefingData.overview?.includes('Demonstração:') || 
-          briefingData.overview?.includes('demo') || 
-          briefingData.overview?.includes('Esta é uma versão de demonstração')) {
+      // Verifica se é uma resposta de demonstração
+      if (isContentDemo(briefingData.overview)) {
         setIsApiAvailable(false);
         toast.info('Modo de demonstração: API não disponível. Configure a API Perplexity para análise completa.');
       } else {

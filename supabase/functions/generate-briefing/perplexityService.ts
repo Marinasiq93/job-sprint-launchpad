@@ -9,10 +9,28 @@ export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: st
   return await callPerplexityAPI(prompt, perplexityApiKey);
 };
 
+// Check if content is a demo/placeholder response
+const isDemoContent = (content: string): boolean => {
+  const demoTerms = [
+    'demonstração:', 
+    'esta é uma versão de demonstração',
+    'esta é uma análise de demonstração', 
+    'modo de demonstração'
+  ];
+  
+  return demoTerms.some(term => content.toLowerCase().includes(term.toLowerCase()));
+};
+
 // Process the raw Perplexity API response into our expected format
 export const processPerplexityResponse = (content: string, companyName: string): BriefingResponse => {
   try {
     console.log("Processing raw response: " + content.substring(0, 200) + "...");
+    
+    // Se o conteúdo explicitamente tem termos de demonstração, ele deve ser tratado como tal
+    if (isDemoContent(content)) {
+      console.log("Content contains demo markers, treating as demo content");
+      throw new Error("Demo content detected");
+    }
     
     // Extract sources using the source extractor
     const sources = extractSources(content);
