@@ -58,30 +58,33 @@ export const perplexityPromptsByCategory = {
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
-    Visite o site institucional da empresa ${companyWebsite} e pesquise especificamente sobre a liderança.
+    Visite o site institucional da empresa ${companyWebsite} e pesquise especificamente sobre a liderança e fundadores.
     
     Não repita informações gerais sobre a empresa que já apareceram em outras perguntas.
-    Foque exclusivamente na equipe de liderança e como ela influencia a direção da empresa.
+    Foque exclusivamente nos perfis profissionais dos fundadores e da equipe de liderança atual.
     
     Organize sua análise nestas seções específicas:
     
-    ## Perfil dos Líderes Principais
+    ## Fundadores
+    - Nomes dos fundadores
+    - Formação acadêmica e especialização
+    - Experiência profissional anterior à fundação da empresa
+    - Motivações pessoais para criar a empresa (se disponível)
+    
+    ## Equipe de Liderança Atual
     - Nomes e cargos dos principais executivos
-    - Background profissional e formação
-    - Conquistas notáveis antes de ingressar na empresa
+    - Background profissional resumido de cada líder
+    - Experiência prévia relevante para o setor
+    - Tempo de atuação na empresa (se disponível)
     
-    ## Estilo e Filosofia de Liderança
-    - Abordagem gerencial evidenciada nas declarações públicas
-    - Citações marcantes sobre visão de negócios e gestão
-    - Como a liderança toma decisões e direciona a empresa
+    ## Trajetória Profissional Destacada
+    - Conquistas notáveis na carreira dos principais líderes
+    - Empresas anteriores onde trabalharam
+    - Projetos importantes que lideraram
+    - Reconhecimentos e prêmios recebidos
     
-    ## Impacto e Legado
-    - Principais contribuições para o crescimento da empresa
-    - Reconhecimentos externos da liderança (prêmios, rankings, etc)
-    - Iniciativas específicas lideradas pela equipe executiva
-    
-    Evite repetir informações sobre cultura geral, história da empresa ou produtos que já foram abordados 
-    em outros tópicos. Concentre-se especificamente nas pessoas que lideram a empresa e seu impacto.`,
+    Concentre-se especificamente nos perfis profissionais das pessoas que fundaram e lideram a empresa, 
+    evitando mencionar iniciativas, valores e aspectos culturais já abordados em outros tópicos.`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -110,4 +113,3 @@ export const perplexityPromptsByCategory = {
     Apresente a história como uma narrativa que mostre a evolução da empresa e os aprendizados ao longo 
     do caminho, evitando repetir detalhes sobre produtos atuais ou cultura que já foram abordados em outros tópicos.`
 };
-
