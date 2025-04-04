@@ -17,7 +17,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Extract sources using the source extractor
     const sources = extractSources(content);
     
-    // Preprocessing - preserve original structure as much as possible
+    // Only perform minimal processing to maintain the original format from Perplexity
     let processedContent = content
       // Normalize line breaks for consistent processing
       .replace(/\r\n/g, '\n');
@@ -28,14 +28,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
       processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
     }
     
-    // Apply very minimal processing to preserve the original Markdown structure
-    // This is crucial to maintain the exact structure Perplexity returns
-    processedContent = preserveMarkdownStructure(processedContent);
-    
-    // Just remove duplicate headers but otherwise preserve the exact format
-    processedContent = removeDuplicateHeaders(processedContent);
-    
-    console.log("Processed content sample:", processedContent.substring(0, 200) + "...");
+    console.log("Minimally processed content sample:", processedContent.substring(0, 200) + "...");
     
     // Return the processed content with minimal modifications
     return {

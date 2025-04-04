@@ -25,12 +25,10 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             ORIENTAÇÕES:
             
             - Utilize dados factuais e específicos sobre a empresa
-            - Use Markdown para formatar sua resposta com títulos e subtítulos claros
-              - Use ## para títulos principais
-              - Use ### para subtítulos
-              - Use #### para tópicos menores
-              - Não use mais de 4 níveis de títulos
+            - Use linguagem simples e natural, evite uso excessivo de formatação
             - Estruture sua resposta de forma organizada com parágrafos bem definidos
+            - Não use formatação com hashtags (#) para títulos
+            - Use negrito para destaques importantes
             - Inclua URLs completas ao mencionar fontes
             - Use informações do site oficial da empresa e fontes confiáveis
             
