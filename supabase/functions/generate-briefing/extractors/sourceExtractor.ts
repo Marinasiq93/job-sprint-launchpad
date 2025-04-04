@@ -1,96 +1,83 @@
 
-// Extract sources from content
-export const extractSources = (content: string): Array<{title: string, url: string}> => {
-  const sources: Array<{title: string, url: string}> = [];
-  const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
+import { getDomainName } from "../utils/textUtils.ts";
+
+// Extract sources from the content
+export const extractSources = (content: string): Array<{ title: string; url: string; }> => {
+  if (!content) return [];
   
-  // Look for the "Fontes" section with various labels
-  const sourcesSectionRegex = /(?:Fontes(?:\s+Utilizadas)?|Sources|Citations|References|Referências):?\s*([\s\S]*?)(?:\n\n|\n?$)/i;
-  const sourcesSection = content.match(sourcesSectionRegex);
+  // Try to find a sources/references section
+  const sourcesMatch = content.match(/(?:^|\n)(?:Sources|Fontes|References|Referências|Fonte)(?::|)\s*([\s\S]*)$/i);
   
-  if (sourcesSection && sourcesSection[1]) {
-    // Try extracting numbered citations with titles first (e.g., [1] Title: http://example.com)
-    const numberedSourceWithTitleRegex = /(?:\[(\d+)\]|\(\d+\)|\d+[\.\)])\s+(.*?)(?::|)\s+(https?:\/\/[^\s\n]+)/g;
+  if (sourcesMatch) {
+    // Extract the sources section
+    const sourcesSection = sourcesMatch[1].trim();
+    
+    // Match numbered sources (1. Source title - http://example.com)
+    // or bulleted sources (- Source title - http://example.com)
+    const sources: Array<{ title: string; url: string; }> = [];
+    
+    // First pattern: numbered sources with titles and URLs
+    const numberedSourceRegex = /(?:^|\n)(?:\d+\.|\d+\)|\d+\s+[-–]|\[\d+\])\s+(.+?)(?:[-–—]|\s+[-–])\s+(https?:\/\/[^\s]+)/g;
     let match;
     
-    while ((match = numberedSourceWithTitleRegex.exec(sourcesSection[1])) !== null) {
-      const title = match[2]?.trim();
-      const url = match[3]?.trim();
-      if (url) {
+    while ((match = numberedSourceRegex.exec(sourcesSection)) !== null) {
+      sources.push({
+        title: match[1].trim(),
+        url: match[2].trim()
+      });
+    }
+    
+    // If no sources found with first pattern, try second pattern: just URLs with optional numbers
+    if (sources.length === 0) {
+      const urlRegex = /(?:^|\n)(?:\d+\.|\d+\)|[-•*]|\[\d+\])?\s*(https?:\/\/[^\s]+)/g;
+      while ((match = urlRegex.exec(sourcesSection)) !== null) {
+        const url = match[1].trim();
         sources.push({
-          title: title || getDomainName(url),
-          url
+          title: `Source: ${getDomainName(url)}`,
+          url: url
         });
       }
     }
     
-    // If no sources with titles found, try numbered citations without titles
+    // If still no sources, try third pattern: lines with URLs anywhere in them
     if (sources.length === 0) {
-      const numberedSourceRegex = /(?:\[(\d+)\]|\(\d+\)|\d+[\.\)])\s+(https?:\/\/[^\s\n]+)/g;
+      const linesWithUrls = sourcesSection.split('\n')
+        .filter(line => line.includes('http'));
       
-      while ((match = numberedSourceRegex.exec(sourcesSection[1])) !== null) {
-        const url = match[2]?.trim();
-        if (url) {
+      linesWithUrls.forEach(line => {
+        const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+        if (urlMatch) {
+          const url = urlMatch[1].trim();
+          const title = line.replace(url, '').replace(/[-–—:]/, '').trim();
+          
           sources.push({
-            title: getDomainName(url),
-            url
+            title: title || `Source: ${getDomainName(url)}`,
+            url: url
           });
         }
-      }
+      });
     }
     
-    // If still no sources found, look for URLs on separate lines
-    if (sources.length === 0) {
-      const lineByLineRegex = /^(?:(?:\[?\d+\]?\.?\s+)?(?:(.*?)(?::|)\s+)?)?(https?:\/\/[^\s\n]+)$/gm;
-      while ((match = lineByLineRegex.exec(sourcesSection[1])) !== null) {
-        const title = match[1]?.trim();
-        const url = match[2]?.trim();
-        if (url) {
-          sources.push({
-            title: title || getDomainName(url),
-            url
-          });
-        }
-      }
-    }
+    return sources;
   }
   
-  // If no sources were found in dedicated sections, look for URLs throughout the content
-  if (sources.length === 0) {
-    // Find all URLs in the content
-    let urls: string[] = [];
-    let match;
-    
-    while ((match = urlRegex.exec(content)) !== null) {
-      urls.push(match[0]);
-    }
-    
-    // Deduplicate URLs
-    urls = [...new Set(urls)];
-    
-    // Add unique URLs as sources
-    urls.forEach(url => {
-      try {
-        sources.push({
-          title: getDomainName(url),
-          url
-        });
-      } catch (e) {
-        // Skip invalid URLs
-        console.log("Invalid URL found:", url);
-      }
+  // If no sources section found, try to extract URLs from the entire content
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = [];
+  let urlMatch;
+  
+  while ((urlMatch = urlRegex.exec(content)) !== null) {
+    urls.push({
+      title: `Source: ${getDomainName(urlMatch[1])}`,
+      url: urlMatch[1].trim()
     });
   }
   
-  // Return deduplicated sources (by URL)
-  return sources
-    .filter((source, index, self) => 
-      index === self.findIndex((s) => s.url === source.url))
-    .slice(0, 10); // Limit to 10 sources
+  return urls;
 };
 
-// Helper function to get domain name from URL
-const getDomainName = (url: string): string => {
+// Extract domain name from URL - moved from utils/textUtils.ts for direct use
+export const getDomainName = (url: string): string => {
   try {
     // Try to create URL object
     const urlObj = new URL(url);
@@ -102,6 +89,3 @@ const getDomainName = (url: string): string => {
     return domainMatch ? domainMatch[1] : url;
   }
 };
-
-// Export the getDomainName function for use in other files
-export { getDomainName };

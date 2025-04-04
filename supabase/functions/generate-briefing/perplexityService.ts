@@ -1,7 +1,7 @@
 
 import { BriefingResponse } from "./types.ts";
 import { callPerplexityAPI } from "./apiService.ts";
-import { extractSources } from "./contentExtractors.ts";
+import { extractSources } from "./extractors/sourceExtractor.ts";
 import { preserveMarkdownStructure, removeDuplicateHeaders } from "./utils/textUtils.ts";
 
 // Call Perplexity API to get the analysis
@@ -40,7 +40,9 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Only remove the source section since we extract it separately
     let processedContent = content;
     
-    const sourceSectionMatch = processedContent.match(/(?:Sources|Fontes|References|Referências)(?::|)\s*\n((?:.|\n)*$)/i);
+    // Look for source sections with different possible headings and formats
+    const sourceSectionRegex = /(?:^|\n)(?:Sources|Fontes|References|Referências|Fonte)(?::|)\s*\n((?:.|\n)*$)/i;
+    const sourceSectionMatch = processedContent.match(sourceSectionRegex);
     if (sourceSectionMatch) {
       processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
     }

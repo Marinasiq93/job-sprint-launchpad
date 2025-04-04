@@ -1,7 +1,7 @@
 
 // Re-export all content extractors from their dedicated modules
 import { extractHighlights } from './extractors/highlightExtractor.ts';
-import { extractSources, getDomainName } from './extractors/sourceExtractor.ts';
+import { extractSources } from './extractors/sourceExtractor.ts';
 import { extractRecentNews } from './extractors/newsExtractor.ts';
 import { cleanText } from './utils/textUtils.ts';
 
@@ -10,6 +10,5 @@ export {
   extractHighlights,
   extractSources,
   extractRecentNews,
-  cleanText,
-  getDomainName
+  cleanText
 };

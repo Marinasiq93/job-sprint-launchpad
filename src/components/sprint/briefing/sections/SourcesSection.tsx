@@ -12,6 +12,7 @@ interface SourcesSectionProps {
 }
 
 const SourcesSection = ({ sources }: SourcesSectionProps) => {
+  // Only render if we have sources
   if (!sources || sources.length === 0) {
     return null;
   }
@@ -35,7 +36,7 @@ const SourcesSection = ({ sources }: SourcesSectionProps) => {
                 className="text-sm flex items-center group hover:bg-gray-50 p-1 rounded-md transition-colors text-blue-600 hover:text-blue-800 flex-1"
               >
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-400 group-hover:text-blue-500" />
-                <span className="text-sm line-clamp-2">{source.title || source.url}</span>
+                <span className="text-sm line-clamp-2 break-words">{source.title || source.url}</span>
               </a>
             </div>
           ))}
