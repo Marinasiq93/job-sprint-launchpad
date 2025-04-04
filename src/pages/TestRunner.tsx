@@ -1,13 +1,13 @@
 
 import { useEffect } from 'react';
-import RunTests from '../runTests';
+import TestRunner from '../runTests';
 
 const TestRunnerPage = () => {
   useEffect(() => {
     document.title = 'Test Runner - JobSprints';
   }, []);
   
-  return <RunTests />;
+  return <TestRunner />;
 };
 
 export default TestRunnerPage;
