@@ -1,10 +1,8 @@
 
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./types";
-import { categoryTitles, BRIEFING_CATEGORIES } from "./briefingConstants";
-import { ExternalLink, AlertCircle, Loader2, Link as LinkIcon } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 
 interface BriefingContentProps {
   currentBriefing: BriefingContentType;
@@ -36,64 +34,28 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
-  // Clean and process the overview content to handle markdown formatting
+  // Process the overview content to handle markdown formatting
   const processedOverview = currentBriefing.overview
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Italic text
+    .replace(/\n\n/g, '<br/><br/>') // Line breaks
     .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>'); // Citations
 
   return (
     <div className="space-y-4">
       <section>
-        <h3 className="font-semibold text-sm flex items-center gap-1.5 text-gray-700 mb-2">
-          <Badge variant="outline" className="bg-gray-50 text-gray-800 border-gray-200">
-            {categoryTitles[currentCategory]}
-          </Badge>
-        </h3>
         <div 
-          className="text-sm mb-2 leading-relaxed prose prose-sm max-w-none"
+          className="text-sm leading-relaxed prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{ __html: processedOverview }}
         />
       </section>
-      
-      {currentBriefing.summary && (
-        <>
-          <Separator />
-          <section>
-            <div className="text-sm leading-relaxed">
-              {currentBriefing.summary}
-            </div>
-          </section>
-        </>
-      )}
-
-      {currentCategory === BRIEFING_CATEGORIES.MISSION_VISION && currentBriefing.additionalPoints && currentBriefing.additionalPoints.length > 0 && (
-        <>
-          <Separator />
-          <section>
-            <ul className="text-sm space-y-1.5">
-              {currentBriefing.additionalPoints.map((point, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium mr-2 flex-shrink-0">
-                    {index + 1}
-                  </span>
-                  <span>{point}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
       
       {currentBriefing.sources && currentBriefing.sources.length > 0 && (
         <>
           <Separator />
           
-          <section>
-            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
-              <LinkIcon className="h-4 w-4 text-gray-600" />
-              Fontes
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <section className="pt-2">
+            <div className="grid grid-cols-1 gap-2">
               {currentBriefing.sources.map((source, index) => (
                 <a 
                   key={index}

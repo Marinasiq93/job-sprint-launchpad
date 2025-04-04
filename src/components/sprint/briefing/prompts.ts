@@ -7,156 +7,96 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    ## Visão Geral da ${companyName}
-    
-    Comece com um resumo abrangente da empresa: o que ela faz, tamanho, mercado, principais produtos, e posicionamento no setor.
+    Comece com um overview da empresa ${companyName}: o que ela faz, tamanho, mercado, principais produtos, e posicionamento no setor.
     Inclua dados factuais como ano de fundação, sede, número aproximado de funcionários quando disponível.
     
-    ## Valores Corporativos
+    Em seguida, apresente os valores corporativos e cultura da empresa:
+    - Liste e explique os valores e princípios da empresa
+    - Detalhe como esses valores se manifestam na cultura
+    - Mencione programas internos ou iniciativas que reflitam esses valores
     
-    Detalhe os valores e princípios da empresa com CITAÇÕES DIRETAS quando possível:
-    * Liste cada valor corporativo EXPLICITAMENTE DECLARADO no site
-    * Para cada valor, explique como ele se manifesta na cultura 
-    * Inclua exemplos concretos de como esses valores são aplicados
-    * Mencione programas internos ou iniciativas que reflitam esses valores
+    Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)
     
-    Busque essas informações em seções como "Sobre Nós", "Missão/Visão/Valores", "Cultura", "Carreiras".
-    
-    ## Notícias Recentes
-    
-    Liste 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    
-    Citations:
-    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
-    [1] URL completa
-    [2] URL completa
-    etc.`,
+    Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    ## Missão e Visão
+    Foque exclusivamente na missão, visão e propósito da empresa ${companyName}:
+    - Apresente a missão oficial da empresa (por que ela existe)
+    - Explique a visão oficial da empresa (onde deseja chegar no futuro)
+    - Detalhe o propósito maior ou impacto social que a empresa busca gerar
+    - Inclua citações inspiradoras dos fundadores ou liderança sobre o propósito da empresa
     
-    Foque exclusivamente na missão, visão e propósito da empresa:
-    * MISSÃO OFICIAL: O propósito declarado da empresa (por que ela existe), use CITAÇÕES DIRETAS
-    * VISÃO OFICIAL: Onde a empresa deseja chegar no futuro, use CITAÇÕES DIRETAS
-    * PROPÓSITO: Causa maior ou impacto social que a empresa busca gerar
-    * INSPIRAÇÃO: Inclua citações inspiradoras dos fundadores ou liderança sobre o propósito da empresa
+    Liste também exemplos concretos de como a empresa está trabalhando para atingir sua missão,
+    como projetos específicos alinhados ao propósito declarado, produtos ou serviços que demonstram
+    o compromisso com a visão, e iniciativas de impacto que refletem os valores.
     
-    Se a missão e visão não estiverem explicitamente declaradas, analise o conteúdo do site para inferir o propósito e direção da empresa.
-    
-    ## Realizações e Impacto
-    
-    Liste exemplos concretos de como a empresa está trabalhando para atingir sua missão:
-    * Projetos específicos alinhados ao propósito declarado
-    * Produtos ou serviços que demonstram o compromisso com a visão
-    * Iniciativas sociais, ambientais ou de impacto que refletem os valores
-    * Exemplos de como a empresa está transformando seu setor de atuação
-    
-    Citations:
-    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
-    [1] URL completa
-    [2] URL completa
-    etc.`,
+    Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    ## Visão Geral dos Produtos e Mercado
+    Comece com um panorama abrangente dos produtos e serviços da empresa ${companyName},
+    explicando o que eles oferecem, seu público-alvo, e contexto de mercado.
     
-    Comece com um panorama abrangente da empresa ${companyName}: produtos e serviços oferecidos, público-alvo, e contexto de mercado.
-    Inclua dados factuais sobre o tamanho do mercado e posicionamento competitivo quando disponíveis.
+    Detalhe o perfil dos clientes e aplicações:
+    - Perfil típico dos usuários/clientes da empresa
+    - Principais casos de uso e aplicações dos produtos/serviços
+    - Problemas específicos que a solução resolve para os clientes
+    - Depoimentos ou casos de sucesso de clientes reais (se disponíveis)
     
-    ## Perfil do Cliente e Aplicações
+    Apresente informações sobre o mercado e competição:
+    - Tamanho e crescimento do mercado em que a empresa atua
+    - Principais concorrentes diretos no mercado
+    - Diferenciais competitivos da empresa
+    - Tendências relevantes para o setor
     
-    Detalhe com exemplos concretos:
-    * Perfil típico dos usuários/clientes da empresa (indústrias, tamanho de empresa, etc.)
-    * Principais casos de uso e aplicações dos produtos/serviços
-    * Problemas específicos que a solução resolve para os clientes
-    * Depoimentos ou casos de sucesso de clientes reais (com citações quando disponíveis)
-    
-    ## Mercado e Competição
-    
-    * Tamanho e crescimento do mercado em que a empresa atua (com dados quando disponíveis)
-    * 3-5 principais concorrentes diretos no mercado
-    * Diferenciais competitivos da empresa (com base no que é declarado no site)
-    * Tendências de mercado relevantes para o setor
-    
-    Citations:
-    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
-    [1] URL completa
-    [2] URL completa
-    etc.`,
+    Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    ## Visão Geral da ${companyName}
-    
-    Comece com um resumo abrangente da empresa: o que ela faz, estágio de desenvolvimento (startup, scale-up, empresa estabelecida), 
+    Comece com um resumo sobre a empresa ${companyName}: o que ela faz, estágio de desenvolvimento,
     e posicionamento no mercado.
     
-    ## Liderança e Fundadores
+    Detalhe informações sobre a liderança e fundadores:
+    - Nomes dos fundadores, backgrounds profissionais e história da fundação
+    - CEO atual e equipe executiva principal
+    - Experiência profissional prévia dos principais líderes
+    - Citações dos líderes sobre a empresa, visão ou cultura (quando disponíveis)
     
-    Detalhe com informações específicas:
-    * Fundadores: nomes, backgrounds profissionais, e história da fundação da empresa
-    * CEO atual e equipe executiva principal: nomes e cargos exatos
-    * Experiência profissional prévia dos principais líderes
-    * Citações diretas dos líderes sobre a empresa, visão ou cultura (quando disponíveis)
+    Explique sobre a cultura de liderança:
+    - Estilo de liderança evidenciado por declarações ou políticas da empresa
+    - Valores que a liderança promove internamente
+    - Iniciativas ou programas liderados pela equipe executiva
+    - Como a liderança aborda temas como inovação e diversidade
     
-    Busque informações tanto no site da empresa (seção "Equipe", "Liderança", "Sobre Nós") quanto em fontes como LinkedIn e entrevistas.
-    
-    ## Cultura de Liderança
-    
-    * Estilo de liderança evidenciado por declarações ou políticas da empresa
-    * Valores que a liderança promove internamente
-    * Iniciativas ou programas liderados pela equipe executiva
-    * Como a liderança aborda inovação, diversidade, ou outros temas relevantes
-    
-    Citations:
-    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
-    [1] URL completa
-    [2] URL completa
-    etc.`,
+    Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    ## Visão Geral da ${companyName}
+    Comece com um resumo atual da empresa ${companyName}: mercado, produtos principais, tamanho e alcance geográfico.
     
-    Comece com um resumo abrangente da empresa atualmente: mercado, produtos principais, tamanho e alcance geográfico.
+    Detalhe a história da fundação:
+    - Ano e local de fundação
+    - Nomes dos fundadores e seus backgrounds
+    - Contexto de mercado no momento da fundação
+    - Motivação original para a criação da empresa
+    - Modelo de negócio inicial e como evoluiu
     
-    ## História da Fundação
+    Liste cronologicamente os eventos significativos na história da empresa:
+    - Lançamentos de produtos importantes
+    - Expansões geográficas
+    - Rodadas de investimento significativas
+    - Aquisições ou fusões
+    - Pivôs estratégicos no modelo de negócio
+    - Conquistas e prêmios importantes
     
-    Detalhe com precisão:
-    * Ano e local exato de fundação
-    * Nomes completos dos fundadores e seus backgrounds
-    * Contexto de mercado no momento da fundação
-    * Motivação original para a criação da empresa (com citações dos fundadores quando disponíveis)
-    * Modelo de negócio inicial e como ele evoluiu
-    
-    ## Marcos Históricos
-    
-    Liste cronologicamente 5-7 eventos significativos na história da empresa:
-    * Lançamentos de produtos importantes
-    * Expansões geográficas
-    * Rodadas de investimento significativas
-    * Aquisições ou fusões
-    * Pivôs estratégicos no modelo de negócio
-    * Conquistas e prêmios importantes
-    
-    Utilize um formato claro com anos específicos para cada marco.
-    
-    Citations:
-    Ao final, liste todas as fontes utilizadas com URLs completas no formato:
-    [1] URL completa
-    [2] URL completa
-    etc.`
+    Ao final, liste todas as fontes utilizadas com URLs completas.`
 };
