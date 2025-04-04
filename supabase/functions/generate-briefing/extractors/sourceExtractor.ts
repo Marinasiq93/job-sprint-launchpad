@@ -4,8 +4,8 @@ export const extractSources = (content: string): Array<{title: string, url: stri
   const sources: Array<{title: string, url: string}> = [];
   const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
   
-  // Look for the "Fontes Utilizadas" or "Citations" sections
-  const sourcesSectionRegex = /(?:Fontes Utilizadas|Fontes|Citations|References|Referências):?\s*([\s\S]*?)(?:\n\n|\n?$)/i;
+  // Look for the "Fontes" section with various labels
+  const sourcesSectionRegex = /(?:Fontes(?:\s+Utilizadas)?|Sources|Citations|References|Referências):?\s*([\s\S]*?)(?:\n\n|\n?$)/i;
   const sourcesSection = content.match(sourcesSectionRegex);
   
   if (sourcesSection && sourcesSection[1]) {
@@ -97,7 +97,7 @@ export const extractSources = (content: string): Array<{title: string, url: stri
     .slice(0, 10); // Limit to 10 sources
 };
 
-// Helper function to get domain name from URL (moved from textUtils.ts)
+// Helper function to get domain name from URL
 const getDomainName = (url: string): string => {
   try {
     // Try to create URL object

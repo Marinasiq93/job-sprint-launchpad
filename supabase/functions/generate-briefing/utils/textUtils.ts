@@ -50,3 +50,17 @@ export const detectTextStructure = (text: string): string => {
   
   return "paragraph"; // Default to paragraph mode
 };
+
+// Extract domain name from URL
+export const getDomainName = (url: string): string => {
+  try {
+    // Try to create URL object
+    const urlObj = new URL(url);
+    // Get the hostname and remove 'www.' prefix if present
+    return urlObj.hostname.replace(/^www\./, '');
+  } catch {
+    // If URL parsing fails, extract domain using regex
+    const domainMatch = url.match(/https?:\/\/(?:www\.)?([^\/]+)/i);
+    return domainMatch ? domainMatch[1] : url;
+  }
+};
