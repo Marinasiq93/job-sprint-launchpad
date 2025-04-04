@@ -25,8 +25,8 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             ORIENTAÇÕES:
             
             - Utilize dados factuais e específicos sobre a empresa
-            - Escreva em linguagem natural e fluida
-            - Estruture sua resposta de forma organizada mas conversacional
+            - Use Markdown para formatar sua resposta com títulos e subtítulos claros
+            - Estruture sua resposta de forma organizada com parágrafos bem definidos
             - Inclua URLs completas ao mencionar fontes
             - Use informações do site oficial da empresa e fontes confiáveis
             
@@ -42,7 +42,7 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             content: prompt
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,  // Slightly lower temperature for more consistent responses
         max_tokens: 2500,
         top_p: 0.95
       })

@@ -28,11 +28,11 @@ export const processPerplexityResponse = (content: string, companyName: string):
       processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
     }
     
-    // Apply structure preservation and remove duplicate headers
+    // Apply minimal processing to preserve original structure
     processedContent = preserveMarkdownStructure(processedContent);
     processedContent = removeDuplicateHeaders(processedContent);
     
-    // Return the processed content with minimal processing
+    // Return the processed content with minimal modifications
     return {
       overview: processedContent, // Use the minimally processed content as overview
       highlights: [],    // We're not using highlights anymore

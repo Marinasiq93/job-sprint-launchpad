@@ -17,6 +17,8 @@ export const perplexityPromptsByCategory = {
     
     Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)
     
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
+    
     Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
@@ -32,6 +34,8 @@ export const perplexityPromptsByCategory = {
     Liste também exemplos concretos de como a empresa está trabalhando para atingir sua missão,
     como projetos específicos alinhados ao propósito declarado, produtos ou serviços que demonstram
     o compromisso com a visão, e iniciativas de impacto que refletem os valores.
+    
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
     
     Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
@@ -54,6 +58,8 @@ export const perplexityPromptsByCategory = {
     - Diferenciais competitivos da empresa
     - Tendências relevantes para o setor
     
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
+    
     Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
@@ -74,6 +80,8 @@ export const perplexityPromptsByCategory = {
     - Valores que a liderança promove internamente
     - Iniciativas ou programas liderados pela equipe executiva
     - Como a liderança aborda temas como inovação e diversidade
+    
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
     
     Ao final, liste todas as fontes utilizadas com URLs completas.`,
   
@@ -97,6 +105,8 @@ export const perplexityPromptsByCategory = {
     - Aquisições ou fusões
     - Pivôs estratégicos no modelo de negócio
     - Conquistas e prêmios importantes
+    
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
     
     Ao final, liste todas as fontes utilizadas com URLs completas.`
 };
