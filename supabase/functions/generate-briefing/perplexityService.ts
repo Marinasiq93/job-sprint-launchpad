@@ -2,6 +2,7 @@
 import { BriefingResponse } from "./types.ts";
 import { callPerplexityAPI } from "./apiService.ts";
 import { extractSources } from "./extractors/sourceExtractor.ts";
+import { preserveMarkdownStructure, removeDuplicateHeaders } from "./utils/textUtils.ts";
 
 // Call Perplexity API to get the analysis
 export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: string): Promise<string> => {
@@ -16,26 +17,24 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Extract sources using the source extractor
     const sources = extractSources(content);
     
-    // Preprocessing - handle spacing and structural elements adaptively
-    const processedContent = content
+    // Preprocessing - preserve original structure as much as possible
+    let processedContent = content
       // Normalize line breaks for consistent processing
-      .replace(/\r\n/g, '\n')
-      
-      // Ensure consistent spacing between sections
-      // Add spacing before potential section headers
-      .replace(/\n([A-Z][A-Z\s]{2,})(?:\s*:|\s*$)/gm, '\n\n$1')
-      .replace(/\n([A-Z][a-zA-Z]+(?:\s+[A-Za-z]+){0,3})(?:\s*:|\s*$)/gm, '\n\n$1')
-      .replace(/\n#+\s+([^\n]+)/gm, '\n\n$&')
-      
-      // Ensure lists are properly spaced
-      .replace(/\n([-–•]|\d+[.)])\s+/gm, '\n\n$&')
-      
-      // Fix multiple consecutive line breaks - normalize to double line breaks
-      .replace(/\n{3,}/g, '\n\n');
+      .replace(/\r\n/g, '\n');
+    
+    // Remove source section since we extract it separately
+    const sourceSectionMatch = processedContent.match(/(?:Sources|Fontes|References|Referências)(?::|)\s*\n((?:.|\n)*$)/i);
+    if (sourceSectionMatch) {
+      processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
+    }
+    
+    // Apply structure preservation and remove duplicate headers
+    processedContent = preserveMarkdownStructure(processedContent);
+    processedContent = removeDuplicateHeaders(processedContent);
     
     // Return the processed content with minimal processing
     return {
-      overview: processedContent, // Use the processed content as overview
+      overview: processedContent, // Use the minimally processed content as overview
       highlights: [],    // We're not using highlights anymore
       summary: "",       // We're not using summary anymore
       sources: sources,  // Still extract sources for reference links

@@ -3,24 +3,14 @@
 export const cleanText = (text: string): string => {
   if (!text) return "";
   
-  // Remove markdown headings
-  let cleaned = text.replace(/^#+\s+/gm, '');
-  
   // Remove HTML tags
-  cleaned = cleaned.replace(/<[^>]*>/g, '');
+  let cleaned = text.replace(/<[^>]*>/g, '');
   
-  // Remove extra whitespace
+  // Remove extra whitespace but preserve paragraph breaks
   cleaned = cleaned.replace(/\s+/g, ' ');
   
-  // Remove markdown formatting
+  // Remove markdown formatting symbols but preserve structure
   cleaned = cleaned.replace(/\*\*|\*|__|\[\d+\]/g, '');
-  
-  // Remove list markers
-  cleaned = cleaned.replace(/^\s*[-–•]\s+/gm, '');
-  cleaned = cleaned.replace(/^\s*\d+\.\s+/gm, '');
-  
-  // Remove extra spaces or tabs at beginning of line
-  cleaned = cleaned.replace(/^\s+/gm, '');
   
   // Remove trailing spaces
   cleaned = cleaned.trim();
@@ -63,4 +53,57 @@ export const getDomainName = (url: string): string => {
     const domainMatch = url.match(/https?:\/\/(?:www\.)?([^\/]+)/i);
     return domainMatch ? domainMatch[1] : url;
   }
+};
+
+// Preserve original markdown headings and structure
+export const preserveMarkdownStructure = (text: string): string => {
+  if (!text) return "";
+  
+  // Replace multiple consecutive newlines with exactly two newlines
+  let preserved = text.replace(/\n{3,}/g, '\n\n');
+  
+  // Ensure headers have proper spacing before them
+  preserved = preserved.replace(/([^\n])\n(#+\s+)/g, '$1\n\n$2');
+  
+  // Ensure lists have consistent formatting
+  preserved = preserved.replace(/([^\n])\n([-*•]\s+)/g, '$1\n\n$2');
+  preserved = preserved.replace(/([^\n])\n(\d+\.\s+)/g, '$1\n\n$2');
+  
+  return preserved;
+};
+
+// Remove duplicate section headers that might appear in the response
+export const removeDuplicateHeaders = (text: string): string => {
+  if (!text) return "";
+  
+  // Split the text into lines
+  const lines = text.split('\n');
+  const processedLines = [];
+  const seenHeaders = new Set();
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Check if it's a header (either markdown or capitalized)
+    const isMarkdownHeader = line.match(/^#+\s+(.+)$/);
+    const isCapitalizedHeader = line.match(/^([A-Z][A-Z\s]+[A-Z]):?\s*$/);
+    
+    if (isMarkdownHeader) {
+      const headerText = isMarkdownHeader[1].toLowerCase();
+      if (seenHeaders.has(headerText)) {
+        continue; // Skip this duplicate header
+      }
+      seenHeaders.add(headerText);
+    } else if (isCapitalizedHeader) {
+      const headerText = isCapitalizedHeader[1].toLowerCase();
+      if (seenHeaders.has(headerText)) {
+        continue; // Skip this duplicate header
+      }
+      seenHeaders.add(headerText);
+    }
+    
+    processedLines.push(lines[i]);
+  }
+  
+  return processedLines.join('\n');
 };
