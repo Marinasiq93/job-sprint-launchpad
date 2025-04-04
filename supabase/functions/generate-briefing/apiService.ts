@@ -22,16 +22,24 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
             Forneça uma análise direta, factual e completa baseada em informações disponíveis online.
             
-            ORIENTAÇÕES:
+            ORIENTAÇÕES DE FORMATAÇÃO:
+            
+            - Estruture sua resposta em seções claras com parágrafos bem organizados
+            - Use negrito (**texto**) para destacar informações importantes
+            - Use marcadores (- item) para listas de itens relacionados 
+            - Use subtópicos quando necessário para organizar informações complexas
+            - Cada tópico importante deve começar com um parágrafo introdutório
+            - Mantenha informações similares agrupadas em seções lógicas
+            - Use espaçamento consistente entre parágrafos e seções
+            
+            ORIENTAÇÕES DE CONTEÚDO:
             
             - Utilize dados factuais e específicos sobre a empresa
-            - Use linguagem simples e natural, evite uso excessivo de formatação
-            - Estruture sua resposta de forma organizada com parágrafos bem definidos
-            - Não use formatação com hashtags (#) para títulos
-            - Use negrito para destaques importantes
+            - Use linguagem simples, direta e profissional
             - Inclua URLs completas ao mencionar fontes em seu texto
             - Use informações do site oficial da empresa e fontes confiáveis
-            - Não inclua uma seção de "Fontes" no final da sua resposta`
+            - Não inclua uma seção de "Fontes" no final da sua resposta
+            - Priorize informações atualizadas e relevantes para o candidato`
           },
           {
             role: 'user',

@@ -34,16 +34,22 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um panorama abrangente dos produtos e serviços da empresa ${companyName},
-    explicando o que eles oferecem, seu público-alvo, e contexto de mercado.
+    Comece com um panorama abrangente e bem estruturado dos produtos e serviços da empresa ${companyName},
+    explicando claramente o que eles oferecem, seu público-alvo, e contexto de mercado.
     
-    Detalhe o perfil dos clientes e aplicações:
+    Divida sua análise em seções bem organizadas sobre:
+
+    Produtos e Serviços:
+    - Descreva os principais produtos/serviços oferecidos
+    - Explique suas características e diferenciais principais
+    - Mencione tecnologias ou inovações relevantes usadas
+    
+    Perfil dos Clientes:
     - Perfil típico dos usuários/clientes da empresa
     - Principais casos de uso e aplicações dos produtos/serviços
     - Problemas específicos que a solução resolve para os clientes
-    - Depoimentos ou casos de sucesso de clientes reais (se disponíveis)
     
-    Apresente informações sobre o mercado e competição:
+    Mercado e Competição:
     - Tamanho e crescimento do mercado em que a empresa atua
     - Principais concorrentes diretos no mercado
     - Diferenciais competitivos da empresa
@@ -56,17 +62,23 @@ export const perplexityPromptsByCategory = {
     Comece com um resumo sobre a empresa ${companyName}: o que ela faz, estágio de desenvolvimento,
     e posicionamento no mercado.
     
-    Detalhe informações sobre a liderança e fundadores:
-    - Nomes dos fundadores, backgrounds profissionais e história da fundação
+    Organize sua análise em seções bem estruturadas:
+    
+    Fundadores e Origem:
+    - Nomes dos fundadores e história da fundação
+    - Backgrounds profissionais dos fundadores
+    - Motivação e visão inicial para a empresa
+    
+    Liderança Atual:
     - CEO atual e equipe executiva principal
     - Experiência profissional prévia dos principais líderes
-    - Citações dos líderes sobre a empresa, visão ou cultura (quando disponíveis)
+    - Citações relevantes dos líderes sobre a empresa ou visão
     
-    Explique sobre a cultura de liderança:
-    - Estilo de liderança evidenciado por declarações ou políticas da empresa
+    Cultura de Liderança:
+    - Estilo de liderança evidenciado na empresa
     - Valores que a liderança promove internamente
     - Iniciativas ou programas liderados pela equipe executiva
-    - Como a liderança aborda temas como inovação e diversidade`,
+    - Como a liderança aborda inovação, diversidade e outros temas importantes`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
