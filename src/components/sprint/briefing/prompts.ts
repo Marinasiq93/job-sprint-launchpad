@@ -33,26 +33,28 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um panorama abrangente dos produtos e serviços da empresa ${companyName},
-    explicando claramente o que eles oferecem, seu público-alvo, e contexto de mercado.
+    Comece com um breve panorama dos produtos e serviços da empresa ${companyName}.
     
-    Divida sua análise nestas seções bem organizadas:
+    Divida sua análise nas seguintes seções, evitando repetições:
 
-    ## Produtos e Serviços:
-    - Descreva os principais produtos/serviços oferecidos
-    - Explique suas características e diferenciais principais
-    - Mencione tecnologias ou inovações relevantes usadas
+    ## Produtos e Serviços
+    - Principais produtos/serviços oferecidos
+    - Características e diferenciais principais
+    - Tecnologias ou inovações relevantes utilizadas
     
-    ## Perfil dos Clientes:
-    - Perfil típico dos usuários/clientes da empresa
-    - Principais casos de uso e aplicações dos produtos/serviços
-    - Problemas específicos que a solução resolve para os clientes
+    ## Perfil dos Clientes
+    - Perfil típico dos usuários/clientes
+    - Principais casos de uso e aplicações
+    - Problemas específicos que a solução resolve
     
-    ## Mercado e Competição:
-    - Tamanho e crescimento do mercado em que a empresa atua
-    - Principais concorrentes diretos no mercado
-    - Diferenciais competitivos da empresa
-    - Tendências relevantes para o setor`,
+    ## Mercado e Competição
+    - Tamanho e crescimento do mercado
+    - Principais concorrentes diretos
+    - Diferenciais competitivos (seja conciso e evite repetir informações já mencionadas)
+    - Tendências relevantes para o setor
+    
+    Seja objetivo e não repita as mesmas informações em seções diferentes. Para os diferenciais competitivos, 
+    foque apenas no que realmente distingue a empresa dos concorrentes sem repetir características já mencionadas.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.

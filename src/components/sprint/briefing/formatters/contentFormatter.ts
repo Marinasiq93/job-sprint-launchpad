@@ -36,23 +36,21 @@ export const formatContent = (content: string): string => {
     .replace(/\n\n+/g, '</p><p class="mb-4">')
     
     // Convert URLs to links
-    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>')
+    .replace(/(\s|^)(https?:\/\/[^\s]+)(\s|$)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">$2</a>$3')
     
-    // Improved bullet list handling - catch more patterns including section headers with hyphens
-    // First: handle lines that start with hyphen + space + text (normal bullet points)
+    // Handle bullet points more comprehensively
     .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
     
-    // Second: handle lines where hyphen is followed by text (no space) that isn't a section header
+    // Special case for hyphens that might be part of bullet lists
     .replace(/^[-]([^\s:].+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
     
-    // Third: specifically handle section headers that start with hyphen (like "- PicPay Lovers:")
+    // Handle bullet points with subtitles (like "- PicPay Lovers:")
     .replace(/^[-]\s*([^:]+):(.*)$/gm, '<li class="ml-6 mb-2 list-disc"><strong>$1:</strong>$2</li>')
     
-    // Improve numbered list detection and formatting
-    // First wrap each numbered item in proper <li> with ordered styling
+    // Handle numbered lists better (1. Item, 1) Item, etc.)
     .replace(/^(\d+)[.):]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-decimal" value="$1">$2</li>');
   
-  // Now process the lists with proper wrapping
+  // Process lists with proper wrapping
   let listProcessed = '';
   let inBulletList = false;
   let inNumberedList = false;

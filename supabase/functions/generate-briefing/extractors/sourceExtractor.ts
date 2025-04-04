@@ -12,80 +12,79 @@ export const extractSources = (content: string): Array<{ title: string; url: str
     // Extract the sources section
     const sourcesSection = sourcesMatch[1].trim();
     
-    // Match numbered sources (1. Source title - http://example.com)
-    // or bulleted sources (- Source title - http://example.com)
+    // Initialize sources array
     const sources: Array<{ title: string; url: string; }> = [];
     
     // First pattern: numbered sources with titles and URLs
-    const numberedSourceRegex = /(?:^|\n)(?:\d+\.|\d+\)|\d+\s+[-–]|\[\d+\])\s+(.+?)(?:[-–—]|\s+[-–])\s+(https?:\/\/[^\s]+)/g;
+    // Match patterns like [1] Title: https://example.com or 1. Title - https://example.com
+    const numberedSourceRegex = /(?:^|\n)(?:\[\d+\]|\d+\.|\d+\))\s+([^:]+(?::|-))\s*(https?:\/\/[^\s]+)/g;
     let match;
     
     while ((match = numberedSourceRegex.exec(sourcesSection)) !== null) {
       sources.push({
-        title: match[1].trim(),
+        title: match[1].trim().replace(/[:|-]$/, ''),
         url: match[2].trim()
       });
     }
     
-    // If no sources found with first pattern, try second pattern: just URLs with optional numbers
+    // Second pattern: just URLs with optional numbers or bullets
     if (sources.length === 0) {
-      const urlRegex = /(?:^|\n)(?:\d+\.|\d+\)|[-•*]|\[\d+\])?\s*(https?:\/\/[^\s]+)/g;
-      while ((match = urlRegex.exec(sourcesSection)) !== null) {
+      const urlOnlyRegex = /(?:^|\n)(?:\[\d+\]|\d+\.|\d+\)|[-•*]|\s+)\s*(https?:\/\/[^\s]+)(?:\s+-\s+([^\n]+))?/g;
+      while ((match = urlOnlyRegex.exec(sourcesSection)) !== null) {
         const url = match[1].trim();
-        sources.push({
-          title: `Source: ${getDomainName(url)}`,
-          url: url
-        });
+        const title = match[2] ? match[2].trim() : `Source: ${getDomainName(url)}`;
+        sources.push({ title, url });
       }
     }
     
-    // If still no sources, try third pattern: lines with URLs anywhere in them
+    // Third pattern: Look for lines with both text and URLs in them
     if (sources.length === 0) {
-      const linesWithUrls = sourcesSection.split('\n')
-        .filter(line => line.includes('http'));
+      const linesWithUrls = sourcesSection
+        .split('\n')
+        .filter(line => line.includes('http') && line.trim().length > 0);
       
       linesWithUrls.forEach(line => {
         const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
         if (urlMatch) {
           const url = urlMatch[1].trim();
-          const title = line.replace(url, '').replace(/[-–—:]/, '').trim();
+          // Get everything before the URL, clean it up
+          let title = line.substring(0, line.indexOf(url)).trim();
+          // Remove numbering and special characters
+          title = title.replace(/^(\[\d+\]|\d+\.|\d+\)|[-•*]|:|-|\s+)+/, '').trim();
           
-          sources.push({
-            title: title || `Source: ${getDomainName(url)}`,
-            url: url
-          });
+          if (!title) {
+            title = `Source: ${getDomainName(url)}`;
+          }
+          
+          sources.push({ title, url });
         }
       });
+    }
+    
+    // If we still have no sources, extract URLs from the entire content
+    if (sources.length === 0) {
+      return extractAllUrls(content);
     }
     
     return sources;
   }
   
-  // If no sources section found, try to extract URLs from the entire content
+  // If no sources section found, extract URLs from the entire content
+  return extractAllUrls(content);
+};
+
+// Helper function to extract all URLs from content
+const extractAllUrls = (content: string): Array<{ title: string; url: string; }> => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const urls = [];
+  const sources = [];
   let urlMatch;
   
   while ((urlMatch = urlRegex.exec(content)) !== null) {
-    urls.push({
+    sources.push({
       title: `Source: ${getDomainName(urlMatch[1])}`,
       url: urlMatch[1].trim()
     });
   }
   
-  return urls;
-};
-
-// Extract domain name from URL - moved from utils/textUtils.ts for direct use
-export const getDomainName = (url: string): string => {
-  try {
-    // Try to create URL object
-    const urlObj = new URL(url);
-    // Get the hostname and remove 'www.' prefix if present
-    return urlObj.hostname.replace(/^www\./, '');
-  } catch {
-    // If URL parsing fails, extract domain using regex
-    const domainMatch = url.match(/https?:\/\/(?:www\.)?([^\/]+)/i);
-    return domainMatch ? domainMatch[1] : url;
-  }
+  return sources;
 };

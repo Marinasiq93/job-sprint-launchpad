@@ -41,7 +41,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
     let processedContent = content;
     
     // Look for source sections with different possible headings and formats
-    const sourceSectionRegex = /(?:^|\n)(?:Sources|Fontes|References|Referências|Fonte)(?::|)\s*\n((?:.|\n)*$)/i;
+    const sourceSectionRegex = /(?:^|\n)(?:Sources|Fontes|References|Referências|Fonte)(?::|)\s*\n?((?:.|\n)*$)/i;
     const sourceSectionMatch = processedContent.match(sourceSectionRegex);
     if (sourceSectionMatch) {
       processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
