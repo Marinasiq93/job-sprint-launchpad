@@ -74,14 +74,14 @@ export const perplexityPromptsByCategory = {
     
     Comece com um resumo atual da empresa ${companyName}: mercado, produtos principais, tamanho e alcance geográfico.
     
-    Detalhe a história da fundação:
+    Detalhe a história da fundação de forma clara e organizada:
     - Ano e local de fundação
     - Nomes dos fundadores e seus backgrounds
     - Contexto de mercado no momento da fundação
     - Motivação original para a criação da empresa
     - Modelo de negócio inicial e como evoluiu
     
-    Liste cronologicamente os eventos significativos na história da empresa:
+    Liste de forma organizada os eventos significativos na história da empresa:
     - Lançamentos de produtos importantes
     - Expansões geográficas
     - Rodadas de investimento significativas
