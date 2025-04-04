@@ -39,19 +39,18 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     // Convert double newlines to temporary markers for paragraph splitting
     .replace(/\n\n+/g, '§PARAGRAPH§')
     
-    // Format markdown headers while preventing duplicates
-    .replace(/^#+\s+(.+)$/gm, (match, headerText) => {
-      // Check if the header text appears in the preceding text (as a possible duplicate)
-      const precedingContext = currentBriefing.overview.split(match)[0].trim();
-      const lastLine = precedingContext.split('\n').pop() || '';
-      
-      // If this header text is similar to the previous line, don't add another heading
-      if (lastLine.toUpperCase() === headerText.toUpperCase() || 
-          lastLine.toUpperCase().includes(headerText.toUpperCase()) ||
-          headerText.toUpperCase().includes(lastLine.toUpperCase())) {
-        return `<p class="mt-4 font-medium">${headerText}</p>`;
-      }
+    // Format markdown headers with different heading levels
+    .replace(/^#{4,}\s+(.+)$/gm, (match, headerText) => {
+      return `<h4 class="text-base font-medium mt-3 mb-1 text-slate-800">${headerText}</h4>`;
+    })
+    .replace(/^###\s+(.+)$/gm, (match, headerText) => {
+      return `<h3 class="text-lg font-semibold mt-6 mb-2 text-slate-800">${headerText}</h3>`;
+    })
+    .replace(/^##\s+(.+)$/gm, (match, headerText) => {
       return `<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">${headerText}</h2>`;
+    })
+    .replace(/^#\s+(.+)$/gm, (match, headerText) => {
+      return `<h1 class="text-2xl font-bold mt-8 mb-4 text-slate-900 border-b pb-2">${headerText}</h1>`;
     })
     
     // Format capitalized headers while preventing duplicates

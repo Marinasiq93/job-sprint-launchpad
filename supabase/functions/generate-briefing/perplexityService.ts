@@ -28,9 +28,14 @@ export const processPerplexityResponse = (content: string, companyName: string):
       processedContent = processedContent.substring(0, processedContent.indexOf(sourceSectionMatch[0])).trim();
     }
     
-    // Apply minimal processing to preserve original structure
+    // Apply very minimal processing to preserve the original Markdown structure
+    // This is crucial to maintain the exact structure Perplexity returns
     processedContent = preserveMarkdownStructure(processedContent);
+    
+    // Just remove duplicate headers but otherwise preserve the exact format
     processedContent = removeDuplicateHeaders(processedContent);
+    
+    console.log("Processed content sample:", processedContent.substring(0, 200) + "...");
     
     // Return the processed content with minimal modifications
     return {
