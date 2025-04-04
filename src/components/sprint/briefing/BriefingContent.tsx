@@ -36,70 +36,84 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
 
   // Process the overview content to enhance markdown formatting
   const processedOverview = currentBriefing.overview
-    // Remove "Análise Geral" section completely
-    .replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '')
+    // Apply adaptive formatting regardless of the structure
     
-    // Format main headers with ### pattern (h2 level - larger headers)
+    // Format headings - handle multiple heading patterns
+    // Main headers pattern 1: Capitalized text at the beginning of a line
+    .replace(/^([A-Z][A-Z\s]{2,})(?:\s*:|\s*$)/gm, 
+      '<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">$1</h2>')
+    
+    // Main headers pattern 2: markdown style headers
     .replace(/^###\s+(.+)$/gm, '<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">$1</h2>')
+    .replace(/^##\s+(.+)$/gm, '<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">$1</h2>')
+    .replace(/^#\s+(.+)$/gm, '<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">$1</h2>')
     
-    // Format secondary headers with ## pattern (h3 level - medium headers)
-    .replace(/^##\s+(.+)$/gm, '<h3 class="text-lg font-semibold mt-6 mb-2 text-slate-800">$3</h3>')
-    
-    // Format capitalized headers (like "TAMANHO E MERCADO")
-    .replace(/^([A-Z][A-Z\s]+[A-Z]):?$/gm, '<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">$1</h2>')
-    
-    // Format title + subtitle pattern (like "Tamanho e Mercado A Picpay é...")
-    .replace(/^([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,})(?:\s*da\s+|\s+de\s+|\s+do\s+|\s+dos\s+|\s+das\s+)?([A-Z][A-Za-z0-9áàâãéèêíïóôõöúçñ\s]+)$/gm, 
-      '<h2 class="text-xl font-bold mt-8 mb-3 text-slate-900 border-b pb-2">$1</h2><p>$2')
-    
-    // Format section headers with explicit colon (h3 level)
-    .replace(/^([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,}):$/gm, 
+    // Subheaders pattern 1: Sentence case followed by colon
+    .replace(/^([A-Z][a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s]{2,}):(?!\S)/gm, 
       '<h3 class="text-lg font-semibold mt-6 mb-2 text-slate-800">$1</h3>')
     
-    // Format product/service names with dash prefix
-    .replace(/^[-–]\s*([^:]+):/gm, '<h4 class="text-base font-medium mt-4 mb-2 text-slate-700">$1:</h4>')
+    // Subheaders pattern 2: Capitalized short phrases (3-4 words) at line start
+    .replace(/^([A-Z][a-zA-Z]+(?:\s+[A-Za-z]+){0,3})(?:\s*-|\s*:|\s*$)(?!\S)/gm, 
+      (match, p1) => {
+        // Don't format if it's likely part of a sentence (next char is lowercase)
+        const nextCharIsLowerCase = match.match(/[a-z]$/);
+        return nextCharIsLowerCase ? match : `<h3 class="text-lg font-semibold mt-6 mb-2 text-slate-800">${p1}</h3>`;
+      })
     
-    // Format hashtag values as bullet items with proper styling for better visibility
-    .replace(/^#([A-Za-z0-9]+):\s+(.+)$/gm, '<li class="ml-5 my-2 list-disc"><span class="font-semibold text-primary">#$1:</span> $2</li>')
+    // Format lists adaptively
+    // Bullet items with dash
+    .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-5 my-2 list-disc">$1</li>')
     
-    // Format normal bullet lists with more spacing
-    .replace(/^-\s+(.+)$/gm, '<li class="ml-5 my-2 list-disc">$1</li>')
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ml-5 my-2 list-decimal">$2</li>')
+    // Numbered lists
+    .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li class="ml-5 my-2 list-decimal">$2</li>')
     
-    // Format text styling
+    // Format hashtags nicely regardless of where they appear
+    .replace(/#([A-Za-z0-9]+)(?:\s*:|-)\s*(.+?)(?=$|\n)/gm, 
+      '<li class="ml-5 my-2 list-disc"><span class="font-semibold text-primary">#$1:</span> $2</li>')
+    
+    // Corporate value patterns (usually single capitalized words ending in common suffixes)
+    .replace(/^([A-Z][a-z]+(?:dade|ção|cia|edade|ismo|ade|eza|tude|ança))(?:\s*:|,|\s*-|\s*$)/gm, 
+      '<li class="ml-5 my-2 list-disc font-semibold text-slate-700">$1</li>')
+    
+    // Format quoted text for better visibility
+    .replace(/"([^"]+)"(?!\s*")/g, '<p class="ml-5 mb-3 italic text-slate-600">"$1"</p>')
+    
+    // Formatting for citations or references
+    .replace(/\[(\d+)\]/g, '<sup class="text-xs font-medium bg-primary/10 text-primary border border-primary/30 rounded-sm px-1 ml-0.5">$1</sup>')
+    
+    // Bold and italic text
     .replace(/\*\*([^*]+)\*\*/g, '<span class="font-bold">$1</span>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>')
     
-    // Format corporate values and attributes with better styling
-    .replace(/^([A-Z][a-z]+(?:dade|ção|cia|edade)),?\s*/gm, '<li class="ml-5 mb-2 list-disc font-semibold text-slate-700">$1</li>')
-    
-    // Format value definitions with better styling
-    .replace(/"([^"]+)"(?=\s+[A-Z])/g, '<p class="ml-5 mb-3 italic text-slate-600">"$1"</p>')
-    
-    // Add proper paragraph spacing - double line breaks become new paragraphs with more spacing
+    // Ensure proper paragraph spacing
     .replace(/\n\n+/g, '</p><p class="mb-5">')
     
-    // Handle triple hashtags as section dividers with proper styling
-    .replace(/^#{3}\s*(.+)$/gm, '<h3 class="text-lg font-semibold mt-7 mb-3 text-slate-800 border-t pt-3">$1</h3>')
+    // Fix paragraph spacing after headings
+    .replace(/<\/h[23]>\s*<p/g, '</h2><p class="mt-3"')
     
-    // Format citation references with better styling
-    .replace(/\[(\d+)\]/g, '<sup class="text-xs font-medium bg-primary/10 text-primary border border-primary/30 rounded-sm px-1 ml-0.5">$1</sup>');
+    // Convert URLs to links
+    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
 
-  // Wrap the processed content in proper HTML structure with better spacing
+  // Wrap the processed content with correct HTML structure
   let wrappedContent = `<div class="space-y-6"><p class="mb-5">${processedOverview}</p></div>`;
   
-  // Add proper list containers
+  // Handle list containers adaptively
   wrappedContent = wrappedContent
-    // Add <ul> wrappers around groups of <li> elements with list-disc class
+    // Add <ul> wrappers around groups of <li> elements
     .replace(/(<li class="ml-5 m[by]-[23] list-disc">.*?)(?=<\/div>|<h[2-6]|<p class="mb-5">)/gs, '<ul class="my-4 space-y-2">$1</ul>')
-    // Fix nested lists by ensuring </li> tags before </ul>
+    .replace(/(<li class="ml-5 m[by]-[23] list-decimal">.*?)(?=<\/div>|<h[2-6]|<p class="mb-5">)/gs, '<ol class="my-4 space-y-2">$1</ol>')
+    
+    // Fix closing tags
     .replace(/<\/li>(\s*)<\/ul>/g, '</li></ul>')
-    // Replace any empty paragraphs that might have been created
+    .replace(/<\/li>(\s*)<\/ol>/g, '</li></ol>')
+    
+    // Fix empty paragraphs
     .replace(/<p class="mb-5"><\/p>/g, '')
-    // Fix any duplicate <ul> tags
-    .replace(/<ul class="my-4 space-y-2">(\s*)<ul class="my-4 space-y-2">/g, '<ul class="my-4 space-y-2">')
-    // Fix any duplicate </ul> tags
-    .replace(/<\/ul>(\s*)<\/ul>/g, '</ul>');
+    
+    // Fix nested list issues
+    .replace(/<(ul|ol) class="my-4 space-y-2">(\s*)<\1 class="my-4 space-y-2">/g, '<$1 class="my-4 space-y-2">')
+    .replace(/<\/(ul|ol)>(\s*)<\/\1>/g, '</$1>');
 
   return (
     <div className="space-y-6 px-1">

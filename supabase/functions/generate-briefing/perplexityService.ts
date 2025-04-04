@@ -16,20 +16,26 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Extract sources using the source extractor
     const sources = extractSources(content);
     
-    // Clean up any potential "Análise Geral" sections from the content
-    // This pattern will match the section header and all content until the next section header or end of content
-    const cleanedContent = content.replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '');
+    // Preprocessing - handle spacing and structural elements adaptively
+    const processedContent = content
+      // Normalize line breaks for consistent processing
+      .replace(/\r\n/g, '\n')
+      
+      // Ensure consistent spacing between sections
+      // Add spacing before potential section headers
+      .replace(/\n([A-Z][A-Z\s]{2,})(?:\s*:|\s*$)/gm, '\n\n$1')
+      .replace(/\n([A-Z][a-zA-Z]+(?:\s+[A-Za-z]+){0,3})(?:\s*:|\s*$)/gm, '\n\n$1')
+      .replace(/\n#+\s+([^\n]+)/gm, '\n\n$&')
+      
+      // Ensure lists are properly spaced
+      .replace(/\n([-–•]|\d+[.)])\s+/gm, '\n\n$&')
+      
+      // Fix multiple consecutive line breaks - normalize to double line breaks
+      .replace(/\n{3,}/g, '\n\n');
     
-    // Add appropriate spacing between paragraphs
-    const formattedContent = cleanedContent
-      // Ensure sections have proper spacing
-      .replace(/\n([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,})(?:\s*da\s+|\s+de\s+|\s+do\s+|\s+dos\s+|\s+das\s+)?([A-Z][A-Za-z0-9áàâãéèêíïóôõöúçñ\s]+)$/gm, '\n\n$1$2')
-      // Add proper spacing before section headers
-      .replace(/\n([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,}):$/gm, '\n\n$1:');
-    
-    // Return the raw content with minimal processing
+    // Return the processed content with minimal processing
     return {
-      overview: formattedContent, // Use the formatted content as overview
+      overview: processedContent, // Use the processed content as overview
       highlights: [],    // We're not using highlights anymore
       summary: "",       // We're not using summary anymore
       sources: sources,  // Still extract sources for reference links
