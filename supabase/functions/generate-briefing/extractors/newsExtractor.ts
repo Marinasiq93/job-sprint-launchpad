@@ -10,13 +10,14 @@ export const extractRecentNews = (content: string, companyName: string): Array<{
   
   if (newsSection && newsSection[1]) {
     // Look for the numbered news items in format: 1. [DATE] - TITLE - SOURCE: URL
-    const newsItemRegex = /\d+\.\s+\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?\s*[-–]\s*([^-\n]+)(?:[-–]\s*(?:[Ff]onte:?\s*)?(.*?))?(?:\n|$)/g;
+    const newsItemRegex = /(\d+)\.\s+\[?(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{1,2}\s+de\s+[a-zç]+(?:\s+de\s+\d{2,4})?)\]?\s*[-–]\s*([^-\n]+)(?:[-–]\s*(?:[Ff]onte:?\s*)?(.*?))?(?:\n|$)/g;
     let match;
     
     while ((match = newsItemRegex.exec(newsSection[1])) !== null) {
-      const date = match[1]?.trim();
-      const title = match[2]?.trim();
-      const source = match[3]?.trim();
+      const originalIndex = parseInt(match[1]);
+      const date = match[2]?.trim();
+      const title = match[3]?.trim();
+      const source = match[4]?.trim();
       
       // Extract URL if it exists in the source
       const urlMatch = source ? source.match(urlRegex) : null;
@@ -26,7 +27,8 @@ export const extractRecentNews = (content: string, companyName: string): Array<{
         recentNews.push({
           title,
           date,
-          url
+          url,
+          originalIndex // Preserve the original index if needed
         });
       }
       

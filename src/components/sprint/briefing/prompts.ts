@@ -17,9 +17,7 @@ export const perplexityPromptsByCategory = {
     
     Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)
     
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
-    
-    Ao final, liste todas as fontes utilizadas com URLs completas.`,
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -35,9 +33,7 @@ export const perplexityPromptsByCategory = {
     como projetos específicos alinhados ao propósito declarado, produtos ou serviços que demonstram
     o compromisso com a visão, e iniciativas de impacto que refletem os valores.
     
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
-    
-    Ao final, liste todas as fontes utilizadas com URLs completas.`,
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -58,9 +54,7 @@ export const perplexityPromptsByCategory = {
     - Diferenciais competitivos da empresa
     - Tendências relevantes para o setor
     
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
-    
-    Ao final, liste todas as fontes utilizadas com URLs completas.`,
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -81,9 +75,7 @@ export const perplexityPromptsByCategory = {
     - Iniciativas ou programas liderados pela equipe executiva
     - Como a liderança aborda temas como inovação e diversidade
     
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
-    
-    Ao final, liste todas as fontes utilizadas com URLs completas.`,
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -106,7 +98,5 @@ export const perplexityPromptsByCategory = {
     - Pivôs estratégicos no modelo de negócio
     - Conquistas e prêmios importantes
     
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.
-    
-    Ao final, liste todas as fontes utilizadas com URLs completas.`
+    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`
 };

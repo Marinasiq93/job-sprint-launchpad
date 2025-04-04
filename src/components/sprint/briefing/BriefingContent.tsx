@@ -1,7 +1,7 @@
 
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./types";
-import { ExternalLink, AlertCircle, Loader2 } from "lucide-react";
+import { ExternalLink, AlertCircle, Loader2, Newspaper } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface BriefingContentProps {
@@ -105,6 +105,42 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
                     <ExternalLink className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-400 group-hover:text-blue-500" />
                     <span className="text-xs line-clamp-1">{source.url}</span>
                   </a>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {currentBriefing.recentNews && currentBriefing.recentNews.length > 0 && (
+        <>
+          <Separator className="my-6" />
+          
+          <section>
+            <h3 className="text-lg font-semibold mb-4">Notícias Recentes</h3>
+            <div className="space-y-3">
+              {currentBriefing.recentNews.map((news, index) => (
+                <div key={index} className="flex items-start">
+                  <div className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-medium mr-2 flex-shrink-0">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">
+                      {news.url ? (
+                        <a 
+                          href={news.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="hover:text-blue-600"
+                        >
+                          {news.title}
+                        </a>
+                      ) : (
+                        news.title
+                      )}
+                    </div>
+                    {news.date && <div className="text-xs text-muted-foreground">{news.date}</div>}
+                  </div>
                 </div>
               ))}
             </div>

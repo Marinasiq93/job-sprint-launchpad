@@ -32,9 +32,8 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             - Inclua URLs completas ao mencionar fontes
             - Use informações do site oficial da empresa e fontes confiáveis
             
-            Ao final, liste as fontes utilizadas no formato:
+            Ao final, liste as URLs das fontes utilizadas (sem título "Fontes" ou "Sources"), apenas os links numerados:
             
-            Sources:
             [1] URL completa
             [2] URL completa
             [etc.]`
