@@ -67,11 +67,15 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       // Convert URLs to links
       .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>')
       
-      // Improve bullet list formatting with proper spacing - make this more robust to catch common bullet formats
-      // First enhance detection of different bullet markers, including the hyphen with or without space
+      // Improved bullet list handling - catch more patterns including section headers with hyphens
+      // First: handle lines that start with hyphen + space + text (normal bullet points)
       .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
-      // Also catch hyphen without space
-      .replace(/^[-]([^\s].+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
+      
+      // Second: handle lines where hyphen is followed by text (no space) that isn't a section header
+      .replace(/^[-]([^\s:].+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
+      
+      // Third: specifically handle section headers that start with hyphen (like "- PicPay Lovers:")
+      .replace(/^[-]\s*([^:]+):(.*)$/gm, '<li class="ml-6 mb-2 list-disc"><strong>$1:</strong>$2</li>')
       
       // Improve numbered list detection and formatting
       // First wrap each numbered item in proper <li> with ordered styling

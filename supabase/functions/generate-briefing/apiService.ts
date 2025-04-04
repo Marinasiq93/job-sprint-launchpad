@@ -1,84 +1,114 @@
+// Import required modules
+import { BriefingPrompt } from "./types.ts";
 
-// Core API service to handle API calls to Perplexity
-export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string): Promise<string> => {
-  if (!perplexityApiKey) {
-    throw new Error("PERPLEXITY_API_KEY is not set in the environment");
-  }
-  
-  console.log("Calling Perplexity API with key:", perplexityApiKey ? "API key is set" : "No API key");
-  
+// Headers for API requests
+const headers = {
+  "Content-Type": "application/json",
+};
+
+// Call the Perplexity API
+export const callPerplexityAPI = async (prompt: string, apiKey: string): Promise<string> => {
   try {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
+    console.log("Calling Perplexity API with key:", apiKey ? "API key is set" : "No API key provided");
+    
+    // System message to guide the response format
+    const systemMessage = `Você é um assistente especializado em análise de empresas e mercados.
+    
+Forneça uma análise clara e estruturada seguindo estas diretrizes:
+
+1. Use markdown para formatar sua resposta:
+   - Use ## para títulos principais
+   - Use ### para subtítulos
+   - Use • para listas com bullets (não use - para bullets de lista)
+   - Use formatação **negrito** para conceitos importantes
+
+2. Organize sua resposta em seções claras
+3. Inclua dados, métricas e fatos objetivos quando disponíveis
+4. Liste suas fontes no final usando formato numerado [1] com URLs
+5. Seja imparcial e objetivo, baseando-se em fatos verificáveis
+6. Evite repetir as mesmas informações em seções diferentes
+7. Formate listas sempre com • para bullets (não use - para bullets)
+8. Não inclua introdução ou conclusão, vá direto ao ponto
+`;
+
+    // Use the Perplexity API to generate a response
+    const response = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json',
+        ...headers,
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: "llama-3.1-sonar-small-128k-online",
         messages: [
           {
-            role: 'system',
-            content: `Você é um assistente especializado em análise de empresas para candidatos a emprego.
-            Forneça uma análise direta, factual e completa baseada em informações disponíveis online.
-            
-            ORIENTAÇÕES DE FORMATAÇÃO:
-            
-            - Estruture sua resposta em seções usando formato markdown (## Título) para seções principais
-            - Use apenas um nível de cabeçalho por seção (##)
-            - Sempre comece sua análise com um parágrafo introdutório antes de qualquer título de seção
-            - Deixe sempre uma linha em branco entre o título e o conteúdo
-            - Use negrito (**texto**) apenas para destacar dados importantes como nomes, datas e números
-            - Use marcadores para listas de itens relacionados no formato:
-               - Item 1 (com espaço após o hífen)
-               - Item 2 (com espaço após o hífen)
-            - Evite usar texto completamente em maiúsculas para títulos ou subtítulos
-            - Mantenha uma linha em branco antes de cada nova seção com título
-            - Para listas numeradas, use o formato:
-               1. Item primeiro
-               2. Item segundo
-            - Não crie seções com letras isoladas como "A P" ou "C I" 
-            - Evite usar termos como "VALORES:" - use títulos markdown em vez disso
-            - Nunca comece um parágrafo com hífen (-) sem espaço depois, sempre use "- " (hífen + espaço)
-            
-            ORIENTAÇÕES DE CONTEÚDO:
-            
-            - Utilize dados factuais e específicos sobre a empresa
-            - Use linguagem simples, direta e profissional
-            - Inclua URLs completas ao mencionar fontes em seu texto
-            - Use informações do site oficial da empresa e fontes confiáveis
-            - Não inclua uma seção de "Fontes" no final da sua resposta
-            - Priorize informações atualizadas e relevantes para o candidato`
+            role: "system",
+            content: systemMessage
           },
           {
-            role: 'user',
+            role: "user",
             content: prompt
           }
         ],
-        temperature: 0.2,  // Slightly lower temperature for more consistent responses
-        max_tokens: 2500,
-        top_p: 0.95
-      })
+        max_tokens: 4000,
+        temperature: 0.3,
+        top_p: 0.95,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+        return_images: false,
+        return_related_questions: false,
+        search_domain_filter: ["perplexity.ai"],
+        search_recency_filter: "month",
+      }),
     });
-    
+
+    // Check if the response is successful
     if (!response.ok) {
-      const errorData = await response.text();
+      const errorData = await response.json();
       console.error("Perplexity API error:", errorData);
-      throw new Error(`API responded with status ${response.status}: ${errorData}`);
+      throw new Error(`API Error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
-    
+
+    // Parse and return the response
     const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    
     console.log("Perplexity API response received");
+    console.log("Raw API response excerpt:", content.substring(0, 100) + "...\n");
     
-    // Extract the content from the response
-    const content = data.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No content in Perplexity API response");
-    }
-    
+    // Return the generated content
     return content;
   } catch (error) {
     console.error("Error calling Perplexity API:", error);
     throw error;
   }
+};
+
+// Generate a prompt based on the company and request type
+export const generatePrompt = (request: BriefingPrompt): string => {
+  const { companyName, companyWebsite, jobDescription, currentQuestionIndex } = request;
+  
+  // Define the base prompt
+  let prompt = `Analise detalhadamente a empresa ${companyName}, com base nas seguintes informações:
+  - Website: ${companyWebsite}
+  - Descrição da vaga: ${jobDescription}
+  
+  Concentre-se em fornecer insights sobre a cultura da empresa, seus valores e propósito, e como eles se alinham com a vaga.`;
+  
+  // Add specific questions based on the current question index
+  if (currentQuestionIndex === 0) {
+    prompt += `\n\nResponda à pergunta: "Você se sente alinhado com a cultura e os valores da empresa? Por quê?"`;
+  } else if (currentQuestionIndex === 1) {
+    prompt += `\n\nResponda à pergunta: "Você se identifica com a missão da empresa? O que mais ressoou com você?"`;
+  } else if (currentQuestionIndex === 2) {
+    prompt += `\n\nResponda à pergunta: "Você tem alguma conexão pessoal ou profissional com o produto, mercado ou público dessa empresa? Já trabalhou com algo parecido ou com esse perfil de cliente?"`;
+  } else if (currentQuestionIndex === 3) {
+    prompt += `\n\nResponda à pergunta: "Você vê o time de liderança como alguém em quem confiaria e aprenderia? Por quê?"`;
+  } else if (currentQuestionIndex === 4) {
+    prompt += `\n\nResponda à pergunta: "Algum pensamento ou conexão sobre a história da fundação da empresa? O que mais chamou sua atenção?"`;
+  }
+  
+  prompt += `\n\nForneça uma análise concisa e direta, sem introdução ou conclusão.`;
+  
+  return prompt;
 };
