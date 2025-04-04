@@ -1,8 +1,8 @@
 
 import { Separator } from "@/components/ui/separator";
 import { BriefingContent as BriefingContentType } from "./briefingService";
-import { categoryTitles } from "./briefingConstants";
-import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon, Check } from "lucide-react";
+import { categoryTitles, BRIEFING_CATEGORIES } from "./briefingConstants";
+import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon, Check, Target } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 
@@ -42,6 +42,54 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
     .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>'); // Citations
 
+  // Customize section titles based on category
+  const getHighlightTitle = () => {
+    switch(currentCategory) {
+      case BRIEFING_CATEGORIES.CULTURE_VALUES:
+        return "Valores da Empresa";
+      case BRIEFING_CATEGORIES.MISSION_VISION:
+        return "Propósito e Direção";
+      case BRIEFING_CATEGORIES.LEADERSHIP:
+        return "Equipe de Liderança";
+      case BRIEFING_CATEGORIES.PRODUCT_MARKET:
+        return "Perfil do Produto e Cliente";
+      case BRIEFING_CATEGORIES.COMPANY_HISTORY:
+        return "Marcos Históricos";
+      default:
+        return "Destaques";
+    }
+  };
+
+  // Customize summary title based on category
+  const getSummaryTitle = () => {
+    switch(currentCategory) {
+      case BRIEFING_CATEGORIES.MISSION_VISION:
+        return "Realizações e Impacto";
+      case BRIEFING_CATEGORIES.CULTURE_VALUES:
+        return "Análise de Cultura";
+      case BRIEFING_CATEGORIES.PRODUCT_MARKET:
+        return "Posição no Mercado";
+      case BRIEFING_CATEGORIES.LEADERSHIP:
+        return "Estilo de Liderança";
+      case BRIEFING_CATEGORIES.COMPANY_HISTORY:
+        return "Trajetória Empresarial";
+      default:
+        return "Análise Geral";
+    }
+  };
+
+  // Icon for highlights section based on category
+  const getHighlightIcon = () => {
+    switch(currentCategory) {
+      case BRIEFING_CATEGORIES.MISSION_VISION:
+        return <Target className="h-4 w-4 text-purple-600" />;
+      case BRIEFING_CATEGORIES.CULTURE_VALUES:
+        return <Check className="h-4 w-4 text-emerald-500" />;
+      default:
+        return <Check className="h-4 w-4 text-emerald-500" />;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <section>
@@ -56,14 +104,14 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
         />
       </section>
       
-      {currentBriefing.highlights.length > 0 && (
+      {currentBriefing.highlights && currentBriefing.highlights.length > 0 && (
         <>
           <Separator />
           
           <section>
             <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
-              <Check className="h-4 w-4 text-emerald-500" />
-              Valores da Empresa
+              {getHighlightIcon()}
+              {getHighlightTitle()}
             </h3>
             <ul className="text-sm space-y-2">
               {currentBriefing.highlights.map((highlight, index) => (
@@ -84,55 +132,23 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       <Separator />
       
       <section>
-        <h3 className="font-medium text-sm text-gray-700 mb-2">Análise Geral</h3>
+        <h3 className="font-medium text-sm text-gray-700 mb-2">{getSummaryTitle()}</h3>
         <div className="text-sm bg-gray-50 p-3 rounded-md border border-gray-100 leading-relaxed">
           {currentBriefing.summary}
         </div>
+        {currentCategory === BRIEFING_CATEGORIES.MISSION_VISION && currentBriefing.additionalPoints && (
+          <ul className="text-sm space-y-1.5 mt-3">
+            {currentBriefing.additionalPoints.map((point, index) => (
+              <li key={index} className="flex items-start">
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium mr-2 flex-shrink-0">
+                  {index + 1}
+                </span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
-      
-      {currentBriefing.recentNews && currentBriefing.recentNews.length > 0 && (
-        <>
-          <Separator />
-          
-          <section>
-            <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
-              <Newspaper className="h-4 w-4 text-blue-600" />
-              Notícias Recentes
-              <Badge variant="outline" className="ml-1 text-xs bg-blue-50 text-blue-700 border-blue-200">
-                Atualizado
-              </Badge>
-            </h3>
-            <ul className="text-sm space-y-2.5">
-              {currentBriefing.recentNews.map((news, index) => (
-                <li key={index} className="border-l-2 border-blue-200 pl-3 py-1 hover:border-blue-400 transition-colors">
-                  <div className="flex flex-col">
-                    <div>
-                      {news.url ? (
-                        <a 
-                          href={news.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline flex items-center"
-                        >
-                          <span>{news.title}</span>
-                          <ExternalLink className="h-3 w-3 ml-1 flex-shrink-0" />
-                        </a>
-                      ) : (
-                        <span className="font-medium">{news.title}</span>
-                      )}
-                    </div>
-                    {news.date && (
-                      <span className="text-xs text-muted-foreground mt-1 font-medium">
-                        {news.date}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
       
       {currentBriefing.sources && currentBriefing.sources.length > 0 && (
         <>

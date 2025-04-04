@@ -1,3 +1,4 @@
+
 export const BRIEFING_CATEGORIES = {
   CULTURE_VALUES: "culture_values",
   MISSION_VISION: "mission_vision",
@@ -45,10 +46,15 @@ export const defaultContentByCategory: Record<string, any> = {
       "Missão oficial da empresa",
       "Visão de futuro declarada",
       "Propósito maior que a empresa busca atingir",
-      "Impacto social ou ambiental desejado",
-      "Citações inspiradoras da liderança"
+      "Citações inspiradoras da liderança sobre o propósito"
     ],
-    summary: "Esta é uma versão de demonstração das informações de missão, visão e propósito. Configure a API para análise completa.",
+    summary: "A empresa demonstra seu compromisso com a missão através de vários projetos e iniciativas:",
+    additionalPoints: [
+      "Projetos alinhados ao propósito declarado",
+      "Produtos que demonstram compromisso com a visão",
+      "Iniciativas de impacto social ou ambiental",
+      "Transformações que a empresa está gerando no setor"
+    ],
     sources: [],
     recentNews: []
   },

@@ -39,29 +39,23 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    ## Visão Geral da ${companyName}
-    
-    Comece com um resumo abrangente da empresa: o que ela faz, tamanho, mercado, principais produtos, e posicionamento no setor.
-    Inclua dados factuais como ano de fundação, sede, número aproximado de funcionários quando disponível.
-    
     ## Missão e Visão
     
-    Detalhe com CITAÇÕES DIRETAS quando possível:
-    * MISSÃO OFICIAL: O propósito declarado da empresa (por que ela existe)
-    * VISÃO OFICIAL: Onde a empresa deseja chegar no futuro
+    Foque exclusivamente na missão, visão e propósito da empresa:
+    * MISSÃO OFICIAL: O propósito declarado da empresa (por que ela existe), use CITAÇÕES DIRETAS
+    * VISÃO OFICIAL: Onde a empresa deseja chegar no futuro, use CITAÇÕES DIRETAS
     * PROPÓSITO: Causa maior ou impacto social que a empresa busca gerar
+    * INSPIRAÇÃO: Inclua citações inspiradoras dos fundadores ou liderança sobre o propósito da empresa
     
     Se a missão e visão não estiverem explicitamente declaradas, analise o conteúdo do site para inferir o propósito e direção da empresa.
-    Inclua citações diretas do CEO ou liderança sobre o propósito da empresa.
     
-    Busque essas informações em seções como "Sobre Nós", "Quem Somos", "Missão e Visão", ou similares.
+    ## Realizações e Impacto
     
-    ## Notícias Recentes
-    
-    Liste 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
+    Liste exemplos concretos de como a empresa está trabalhando para atingir sua missão:
+    * Projetos específicos alinhados ao propósito declarado
+    * Produtos ou serviços que demonstram o compromisso com a visão
+    * Iniciativas sociais, ambientais ou de impacto que refletem os valores
+    * Exemplos de como a empresa está transformando seu setor de atuação
     
     Citations:
     Ao final, liste todas as fontes utilizadas com URLs completas no formato:
