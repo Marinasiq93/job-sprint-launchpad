@@ -60,31 +60,23 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e pesquise especificamente sobre a liderança e fundadores.
     
-    Não repita informações gerais sobre a empresa que já apareceram em outras perguntas.
-    Foque exclusivamente nos perfis profissionais dos fundadores e da equipe de liderança atual.
-    
-    Organize sua análise nestas seções específicas:
+    Forneça uma visão concisa e objetiva sobre as pessoas por trás da empresa ${companyName}.
+    Não inclua informações gerais sobre a empresa, produtos ou valores que já foram abordados em outras perguntas.
     
     ## Fundadores
-    - Nomes dos fundadores
-    - Formação acadêmica e especialização
-    - Experiência profissional anterior à fundação da empresa
-    - Motivações pessoais para criar a empresa (se disponível)
+    Apresente um breve perfil de cada fundador incluindo:
+    - Formação acadêmica e experiência profissional relevante
+    - Papel na fundação da empresa
+    - Alguma conquista ou contribuição notável (se disponível)
     
-    ## Equipe de Liderança Atual
-    - Nomes e cargos dos principais executivos
-    - Background profissional resumido de cada líder
-    - Experiência prévia relevante para o setor
-    - Tempo de atuação na empresa (se disponível)
+    ## Equipe Executiva
+    Se houver outros membros-chave da liderança além dos fundadores:
+    - Mencione apenas os principais executivos (C-level ou diretores)
+    - Para cada um, inclua cargo atual, formação e experiência anterior relevante
+    - Seja breve e objetivo, focando apenas em 3-5 executivos no máximo
     
-    ## Trajetória Profissional Destacada
-    - Conquistas notáveis na carreira dos principais líderes
-    - Empresas anteriores onde trabalharam
-    - Projetos importantes que lideraram
-    - Reconhecimentos e prêmios recebidos
-    
-    Concentre-se especificamente nos perfis profissionais das pessoas que fundaram e lideram a empresa, 
-    evitando mencionar iniciativas, valores e aspectos culturais já abordados em outros tópicos.`,
+    Mantenha o conteúdo conciso e focado nos perfis profissionais das pessoas, sem repetições
+    ou informações desnecessárias sobre a empresa em si.`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.

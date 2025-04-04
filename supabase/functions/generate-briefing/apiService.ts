@@ -18,13 +18,13 @@ export const callPerplexityAPI = async (prompt: string, apiKey: string): Promise
 Forneça uma análise clara e estruturada seguindo estas diretrizes:
 
 1. Use markdown para formatar sua resposta:
-   - Use ## para títulos principais
-   - Use ### para subtítulos
+   - Use ## para títulos principais (use no máximo 3 títulos principais)
+   - Use ### para subtítulos (use com moderação)
    - Use • para listas com bullets (não use - para bullets de lista)
    - Use formatação **negrito** para conceitos importantes
 
-2. Organize sua resposta em seções claras com títulos
-3. Inclua um pequeno resumo no início da sua análise
+2. Mantenha sua resposta direta e concisa, sem repetições
+3. Organize as informações de forma lógica e fluida
 4. Inclua dados, métricas e fatos objetivos quando disponíveis
 5. Liste suas fontes no final usando formato numerado [1] com URLs completas
 6. Inclua os nomes dos sites nas fontes antes das URLs quando possível
