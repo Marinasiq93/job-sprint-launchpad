@@ -87,13 +87,6 @@ export const perplexityPromptsByCategory = {
     * Diferenciais competitivos da empresa (com base no que é declarado no site)
     * Tendências de mercado relevantes para o setor
     
-    ## Notícias Recentes
-    
-    Liste 3 NOTÍCIAS RECENTES sobre os produtos/serviços ou empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    
     Citations:
     Ao final, liste todas as fontes utilizadas com URLs completas no formato:
     [1] URL completa
@@ -125,13 +118,6 @@ export const perplexityPromptsByCategory = {
     * Valores que a liderança promove internamente
     * Iniciativas ou programas liderados pela equipe executiva
     * Como a liderança aborda inovação, diversidade, ou outros temas relevantes
-    
-    ## Notícias Recentes
-    
-    Liste 3 NOTÍCIAS RECENTES sobre a liderança/empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
     
     Citations:
     Ao final, liste todas as fontes utilizadas com URLs completas no formato:
@@ -167,13 +153,6 @@ export const perplexityPromptsByCategory = {
     * Conquistas e prêmios importantes
     
     Utilize um formato claro com anos específicos para cada marco.
-    
-    ## Notícias Recentes
-    
-    Liste 3 NOTÍCIAS RECENTES sobre a empresa (dos últimos 6 meses), no formato:
-    1. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    2. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
-    3. [DATA DD/MM/AAAA] - [TÍTULO completo da notícia] - [FONTE: nome do site e URL completo]
     
     Citations:
     Ao final, liste todas as fontes utilizadas com URLs completas no formato:

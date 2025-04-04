@@ -99,6 +99,25 @@ export const processPerplexityResponse = (content: string, companyName: string):
       ];
     }
     
+    // Look for additionalPoints in the Realizações e Impacto section
+    let additionalPoints: string[] = [];
+    const realizacoesSectionIndex = sections.findIndex(s => 
+      s.toLowerCase().includes('realizações') || 
+      s.toLowerCase().includes('impacto')
+    );
+    
+    if (realizacoesSectionIndex !== -1) {
+      const realizacoesSection = sections[realizacoesSectionIndex];
+      const bulletRegex = /(?:^|\n)\s*[•\*-]\s+([^\n]+)/g;
+      
+      while ((match = bulletRegex.exec(realizacoesSection)) !== null) {
+        const point = cleanText(match[1]);
+        if (point && point.length > 0) {
+          additionalPoints.push(point);
+        }
+      }
+    }
+    
     // Find a summary paragraph from the content
     let summary = '';
     
@@ -149,7 +168,8 @@ export const processPerplexityResponse = (content: string, companyName: string):
       highlights,
       summary,
       sources,
-      recentNews
+      recentNews,
+      additionalPoints: additionalPoints.length > 0 ? additionalPoints : undefined
     };
   } catch (error) {
     console.error("Error processing Perplexity response:", error);
