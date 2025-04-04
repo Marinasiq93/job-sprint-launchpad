@@ -36,43 +36,62 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
 
   // Process the overview content to enhance markdown formatting
   const processedOverview = currentBriefing.overview
-    // Format headings (# Heading)
-    .replace(/^#\s+(.+)$/gm, '<h1 class="text-2xl font-bold mt-6 mb-3">$1</h1>')
-    .replace(/^##\s+(.+)$/gm, '<h2 class="text-xl font-semibold mt-5 mb-2">$1</h2>')
-    .replace(/^###\s+(.+)$/gm, '<h3 class="text-lg font-medium mt-4 mb-2">$1</h3>')
-    .replace(/^####\s+(.+)$/gm, '<h4 class="text-md font-medium mt-3 mb-1">$1</h4>')
-    // Replace "Análise Geral" section including its content (if present)
+    // Remove "Análise Geral" section including its content (if present)
     .replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '')
+    
+    // Format main headers (Title format)
+    .replace(/^(.*?):\s*$/gm, '<h2 class="text-xl font-bold mt-8 mb-4 text-primary">$1</h2>')
+    
+    // Format section headers with better spacing
+    .replace(/^###?\s+(.+)$/gm, '<h3 class="text-lg font-bold mt-6 mb-3 text-slate-800">$1</h3>')
+    .replace(/^####?\s+(.+)$/gm, '<h4 class="text-base font-semibold mt-5 mb-2 text-slate-700">$1</h4>')
+    
+    // Bold section titles that aren't using markdown headers
+    .replace(/^([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,})$/gm, '<h3 class="text-lg font-bold mt-6 mb-3 text-slate-800">$1</h3>')
+    
+    // Format subsection titles that end with colon
+    .replace(/^([A-Z][A-Za-záàâãéèêíïóôõöúçñ\s]{2,}):$/gm, '<h4 class="text-base font-semibold mt-5 mb-2 text-slate-700">$1:</h4>')
+    
     // Enhance text formatting
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>') // Bold text
     .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Italic text
-    // Improve paragraph spacing and line breaks
-    .replace(/\n\n/g, '</p><p class="mb-4">') // Double line breaks as paragraphs with space
-    .replace(/\n(?!\n)/g, '<br />') // Single line breaks
-    // Format lists
-    .replace(/^-\s+(.+)$/gm, '<li class="ml-4 mb-1">$1</li>') // Unordered list items
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ml-4 mb-1">$2</li>') // Ordered list items
+    
+    // Improve paragraph spacing
+    .replace(/\n\n/g, '</p><p class="mb-4">')
+    
+    // Format lists with better spacing and bullets
+    .replace(/^-\s+(.+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ml-6 mb-2 list-decimal">$2</li>')
+    
+    // Handle line breaks within paragraphs
+    .replace(/\n(?!\n)/g, '<br />')
+    
     // Citations
-    .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>');
+    .replace(/\[(\d+)\]/g, '<sup class="text-xs text-blue-600">[$1]</sup>');
 
-  // Wrap the processed content in a paragraph tag for initial content
-  const wrappedContent = `<p class="mb-4">${processedOverview}</p>`;
+  // Wrap the processed content in a paragraph tag and add list containers
+  let wrappedContent = `<p class="mb-4">${processedOverview}</p>`;
+  
+  // Add proper list containers
+  wrappedContent = wrappedContent
+    .replace(/(<li class="ml-6 mb-2 list-disc">.*?<\/li>)(?!\s*<li)/g, '<ul class="my-4">$1</ul>')
+    .replace(/(<li class="ml-6 mb-2 list-decimal">.*?<\/li>)(?!\s*<li)/g, '<ol class="my-4">$1</ol>');
 
   return (
     <div className="space-y-4">
       <section className="mb-4">
         <div 
-          className="text-sm leading-relaxed prose prose-sm max-w-none"
+          className="prose prose-sm max-w-none text-sm leading-relaxed"
           dangerouslySetInnerHTML={{ __html: wrappedContent }}
         />
       </section>
       
       {currentBriefing.sources && currentBriefing.sources.length > 0 && (
         <>
-          <Separator />
+          <Separator className="my-4" />
           
           <section className="pt-2">
-            <h3 className="text-md font-medium mb-2">Fontes</h3>
+            <h3 className="text-lg font-bold mb-3">Fontes</h3>
             <div className="grid grid-cols-1 gap-2">
               {currentBriefing.sources.map((source, index) => (
                 <a 

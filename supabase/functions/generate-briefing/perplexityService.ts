@@ -17,6 +17,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
     const sources = extractSources(content);
     
     // Clean up any potential "Análise Geral" sections from the content
+    // This pattern will match the section header and all content until the next section header or end of content
     const cleanedContent = content.replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '');
     
     // Return the raw content with minimal processing
