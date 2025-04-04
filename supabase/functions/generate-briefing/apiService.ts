@@ -30,8 +30,8 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             - Deixe sempre uma linha em branco entre o título e o conteúdo
             - Use negrito (**texto**) apenas para destacar dados importantes como nomes, datas e números
             - Use marcadores para listas de itens relacionados no formato:
-               - Item 1
-               - Item 2
+               - Item 1 (com espaço após o hífen)
+               - Item 2 (com espaço após o hífen)
             - Evite usar texto completamente em maiúsculas para títulos ou subtítulos
             - Mantenha uma linha em branco antes de cada nova seção com título
             - Para listas numeradas, use o formato:
@@ -39,6 +39,7 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
                2. Item segundo
             - Não crie seções com letras isoladas como "A P" ou "C I" 
             - Evite usar termos como "VALORES:" - use títulos markdown em vez disso
+            - Nunca comece um parágrafo com hífen (-) sem espaço depois, sempre use "- " (hífen + espaço)
             
             ORIENTAÇÕES DE CONTEÚDO:
             
