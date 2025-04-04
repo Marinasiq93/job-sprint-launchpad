@@ -1,62 +1,94 @@
-
-// Define content categories for briefings
 export const BRIEFING_CATEGORIES = {
-  CULTURE_VALUES: 'culture_values',
-  MISSION_VISION: 'mission_vision',
-  PRODUCT_MARKET: 'product_market',
-  LEADERSHIP: 'leadership',
-  COMPANY_HISTORY: 'company_history'
+  CULTURE_VALUES: "culture_values",
+  MISSION_VISION: "mission_vision",
+  PRODUCT_MARKET: "product_market",
+  LEADERSHIP: "leadership",
+  COMPANY_HISTORY: "company_history",
 };
 
-// Define the mapping between questions and briefing categories
-// This allows multiple questions to reference the same briefing without duplication
-export const questionToBriefingMap = [
-  BRIEFING_CATEGORIES.CULTURE_VALUES,    // Question 0: "Você se sente alinhado com a cultura e os valores da empresa?"
-  BRIEFING_CATEGORIES.MISSION_VISION,    // Question 1: "Você se identifica com a missão da empresa?"
-  BRIEFING_CATEGORIES.PRODUCT_MARKET,    // Question 2: "Você tem alguma conexão pessoal ou profissional com o produto...?"
-  BRIEFING_CATEGORIES.LEADERSHIP,        // Question 3: "Você vê o time de liderança como alguém em quem confiaria...?"
-  BRIEFING_CATEGORIES.COMPANY_HISTORY    // Question 4: "Algum pensamento ou conexão sobre a história da fundação...?"
-];
+// Map each question index to a briefing category
+export const questionToBriefingMap: Record<number, string> = {
+  0: BRIEFING_CATEGORIES.CULTURE_VALUES,
+  1: BRIEFING_CATEGORIES.MISSION_VISION,
+  2: BRIEFING_CATEGORIES.PRODUCT_MARKET,
+  3: BRIEFING_CATEGORIES.LEADERSHIP,
+  4: BRIEFING_CATEGORIES.COMPANY_HISTORY,
+};
 
-// Category titles for UI display
-export const categoryTitles = {
-  [BRIEFING_CATEGORIES.CULTURE_VALUES]: "Valores e Cultura",
-  [BRIEFING_CATEGORIES.MISSION_VISION]: "Propósito e Visão",
+// Titles for each category
+export const categoryTitles: Record<string, string> = {
+  [BRIEFING_CATEGORIES.CULTURE_VALUES]: "Cultura e Valores",
+  [BRIEFING_CATEGORIES.MISSION_VISION]: "Missão e Visão",
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: "Produto e Mercado",
-  [BRIEFING_CATEGORIES.LEADERSHIP]: "Liderança e Gestão",
-  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: "História e Trajetória"
+  [BRIEFING_CATEGORIES.LEADERSHIP]: "Liderança",
+  [BRIEFING_CATEGORIES.COMPANY_HISTORY]: "História da Empresa",
 };
 
-// Store default fallback content by category (used before API fetch or on error)
-export const defaultContentByCategory = {
+// Default content for each category if API is unavailable
+export const defaultContentByCategory: Record<string, any> = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: {
-    overview: "Carregando informações sobre os valores e cultura da empresa...",
-    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
-    summary: "Carregando análise de contexto...",
-    sources: []
+    overview: "Demonstração: Cultura e valores da empresa.",
+    highlights: [
+      "Valores fundamentais da empresa",
+      "Como a cultura se manifesta no dia a dia",
+      "Iniciativas que reforçam os valores",
+      "Declarações da liderança sobre a cultura",
+      "Prêmios ou reconhecimentos relacionados à cultura"
+    ],
+    summary: "Esta é uma versão de demonstração das informações de cultura e valores. Configure a API para análise completa.",
+    sources: [],
+    recentNews: []
   },
   [BRIEFING_CATEGORIES.MISSION_VISION]: {
-    overview: "Carregando informações sobre o propósito e visão da empresa...",
-    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
-    summary: "Carregando análise de contexto...",
-    sources: []
+    overview: "Demonstração: Missão, visão e propósito da empresa.",
+    highlights: [
+      "Missão oficial da empresa",
+      "Visão de futuro declarada",
+      "Propósito maior que a empresa busca atingir",
+      "Impacto social ou ambiental desejado",
+      "Citações inspiradoras da liderança"
+    ],
+    summary: "Esta é uma versão de demonstração das informações de missão, visão e propósito. Configure a API para análise completa.",
+    sources: [],
+    recentNews: []
   },
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: {
-    overview: "Carregando informações sobre produto e mercado da empresa...",
-    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
-    summary: "Carregando análise de contexto...",
-    sources: []
+    overview: "Demonstração: Informações sobre produto, mercado e público da empresa.",
+    highlights: [
+      "Principais produtos ou serviços oferecidos",
+      "Perfil típico dos usuários ou clientes",
+      "Setores de mercado onde a solução é mais utilizada",
+      "Profissionais que costumam utilizar o produto",
+      "Concorrentes ou ferramentas similares no mercado"
+    ],
+    summary: "Esta é uma versão de demonstração das informações de produto e mercado. Configure a API para análise completa.",
+    sources: [],
+    recentNews: []
   },
   [BRIEFING_CATEGORIES.LEADERSHIP]: {
-    overview: "Carregando informações sobre a liderança e gestão da empresa...",
-    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
-    summary: "Carregando análise de contexto...",
-    sources: []
+    overview: "Demonstração: Informações sobre a liderança da empresa.",
+    highlights: [
+      "Nomes e cargos dos principais líderes",
+      "Experiência profissional da liderança",
+      "Estilo de liderança e valores promovidos",
+      "Iniciativas lideradas pela equipe executiva",
+      "Visão da liderança para o futuro da empresa"
+    ],
+    summary: "Esta é uma versão de demonstração das informações sobre a liderança. Configure a API para análise completa.",
+    sources: [],
+    recentNews: []
   },
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: {
-    overview: "Carregando informações sobre a história e trajetória da empresa...",
-    highlights: ["Carregando...", "Carregando...", "Carregando...", "Carregando...", "Carregando..."],
-    summary: "Carregando análise de contexto...",
-    sources: []
-  }
+    overview: "Demonstração: História da fundação e marcos importantes da empresa.",
+    highlights: [
+      "Ano e local de fundação",
+      "Nomes dos fundadores e seus backgrounds",
+      "Motivação original para a criação da empresa",
+      "Principais marcos históricos da empresa",
+      "Pivôs estratégicos no modelo de negócio"
+    ],
+    summary: "Esta é uma versão de demonstração da história da empresa. Configure a API para análise completa.",
+    sources: [],
+    recentNews: []
+  },
 };
