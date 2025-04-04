@@ -46,5 +46,7 @@ describe('BriefingContent', () => {
     expect(screen.getByText("This is a test overview")).toBeInTheDocument();
     expect(screen.getByText("Highlight 1")).toBeInTheDocument();
     expect(screen.getByText("This is a test summary")).toBeInTheDocument();
+    // Check for the new title
+    expect(screen.getByText("Valores da Empresa")).toBeInTheDocument();
   });
 });

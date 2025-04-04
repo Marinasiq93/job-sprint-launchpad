@@ -36,9 +36,9 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
-  // Clean and process the overview content to handle markdown formatting
+  // Clean and process the overview content to handle markdown formatting and remove the "Visão Geral da [COMPANY]" text
   const processedOverview = currentBriefing.overview
-    .replace(/## [^\n]+\n/, '') // Remove the header if it exists
+    .replace(/## Visão Geral d[aeo]s? [^\n]+\n?/i, '') // Remove the header if it exists
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
     .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>'); // Citations
 
@@ -63,7 +63,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <section>
             <h3 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-1.5">
               <Check className="h-4 w-4 text-emerald-500" />
-              Informações Relevantes
+              Valores da Empresa
             </h3>
             <ul className="text-sm space-y-2">
               {currentBriefing.highlights.map((highlight, index) => (
