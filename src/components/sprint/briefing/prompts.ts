@@ -65,13 +65,14 @@ export const perplexityPromptsByCategory = {
     
     ## Fundadores
     Apresente um breve perfil de cada fundador incluindo:
+    - Nome e cargo atual na empresa (se ainda ocupar alguma posição)
     - Formação acadêmica e experiência profissional relevante
     - Papel na fundação da empresa
     - Alguma conquista ou contribuição notável (se disponível)
     
     ## Equipe Executiva
     Se houver outros membros-chave da liderança além dos fundadores:
-    - Mencione apenas os principais executivos (C-level ou diretores) que NÃO são fundadores (para evitar repetições)
+    - Mencione apenas os principais executivos (C-level ou diretores) que NÃO são fundadores
     - Para cada um, inclua cargo atual, formação e experiência anterior relevante
     - Seja breve e objetivo, focando apenas em 3-5 executivos no máximo
     

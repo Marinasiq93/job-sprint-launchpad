@@ -64,8 +64,8 @@ export const processPerplexityResponse = (content: string, companyName: string):
       const foundersText = foundersMatch[1];
       const executiveText = executiveMatch[1];
       
-      // Simple name extraction (looking for bold names or names followed by colon/dash)
-      const nameExtractor = /\*\*([^*]+)\*\*|(?:^|\n)([A-Z][a-zÀ-ÿ]+(?: [A-Z][a-zÀ-ÿ]+)+)(?=\s*[:-])/g;
+      // Enhanced name extraction for founders (looking for names followed by titles/roles)
+      const nameExtractor = /\*\*([^*]+)\*\*|(?:^|\n)([A-Z][a-zÀ-ÿ]+(?: [A-Z][a-zÀ-ÿ]+)+)(?=\s*[:-]|\s+é|\s+(atual|co-fundador|fundador|CEO|CTO|COO|CFO))/gi;
       const founderNames: string[] = [];
       let match;
       
@@ -74,14 +74,40 @@ export const processPerplexityResponse = (content: string, companyName: string):
         if (match[2]) founderNames.push(match[2].toLowerCase());
       }
       
+      // Check for duplicate content - looking for founders mentioned in executive section
+      let duplicatesFound = false;
+      const cleanedExecutiveText = executiveText.replace(/Co-fundador|Fundador|CEO|CTO|COO|CFO/gi, (match) => {
+        duplicatesFound = true;
+        return match; // Just marking that we found duplicates, not changing the text yet
+      });
+      
       // If we found founder names, add a note to executive section if needed
-      if (founderNames.length > 0 && !executiveText.includes("não inclui fundadores") && !executiveText.includes("sem os fundadores")) {
+      if ((founderNames.length > 0 && duplicatesFound) || 
+          (founderNames.length > 0 && !executiveText.includes("não inclui fundadores") && !executiveText.includes("sem os fundadores"))) {
         console.log("Adding clarification note about founders in executive section");
-        const updatedExecutiveSection = `## Equipe Executiva
+        
+        // If the executive section starts with "Principais Executivos" rather than the heading,
+        // we need to handle it differently
+        if (executiveText.trim().startsWith("Principais Executivos") || 
+            executiveText.trim().startsWith("- Cargo Atual:")) {
+          // This might be a duplicate section - let's remove it completely if short enough
+          // or add a clarification note if it's substantial
+          if (executiveText.length < 400) { // If it's a short section, likely just duplicated content
+            processedContent = processedContent.replace(executiveMatch[0], "");
+          } else {
+            const updatedExecutiveSection = `## Equipe Executiva
+*(Nota: Esta seção lista apenas executivos que não são fundadores)*
+${executiveText.replace(/^Principais Executivos[^]*?(##|$)/m, '')}`;
+            processedContent = processedContent.replace(executiveSectionRegex, updatedExecutiveSection);
+          }
+        } else {
+          // Standard case - add clarification note
+          const updatedExecutiveSection = `## Equipe Executiva
 *(Nota: Esta seção lista apenas executivos que não são fundadores)*
 ${executiveText.replace(/##\s*Equipe\s*Executiva\s*/i, '')}`;
-        
-        processedContent = processedContent.replace(executiveSectionRegex, updatedExecutiveSection);
+          
+          processedContent = processedContent.replace(executiveSectionRegex, updatedExecutiveSection);
+        }
       }
     }
     
