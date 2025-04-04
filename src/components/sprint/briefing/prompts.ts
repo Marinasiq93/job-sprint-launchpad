@@ -7,8 +7,7 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um overview da empresa ${companyName}: o que ela faz, tamanho, mercado, principais produtos, e posicionamento no setor.
-    Inclua dados factuais como ano de fundação, sede, número aproximado de funcionários quando disponível.
+    Comece com um overview da empresa ${companyName}: quem ela é, quando foi fundada, e qual seu posicionamento no mercado.
     
     Em seguida, apresente os valores corporativos e cultura da empresa:
     - Liste e explique os valores e princípios da empresa
@@ -34,22 +33,22 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um panorama abrangente e bem estruturado dos produtos e serviços da empresa ${companyName},
+    Comece com um panorama abrangente dos produtos e serviços da empresa ${companyName},
     explicando claramente o que eles oferecem, seu público-alvo, e contexto de mercado.
     
-    Divida sua análise em seções bem organizadas sobre:
+    Divida sua análise nestas seções bem organizadas:
 
-    Produtos e Serviços:
+    ### Produtos e Serviços:
     - Descreva os principais produtos/serviços oferecidos
     - Explique suas características e diferenciais principais
     - Mencione tecnologias ou inovações relevantes usadas
     
-    Perfil dos Clientes:
+    ### Perfil dos Clientes:
     - Perfil típico dos usuários/clientes da empresa
     - Principais casos de uso e aplicações dos produtos/serviços
     - Problemas específicos que a solução resolve para os clientes
     
-    Mercado e Competição:
+    ### Mercado e Competição:
     - Tamanho e crescimento do mercado em que a empresa atua
     - Principais concorrentes diretos no mercado
     - Diferenciais competitivos da empresa
@@ -59,22 +58,21 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um resumo sobre a empresa ${companyName}: o que ela faz, estágio de desenvolvimento,
-    e posicionamento no mercado.
+    Comece com um resumo sobre a empresa ${companyName} focando em aspectos gerais de organização e estrutura.
     
     Organize sua análise em seções bem estruturadas:
     
-    Fundadores e Origem:
+    ### Fundadores e Origem:
     - Nomes dos fundadores e história da fundação
     - Backgrounds profissionais dos fundadores
     - Motivação e visão inicial para a empresa
     
-    Liderança Atual:
+    ### Liderança Atual:
     - CEO atual e equipe executiva principal
     - Experiência profissional prévia dos principais líderes
     - Citações relevantes dos líderes sobre a empresa ou visão
     
-    Cultura de Liderança:
+    ### Cultura de Liderança:
     - Estilo de liderança evidenciado na empresa
     - Valores que a liderança promove internamente
     - Iniciativas ou programas liderados pela equipe executiva
@@ -84,7 +82,7 @@ export const perplexityPromptsByCategory = {
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
     Visite o site institucional da empresa ${companyWebsite} e faça uma pesquisa completa sobre a empresa.
     
-    Comece com um resumo atual da empresa ${companyName}: mercado, produtos principais, tamanho e alcance geográfico.
+    Comece com um resumo atual da empresa ${companyName}: mercado e alcance geográfico.
     
     Detalhe a história da fundação de forma clara e organizada:
     - Ano e local de fundação
