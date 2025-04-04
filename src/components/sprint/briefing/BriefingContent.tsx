@@ -1,6 +1,6 @@
 
 import { Separator } from "@/components/ui/separator";
-import { BriefingContent as BriefingContentType } from "./briefingService";
+import { BriefingContent as BriefingContentType } from "./types";
 import { categoryTitles, BRIEFING_CATEGORIES } from "./briefingConstants";
 import { ExternalLink, AlertCircle, Loader2, Newspaper, Link as LinkIcon, Check, Target } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";

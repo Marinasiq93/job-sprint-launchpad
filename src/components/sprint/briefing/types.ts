@@ -4,6 +4,7 @@ export interface BriefingContent {
   overview: string;
   highlights: string[];
   summary: string;
+  additionalPoints?: string[]; // Adding this property for Mission & Vision content
   sources?: Array<{
     title: string;
     url: string;
