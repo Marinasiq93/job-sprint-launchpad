@@ -34,19 +34,36 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     );
   }
 
-  // Process the overview content to handle markdown formatting
+  // Process the overview content to enhance markdown formatting
   const processedOverview = currentBriefing.overview
+    // Format headings (# Heading)
+    .replace(/^#\s+(.+)$/gm, '<h1 class="text-2xl font-bold mt-6 mb-3">$1</h1>')
+    .replace(/^##\s+(.+)$/gm, '<h2 class="text-xl font-semibold mt-5 mb-2">$1</h2>')
+    .replace(/^###\s+(.+)$/gm, '<h3 class="text-lg font-medium mt-4 mb-2">$1</h3>')
+    .replace(/^####\s+(.+)$/gm, '<h4 class="text-md font-medium mt-3 mb-1">$1</h4>')
+    // Replace "Análise Geral" section including its content (if present)
+    .replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '')
+    // Enhance text formatting
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>') // Bold text
     .replace(/\*([^*]+)\*/g, '<em>$1</em>') // Italic text
-    .replace(/\n\n/g, '<br/><br/>') // Line breaks
-    .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>'); // Citations
+    // Improve paragraph spacing and line breaks
+    .replace(/\n\n/g, '</p><p class="mb-4">') // Double line breaks as paragraphs with space
+    .replace(/\n(?!\n)/g, '<br />') // Single line breaks
+    // Format lists
+    .replace(/^-\s+(.+)$/gm, '<li class="ml-4 mb-1">$1</li>') // Unordered list items
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ml-4 mb-1">$2</li>') // Ordered list items
+    // Citations
+    .replace(/\[(\d+)\]/g, '<sup>[$1]</sup>');
+
+  // Wrap the processed content in a paragraph tag for initial content
+  const wrappedContent = `<p class="mb-4">${processedOverview}</p>`;
 
   return (
     <div className="space-y-4">
-      <section>
+      <section className="mb-4">
         <div 
           className="text-sm leading-relaxed prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: processedOverview }}
+          dangerouslySetInnerHTML={{ __html: wrappedContent }}
         />
       </section>
       
@@ -55,6 +72,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
           <Separator />
           
           <section className="pt-2">
+            <h3 className="text-md font-medium mb-2">Fontes</h3>
             <div className="grid grid-cols-1 gap-2">
               {currentBriefing.sources.map((source, index) => (
                 <a 

@@ -16,9 +16,12 @@ export const processPerplexityResponse = (content: string, companyName: string):
     // Extract sources using the source extractor
     const sources = extractSources(content);
     
+    // Clean up any potential "Análise Geral" sections from the content
+    const cleanedContent = content.replace(/\b(Análise Geral|ANÁLISE GERAL)(\s*:|\s*\n|\s*)([\s\S]*?)(?=(\n\s*\n\s*[A-Z#]|$))/gi, '');
+    
     // Return the raw content with minimal processing
     return {
-      overview: content, // Use the entire content as overview
+      overview: cleanedContent, // Use the cleaned content as overview
       highlights: [],    // We're not using highlights anymore
       summary: "",       // We're not using summary anymore
       sources: sources,  // Still extract sources for reference links

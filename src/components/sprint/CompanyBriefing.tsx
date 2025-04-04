@@ -45,7 +45,7 @@ const CompanyBriefing = ({
         isLoading={isLoading}
         isApiAvailable={isApiAvailable}
       />
-      <CardContent className="flex-1 overflow-auto pb-6">
+      <CardContent className="flex-1 overflow-auto pb-6 px-5">
         {showApiWarning && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
