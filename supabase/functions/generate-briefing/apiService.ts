@@ -29,14 +29,9 @@ export const callPerplexityAPI = async (prompt: string, perplexityApiKey: string
             - Estruture sua resposta de forma organizada com parágrafos bem definidos
             - Não use formatação com hashtags (#) para títulos
             - Use negrito para destaques importantes
-            - Inclua URLs completas ao mencionar fontes
+            - Inclua URLs completas ao mencionar fontes em seu texto
             - Use informações do site oficial da empresa e fontes confiáveis
-            
-            Ao final, liste as URLs das fontes utilizadas (sem título "Fontes" ou "Sources"), apenas os links numerados:
-            
-            [1] URL completa
-            [2] URL completa
-            [etc.]`
+            - Não inclua uma seção de "Fontes" no final da sua resposta`
           },
           {
             role: 'user',

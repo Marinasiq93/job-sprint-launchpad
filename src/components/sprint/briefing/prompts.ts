@@ -15,9 +15,7 @@ export const perplexityPromptsByCategory = {
     - Detalhe como esses valores se manifestam na cultura
     - Mencione programas internos ou iniciativas que reflitam esses valores
     
-    Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)
-    
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
+    Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -30,10 +28,7 @@ export const perplexityPromptsByCategory = {
     - Inclua citações inspiradoras dos fundadores ou liderança sobre o propósito da empresa
     
     Liste também exemplos concretos de como a empresa está trabalhando para atingir sua missão,
-    como projetos específicos alinhados ao propósito declarado, produtos ou serviços que demonstram
-    o compromisso com a visão, e iniciativas de impacto que refletem os valores.
-    
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
+    como projetos específicos alinhados ao propósito declarado e iniciativas de impacto que refletem os valores.`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -52,9 +47,7 @@ export const perplexityPromptsByCategory = {
     - Tamanho e crescimento do mercado em que a empresa atua
     - Principais concorrentes diretos no mercado
     - Diferenciais competitivos da empresa
-    - Tendências relevantes para o setor
-    
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
+    - Tendências relevantes para o setor`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -73,9 +66,7 @@ export const perplexityPromptsByCategory = {
     - Estilo de liderança evidenciado por declarações ou políticas da empresa
     - Valores que a liderança promove internamente
     - Iniciativas ou programas liderados pela equipe executiva
-    - Como a liderança aborda temas como inovação e diversidade
-    
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`,
+    - Como a liderança aborda temas como inovação e diversidade`,
   
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Utilize o nome da empresa ${companyName} e a URL institucional ${companyWebsite} para gerar este conteúdo.
@@ -96,7 +87,5 @@ export const perplexityPromptsByCategory = {
     - Rodadas de investimento significativas
     - Aquisições ou fusões
     - Pivôs estratégicos no modelo de negócio
-    - Conquistas e prêmios importantes
-    
-    Use Markdown para formatar sua resposta, com títulos (##) e subtítulos (###) claros.`
+    - Conquistas e prêmios importantes`
 };
