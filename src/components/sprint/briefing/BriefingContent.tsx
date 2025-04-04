@@ -43,6 +43,12 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       // Add paragraph spacing
       .replace(/\n\n+/g, '</p><p class="mb-4">')
       
+      // Format headings properly
+      .replace(/#{4,}\s+([^\n]+)/g, '<h4 class="text-lg font-semibold mt-5 mb-2">$1</h4>') // h4
+      .replace(/#{3}\s+([^\n]+)/g, '<h3 class="text-xl font-semibold mt-6 mb-3">$1</h3>') // h3
+      .replace(/#{2}\s+([^\n]+)/g, '<h2 class="text-2xl font-bold mt-8 mb-3 border-b pb-2">$1</h2>') // h2
+      .replace(/#{1}\s+([^\n]+)/g, '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>') // h1
+      
       // Format bold text
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       
@@ -54,9 +60,9 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
       .replace(/^[-–•]\s+(.+)$/gm, '<li class="ml-5 my-1.5 list-disc">$1</li>')
       .replace(/^(\d+)[.)]\s+(.+)$/gm, '<li class="ml-5 my-1.5 list-decimal">$2</li>')
       
-      // Format section titles (without using Markdown-style headers)
-      .replace(/^([A-Z][A-Z\s]{2,}:)(.+)$/gm, '<h2 class="text-xl font-bold mt-6 mb-3">$1$2</h2>')
-      .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(.+)$/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1$2</h3>')
+      // Format section titles that aren't using Markdown headers
+      .replace(/^([A-Z][A-Z\s]{2,}:)(.+)$/gm, '<h3 class="text-xl font-semibold mt-6 mb-3">$1$2</h3>')
+      .replace(/^([A-Z][a-z]+(?:[A-Z][a-z]+)+:)(.+)$/gm, '<h4 class="text-lg font-semibold mt-4 mb-2">$1$2</h4>')
       
       // Convert URLs to links
       .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
@@ -69,7 +75,7 @@ const BriefingContent = ({ currentBriefing, currentCategory, error, isLoading }:
     <div className="space-y-6 px-1">
       <section>
         <div 
-          className="prose prose-sm max-w-none text-sm leading-relaxed prose-headings:my-4 prose-p:my-2 prose-li:my-0.5 whitespace-pre-line"
+          className="prose prose-sm max-w-none text-sm leading-relaxed prose-headings:my-4 prose-p:my-2 prose-li:my-0.5"
           dangerouslySetInnerHTML={{ __html: `<p class="mb-4">${formattedContent}</p>` }}
         />
       </section>
