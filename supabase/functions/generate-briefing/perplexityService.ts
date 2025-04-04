@@ -34,6 +34,7 @@ export const processPerplexityResponse = (content: string, companyName: string):
     
     // Extract sources using the source extractor
     const sources = extractSources(content);
+    console.log(`Extracted ${sources.length} sources`);
     
     // Preserve the original format as much as possible
     // Only remove the source section since we extract it separately
