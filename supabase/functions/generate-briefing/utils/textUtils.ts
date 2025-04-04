@@ -28,15 +28,6 @@ export const cleanText = (text: string): string => {
   return cleaned;
 };
 
-// Helper function to get domain name from URL
-export const getDomainName = (url: string): string => {
-  try {
-    return url.split("//")[1]?.split("/")[0] || url;
-  } catch {
-    return url;
-  }
-};
-
 // Detect the structure type of a text to apply appropriate formatting
 export const detectTextStructure = (text: string): string => {
   if (!text) return "unknown";

@@ -4,29 +4,28 @@ export const extractSources = (content: string): Array<{title: string, url: stri
   const sources: Array<{title: string, url: string}> = [];
   const urlRegex = /(https?:\/\/[^\s\)\"\'\]]+)/g;
   
-  // Look for the Citations section
-  const citationsSectionRegex = /Citations:?\s*([\s\S]*?)(?:\n\n|\n?$)/i;
-  const citationsSection = content.match(citationsSectionRegex);
+  // Look for the "Fontes Utilizadas" or "Citations" sections
+  const sourcesSectionRegex = /(?:Fontes Utilizadas|Fontes|Citations|References|Referências):?\s*([\s\S]*?)(?:\n\n|\n?$)/i;
+  const sourcesSection = content.match(sourcesSectionRegex);
   
-  if (citationsSection && citationsSection[1]) {
-    // Extract sources in the format [n] URL
-    const sourceRegex = /\[(\d+)\]\s+(https?:\/\/[^\s\n]+)/g;
+  if (sourcesSection && sourcesSection[1]) {
+    // Try extracting numbered citations first (e.g., [1] http://example.com)
+    const numberedSourceRegex = /(?:\[(\d+)\]|\(\d+\)|\d+[\.\)])\s+(https?:\/\/[^\s\n]+)/g;
     let match;
     
-    while ((match = sourceRegex.exec(citationsSection[1])) !== null) {
+    while ((match = numberedSourceRegex.exec(sourcesSection[1])) !== null) {
       const url = match[2]?.trim();
       if (url) {
         try {
-          // Try to extract domain name for title
-          const urlObj = new URL(url);
-          const domain = urlObj.hostname.replace(/^www\./, '');
+          // Extract domain name for title
+          let domain = getDomainName(url);
           
           sources.push({
             title: domain,
             url
           });
         } catch (e) {
-          // If URL parsing fails, still include the source with the URL as title
+          // Fallback if URL parsing fails
           sources.push({
             title: url,
             url
@@ -34,11 +33,39 @@ export const extractSources = (content: string): Array<{title: string, url: stri
         }
       }
     }
+    
+    // If no numbered sources found, look for URLs on separate lines
+    if (sources.length === 0) {
+      const lineByLineRegex = /^(https?:\/\/[^\s\n]+)$/gm;
+      while ((match = lineByLineRegex.exec(sourcesSection[1])) !== null) {
+        const url = match[1]?.trim();
+        if (url) {
+          sources.push({
+            title: getDomainName(url),
+            url
+          });
+        }
+      }
+    }
+    
+    // If still no sources found, extract all URLs in the section
+    if (sources.length === 0) {
+      const generalUrlRegex = /(https?:\/\/[^\s\n]+)/g;
+      while ((match = generalUrlRegex.exec(sourcesSection[1])) !== null) {
+        const url = match[1]?.trim();
+        if (url && !sources.some(s => s.url === url)) {
+          sources.push({
+            title: getDomainName(url),
+            url
+          });
+        }
+      }
+    }
   }
   
-  // If no sources found in Citations section, look for URLs throughout the content
+  // If no sources were found in dedicated sections, look for URLs throughout the content
   if (sources.length === 0) {
-    // Check for URLs in the content
+    // Find all URLs in the content
     let urls: string[] = [];
     let match;
     
@@ -52,11 +79,8 @@ export const extractSources = (content: string): Array<{title: string, url: stri
     // Add unique URLs as sources
     urls.forEach(url => {
       try {
-        const urlObj = new URL(url);
-        const domain = urlObj.hostname.replace(/^www\./, '');
-        
         sources.push({
-          title: domain,
+          title: getDomainName(url),
           url
         });
       } catch (e) {
@@ -66,13 +90,23 @@ export const extractSources = (content: string): Array<{title: string, url: stri
     });
   }
   
-  // If still no sources, add a search link
-  if (sources.length === 0) {
-    sources.push({
-      title: "Pesquisar mais informações",
-      url: "https://www.google.com"
-    });
+  // Return deduplicated sources (by URL)
+  return sources
+    .filter((source, index, self) => 
+      index === self.findIndex((s) => s.url === source.url))
+    .slice(0, 10); // Limit to 10 sources
+};
+
+// Helper function to get domain name from URL (moved from textUtils.ts)
+const getDomainName = (url: string): string => {
+  try {
+    // Try to create URL object
+    const urlObj = new URL(url);
+    // Get the hostname and remove 'www.' prefix if present
+    return urlObj.hostname.replace(/^www\./, '');
+  } catch {
+    // If URL parsing fails, extract domain using regex
+    const domainMatch = url.match(/https?:\/\/(?:www\.)?([^\/]+)/i);
+    return domainMatch ? domainMatch[1] : url;
   }
-  
-  return sources.slice(0, 10); // Limit to 10 sources
 };
