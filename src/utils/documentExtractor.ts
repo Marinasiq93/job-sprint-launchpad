@@ -29,11 +29,14 @@ Este arquivo pode conter informações sobre sua formação acadêmica, experiê
  * Enhanced function to extract content from files
  */
 export const extractFileContent = async (file: File): Promise<string> => {
+  console.log(`Extracting content from ${file.name} (${file.type}), size: ${(file.size/1024).toFixed(2)}KB`);
+  
   // For PDFs, use an improved text extraction approach
   if (file.type === 'application/pdf') {
     try {
       // Extract text from PDF
       let text = await extractPDFContent(file);
+      console.log(`PDF extraction complete. Extracted ${text.length} characters`);
       
       // If extracted text is too short, try using file metadata as a fallback
       if (!text || text.length < 100) {
