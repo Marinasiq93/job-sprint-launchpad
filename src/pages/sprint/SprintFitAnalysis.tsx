@@ -9,6 +9,7 @@ import { useFitAnalysis } from "@/hooks/useFitAnalysis";
 import FitAnalysisResult from "@/components/sprint/fit-analysis/FitAnalysisResult";
 import FitAnalysisPrompt from "@/components/sprint/fit-analysis/FitAnalysisPrompt";
 import FitQuestionsSection from "@/components/sprint/fit-analysis/FitQuestionsSection";
+import { Alert, AlertCircle } from "lucide-react";
 
 interface SprintData {
   jobTitle: string;
@@ -35,9 +36,11 @@ const SprintFitAnalysis = () => {
   useEffect(() => {
     // Get sprint data from location state or fetch it based on sprintId
     if (location.state?.sprintData) {
+      console.log("Using sprint data from location state:", location.state.sprintData);
       setSprintData(location.state.sprintData);
       setLoading(false);
     } else if (sprintId) {
+      console.log("No sprint data in location state, creating mock data for sprint ID:", sprintId);
       // TODO: In a real implementation, we would fetch the sprint data from the database
       // For now, just set a mock data to demonstrate functionality
       // In production, this would be a fetch from the database
@@ -51,7 +54,7 @@ const SprintFitAnalysis = () => {
     }
   }, [location.state, sprintId]);
 
-  const { loading: analyzeLoading, result: fitAnalysisResult, generateFitAnalysis } = useFitAnalysis({ 
+  const { loading: analyzeLoading, result: fitAnalysisResult, error: analyzeError, generateFitAnalysis } = useFitAnalysis({ 
     sprintData, 
     userDocuments 
   });
@@ -81,6 +84,19 @@ const SprintFitAnalysis = () => {
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />
+        </div>
+      );
+    }
+
+    if (analyzeError) {
+      return (
+        <div className="p-4 border border-red-200 rounded-md bg-red-50">
+          <div className="flex items-center gap-2 text-red-600 mb-2">
+            <AlertCircle className="h-5 w-5" />
+            <h3 className="font-semibold">Erro na análise</h3>
+          </div>
+          <p className="text-sm text-red-600 mb-4">{analyzeError}</p>
+          <FitAnalysisPrompt onAnalyze={generateFitAnalysis} userDocuments={userDocuments} />
         </div>
       );
     }

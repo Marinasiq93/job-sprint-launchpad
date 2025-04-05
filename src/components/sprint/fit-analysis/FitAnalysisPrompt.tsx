@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { UserDocument } from "@/types/documents";
+import { AlertCircle, FileCheck } from "lucide-react";
 
 interface FitAnalysisPromptProps {
   onAnalyze: () => void;
@@ -9,24 +10,57 @@ interface FitAnalysisPromptProps {
 }
 
 const FitAnalysisPrompt: React.FC<FitAnalysisPromptProps> = ({ onAnalyze, userDocuments }) => {
+  const hasResume = userDocuments?.resume_text;
+  
   return (
     <div className="text-center p-6">
-      <p className="text-muted-foreground mb-4">
+      <p className="text-muted-foreground mb-6">
         Vamos analisar seu perfil em relação à vaga e gerar insights valiosos para sua candidatura.
       </p>
+      
+      {!userDocuments && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex items-center gap-2 text-amber-600 mb-1">
+            <AlertCircle className="h-4 w-4" />
+            <span className="font-medium">Documentos não encontrados</span>
+          </div>
+          <p className="text-sm text-amber-600">
+            É necessário ter documentos cadastrados no seu perfil para realizar a análise.
+          </p>
+        </div>
+      )}
+      
+      {userDocuments && !hasResume && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex items-center gap-2 text-amber-600 mb-1">
+            <AlertCircle className="h-4 w-4" />
+            <span className="font-medium">Currículo não encontrado</span>
+          </div>
+          <p className="text-sm text-amber-600">
+            É necessário ter um currículo cadastrado no seu perfil para realizar a análise.
+          </p>
+        </div>
+      )}
+      
+      {userDocuments && hasResume && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <div className="flex items-center gap-2 text-green-600 mb-1">
+            <FileCheck className="h-4 w-4" />
+            <span className="font-medium">Currículo encontrado</span>
+          </div>
+          <p className="text-sm text-green-600">
+            Seu currículo foi carregado e está pronto para análise.
+          </p>
+        </div>
+      )}
+      
       <Button 
         onClick={onAnalyze}
         className="bg-jobsprint-blue hover:bg-jobsprint-blue/90"
-        disabled={!userDocuments}
+        disabled={!userDocuments || !hasResume}
       >
-        {userDocuments ? "Analisar Compatibilidade" : "Documentos não encontrados"}
+        Analisar Compatibilidade
       </Button>
-      
-      {!userDocuments && (
-        <p className="text-sm text-muted-foreground mt-2">
-          É necessário ter documentos cadastrados no seu perfil para realizar a análise.
-        </p>
-      )}
     </div>
   );
 };

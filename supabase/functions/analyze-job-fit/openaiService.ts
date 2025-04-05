@@ -21,7 +21,8 @@ export async function generateJobFitAnalysis(input: JobFitAnalysisInput): Promis
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not set in environment variables');
+      console.error('OPENAI_API_KEY is not set in environment variables');
+      throw new Error('Chave da API OpenAI não configurada. Contate o administrador.');
     }
 
     const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = input;
@@ -63,7 +64,11 @@ ${jobDescription}
 DOCUMENTOS DO CANDIDATO:
 ${userDocuments}`;
 
-    console.log("Calling OpenAI API");
+    console.log("Calling OpenAI API with document lengths:", {
+      resumeLength: resumeText.length,
+      coverLetterLength: coverLetterText?.length || 0,
+      referenceTextLength: referenceText?.length || 0
+    });
     
     // Call OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -73,7 +78,7 @@ ${userDocuments}`;
         "Authorization": `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4-turbo",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemMessage },
           { role: "user", content: userMessage }
@@ -86,11 +91,13 @@ ${userDocuments}`;
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API Error: ${response.status}`);
+      throw new Error(`Erro na API do OpenAI: ${response.status}`);
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content;
+    
+    console.log("OpenAI response received, parsing JSON...");
     
     // Parse the JSON response
     try {
@@ -101,7 +108,8 @@ ${userDocuments}`;
           !Array.isArray(fitAnalysisResult.keySkills) || 
           !Array.isArray(fitAnalysisResult.relevantExperiences) ||
           !Array.isArray(fitAnalysisResult.identifiedGaps)) {
-        throw new Error("Invalid response format from OpenAI API");
+        console.error("Invalid response format:", fitAnalysisResult);
+        throw new Error("Formato de resposta inválido da API OpenAI");
       }
       
       // Ensure all arrays have exactly 5 items
@@ -125,8 +133,9 @@ ${userDocuments}`;
       };
       
     } catch (error) {
-      console.error("Error parsing OpenAI response:", error, content);
-      throw new Error("Failed to parse analysis result");
+      console.error("Error parsing OpenAI response:", error);
+      console.error("Raw content:", content);
+      throw new Error("Falha ao analisar o resultado da análise");
     }
     
   } catch (error) {
