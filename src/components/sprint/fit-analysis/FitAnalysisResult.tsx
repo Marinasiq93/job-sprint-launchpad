@@ -1,18 +1,16 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { FitAnalysisResult as FitAnalysisResultType } from "@/hooks/useFitAnalysis";
 
 interface FitAnalysisResultProps {
-  result: {
-    compatibilityScore: string;
-    keySkills: string[];
-    relevantExperiences: string[];
-    identifiedGaps: string[];
-  } | null;
+  result: FitAnalysisResultType | null;
   loading: boolean;
+  debugMode?: boolean;
 }
 
-const FitAnalysisResult: React.FC<FitAnalysisResultProps> = ({ result, loading }) => {
+const FitAnalysisResult: React.FC<FitAnalysisResultProps> = ({ result, loading, debugMode }) => {
   if (loading) {
     return <p>Analisando compatibilidade...</p>;
   }
@@ -23,6 +21,25 @@ const FitAnalysisResult: React.FC<FitAnalysisResultProps> = ({ result, loading }
 
   return (
     <div className="space-y-6">
+      {debugMode && result.inputSummary && (
+        <Card className="bg-gray-50 border-dashed">
+          <CardContent className="pt-4">
+            <h3 className="font-semibold mb-2 text-gray-700">Debug: Informações Utilizadas na Análise</h3>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li>Título da vaga: {result.inputSummary.jobTitleLength} caracteres</li>
+              <li>Descrição da vaga: {result.inputSummary.jobDescriptionLength} caracteres</li>
+              <li>Currículo: {result.inputSummary.resumeTextLength} caracteres</li>
+              {result.inputSummary.coverLetterTextLength > 0 && (
+                <li>Carta de apresentação: {result.inputSummary.coverLetterTextLength} caracteres</li>
+              )}
+              {result.inputSummary.referenceTextLength > 0 && (
+                <li>Referências: {result.inputSummary.referenceTextLength} caracteres</li>
+              )}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h3 className="font-semibold mb-2">Compatibilidade com a Vaga</h3>
         <p className="text-lg font-bold text-jobsprint-blue">{result.compatibilityScore}</p>

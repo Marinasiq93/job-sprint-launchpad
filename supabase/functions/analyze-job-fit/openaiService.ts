@@ -1,7 +1,6 @@
 
-// OpenAI service for job fit analysis
-
-interface JobFitAnalysisInput {
+// Import OpenAI API types
+interface AnalysisInput {
   jobTitle: string;
   jobDescription: string;
   resumeText: string;
@@ -9,84 +8,29 @@ interface JobFitAnalysisInput {
   referenceText?: string;
 }
 
-interface FitAnalysisResult {
+interface AnalysisResult {
   compatibilityScore: string;
   keySkills: string[];
   relevantExperiences: string[];
   identifiedGaps: string[];
 }
 
-export async function generateJobFitAnalysis(input: JobFitAnalysisInput): Promise<FitAnalysisResult> {
+// Generate job fit analysis using OpenAI API
+export async function generateJobFitAnalysis(input: AnalysisInput): Promise<AnalysisResult> {
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  
+  if (!OPENAI_API_KEY) {
+    console.error("OPENAI_API_KEY environment variable not set");
+    throw new Error("A chave da API OpenAI não está configurada");
+  }
+  
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    // Create a prompt for the OpenAI API
+    const prompt = createAnalysisPrompt(input);
     
-    if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY is not set in environment variables');
-      throw new Error('Chave da API OpenAI não configurada. Contate o administrador.');
-    }
-
-    const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = input;
+    console.log("Sending request to OpenAI API");
     
-    // Clean and validate inputs
-    const cleanedResumeText = cleanDocumentText(resumeText);
-    
-    if (!cleanedResumeText || cleanedResumeText.trim().length < 10) {
-      throw new Error('Texto do currículo não encontrado ou muito curto para análise');
-    }
-    
-    // Prepare documents for analysis, combining all available text
-    let userDocuments = `CURRÍCULO:\n${cleanedResumeText}\n\n`;
-    
-    if (coverLetterText && coverLetterText.trim() !== "") {
-      userDocuments += `CARTA DE APRESENTAÇÃO:\n${cleanDocumentText(coverLetterText)}\n\n`;
-    }
-    
-    if (referenceText && referenceText.trim() !== "") {
-      userDocuments += `MATERIAIS DE REFERÊNCIA:\n${cleanDocumentText(referenceText)}`;
-    }
-
-    // Log document sizes for debugging
-    console.log("Document sizes for analysis:", {
-      resumeTextLength: cleanedResumeText.length,
-      coverLetterTextLength: coverLetterText ? cleanDocumentText(coverLetterText).length : 0,
-      referenceTextLength: referenceText ? cleanDocumentText(referenceText).length : 0,
-      totalDocumentsLength: userDocuments.length
-    });
-
-    // Create system message
-    const systemMessage = `Você é um especialista em recrutamento e seleção com profundo conhecimento em análise de compatibilidade entre candidatos e vagas.
-    
-Analise cuidadosamente os documentos do candidato (currículo, carta de apresentação e outros materiais) em relação à descrição da vaga. 
-Sua tarefa é fornecer uma análise estruturada de compatibilidade retornando exatamente os seguintes elementos em formato JSON:
-
-1. compatibilityScore: Uma avaliação geral do nível de compatibilidade do candidato com a vaga em formato de texto descritivo seguido de uma porcentagem entre parênteses. Ex: "Elevado (85%)" ou "Moderado (65%)"
-
-2. keySkills: Uma array com exatamente 5 principais habilidades identificadas no perfil do candidato que são relevantes para a vaga
-
-3. relevantExperiences: Uma array com exatamente 5 experiências ou projetos do candidato que são mais relevantes para a vaga (explicando brevemente por quê)
-
-4. identifiedGaps: Uma array com exatamente 5 lacunas ou requisitos importantes que foram identificados na vaga mas que não aparecem claramente no perfil do candidato ou precisam ser melhor desenvolvidos
-
-Seja preciso, detalhado e honesto em sua avaliação. Se o candidato não apresenta boa compatibilidade, sua análise deve refletir isso claramente. 
-
-IMPORTANTE: Retorne APENAS o objeto JSON válido sem formatação Markdown ou qualquer outro texto adicional.`;
-
-    // Create user message
-    const userMessage = `VAGA: ${jobTitle}
-    
-DESCRIÇÃO DA VAGA:
-${jobDescription}
-
-DOCUMENTOS DO CANDIDATO:
-${userDocuments}`;
-
-    console.log("Calling OpenAI API with document lengths:", {
-      resumeLength: cleanedResumeText.length,
-      coverLetterLength: coverLetterText?.length || 0,
-      referenceTextLength: referenceText?.length || 0
-    });
-    
-    // Call OpenAI API
+    // Call the OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -96,102 +40,151 @@ ${userDocuments}`;
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: systemMessage },
-          { role: "user", content: userMessage }
+          {
+            role: "system",
+            content: 
+              "You are an expert career advisor specializing in job application analysis. " + 
+              "Your task is to compare a candidate's profile with a job description and provide structured feedback. " +
+              "Focus on being accurate, honest, and constructive. " + 
+              "All responses must be in Portuguese."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
         ],
-        temperature: 0.2,
-        max_tokens: 2000
+        temperature: 0.5,
+        max_tokens: 1000
       })
     });
-
+    
+    // Check if the response was successful
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(`Erro na API do OpenAI: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    
-    console.log("OpenAI response received, parsing JSON...");
-    
-    // Parse the JSON response, handling potential markdown formatting
-    try {
-      // Try to clean up the response in case it's wrapped in markdown code blocks
-      let cleanedContent = content;
-      
-      // Remove markdown code blocks if present
-      const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
-      const match = cleanedContent.match(codeBlockRegex);
-      if (match && match[1]) {
-        cleanedContent = match[1];
-      }
-      
-      // Log the cleaned content for debugging
-      console.log("Cleaned content for parsing:", cleanedContent);
-      
-      const fitAnalysisResult = JSON.parse(cleanedContent);
-      
-      // Validate that all required fields are present
-      if (!fitAnalysisResult.compatibilityScore || 
-          !Array.isArray(fitAnalysisResult.keySkills) || 
-          !Array.isArray(fitAnalysisResult.relevantExperiences) ||
-          !Array.isArray(fitAnalysisResult.identifiedGaps)) {
-        console.error("Invalid response format:", fitAnalysisResult);
-        throw new Error("Formato de resposta inválido da API OpenAI");
-      }
-      
-      // Ensure all arrays have exactly 5 items
-      const ensureExactlyFive = <T>(arr: T[], label: string): T[] => {
-        if (arr.length < 5) {
-          console.warn(`${label} has less than 5 items, padding with placeholders`);
-          return [...arr, ...Array(5 - arr.length).fill(`${label.slice(0, -1)} não identificado`)];
-        }
-        if (arr.length > 5) {
-          console.warn(`${label} has more than 5 items, truncating`);
-          return arr.slice(0, 5);
-        }
-        return arr;
-      };
-      
-      return {
-        compatibilityScore: fitAnalysisResult.compatibilityScore,
-        keySkills: ensureExactlyFive(fitAnalysisResult.keySkills, "Habilidades"),
-        relevantExperiences: ensureExactlyFive(fitAnalysisResult.relevantExperiences, "Experiências"),
-        identifiedGaps: ensureExactlyFive(fitAnalysisResult.identifiedGaps, "Lacunas")
-      };
-      
-    } catch (error) {
-      console.error("Error parsing OpenAI response:", error);
-      console.error("Raw content:", content);
-      throw new Error("Falha ao analisar o resultado da análise");
+      const errorDetails = await response.text();
+      console.error("OpenAI API request failed:", response.status, errorDetails);
+      throw new Error(`Falha na requisição à API OpenAI: ${response.status}`);
     }
     
+    // Parse the response
+    const responseData = await response.json();
+    const content = responseData.choices[0]?.message?.content;
+    
+    if (!content) {
+      console.error("No content in OpenAI response:", responseData);
+      throw new Error("Nenhum conteúdo na resposta da API OpenAI");
+    }
+    
+    console.log("Received response from OpenAI API, parsing result");
+    console.log("Response sample:", content.substring(0, 200));
+    
+    // Parse the content into the required format
+    return parseAnalysisResponse(content);
   } catch (error) {
     console.error("Error generating job fit analysis:", error);
-    throw error;
+    throw new Error(`Erro ao gerar análise de compatibilidade: ${error.message}`);
   }
 }
 
-// Helper function to clean document text
-function cleanDocumentText(text: string | null | undefined): string {
-  if (!text) return '';
+// Create a prompt for the OpenAI API
+function createAnalysisPrompt(input: AnalysisInput): string {
+  const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = input;
   
-  // Handle auto-generated text from file uploads
-  if (text.startsWith('Conteúdo do arquivo:') && text.includes('(Texto extraído automaticamente)')) {
-    return text;
+  let prompt = `
+Analise a compatibilidade entre o perfil do candidato e a vaga de emprego a seguir.
+
+## VAGA
+Título: ${jobTitle}
+
+Descrição:
+${jobDescription}
+
+## PERFIL DO CANDIDATO
+### Currículo
+${resumeText}
+`;
+
+  // Add cover letter if available
+  if (coverLetterText && coverLetterText.trim() !== "") {
+    prompt += `
+### Carta de Apresentação
+${coverLetterText}
+`;
   }
-  
-  // Handle text that's just a filename reference (from our extraction fallbacks)
-  if (text.startsWith('Arquivo:') || text.startsWith('Currículo:') || text.startsWith('Carta de apresentação:')) {
-    return text;
+
+  // Add reference if available
+  if (referenceText && referenceText.trim() !== "") {
+    prompt += `
+### Referências
+${referenceText}
+`;
   }
+
+  // Add instructions for the output format
+  prompt += `
+## INSTRUÇÕES
+Baseado na comparação entre o perfil do candidato e os requisitos da vaga, forneça uma análise estruturada nos seguintes formatos:
+
+1. Compatibilidade com a Vaga: Uma classificação qualitativa (Baixa, Média-Baixa, Média, Média-Alta, Alta) seguida de uma porcentagem estimada.
+
+2. Principais Habilidades Identificadas: Uma lista de 3-5 habilidades ou competências do candidato que são relevantes para esta vaga específica.
+
+3. Experiências ou Projetos Relevantes: Uma lista de 3-5 experiências ou projetos do candidato que demonstram sua aptidão para a vaga.
+
+4. Lacunas Identificadas: Uma lista de 3-5 habilidades ou experiências que o candidato precisaria desenvolver para se adequar melhor à vaga.
+
+Sua resposta deve estar em formato JSON com o seguinte padrão:
+{
+  "compatibilityScore": "Texto com classificação qualitativa e porcentagem",
+  "keySkills": ["habilidade 1", "habilidade 2", "habilidade 3"],
+  "relevantExperiences": ["experiência 1", "experiência 2", "experiência 3"],
+  "identifiedGaps": ["lacuna 1", "lacuna 2", "lacuna 3"]
+}
+`;
+
+  // Log the prompt length
+  console.log("Analysis prompt created, length:", prompt.length);
   
-  // For PDF file references with some metadata
-  if (text.startsWith('Arquivo PDF:')) {
-    return text;
+  return prompt;
+}
+
+// Parse the response from the OpenAI API
+function parseAnalysisResponse(content: string): AnalysisResult {
+  try {
+    // Try to find and extract JSON from the response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    
+    if (!jsonMatch) {
+      console.error("No JSON found in OpenAI response");
+      throw new Error("Formato de resposta inválido");
+    }
+    
+    // Parse the JSON
+    const jsonText = jsonMatch[0];
+    console.log("Found JSON in response:", jsonText.substring(0, 100) + "...");
+    
+    // Remove any markdown formatting that might be in the JSON string
+    const cleanJsonText = jsonText.replace(/```json|```/g, '').trim();
+    
+    // Parse the cleaned JSON
+    const result = JSON.parse(cleanJsonText);
+    
+    // Validate the result has all the required fields
+    if (!result.compatibilityScore || !Array.isArray(result.keySkills) || 
+        !Array.isArray(result.relevantExperiences) || !Array.isArray(result.identifiedGaps)) {
+      console.error("Invalid response format, missing required fields:", result);
+      throw new Error("Formato de resposta inválido, campos obrigatórios ausentes");
+    }
+    
+    // Return the validated result
+    return {
+      compatibilityScore: result.compatibilityScore,
+      keySkills: result.keySkills,
+      relevantExperiences: result.relevantExperiences,
+      identifiedGaps: result.identifiedGaps
+    };
+  } catch (error) {
+    console.error("Error parsing OpenAI response:", error);
+    console.error("Raw response content:", content);
+    throw new Error(`Erro ao processar resposta da API: ${error.message}`);
   }
-  
-  // Remove excessive whitespace, normalize line breaks
-  return text.replace(/\s+/g, ' ').trim();
 }

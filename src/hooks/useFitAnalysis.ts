@@ -8,6 +8,13 @@ export interface FitAnalysisResult {
   keySkills: string[];
   relevantExperiences: string[];
   identifiedGaps: string[];
+  inputSummary?: {
+    jobTitleLength: number;
+    jobDescriptionLength: number;
+    resumeTextLength: number;
+    coverLetterTextLength: number;
+    referenceTextLength: number;
+  };
 }
 
 interface UseFitAnalysisProps {
@@ -28,6 +35,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FitAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugMode, setDebugMode] = useState(false);
 
   const generateFitAnalysis = async () => {
     if (!sprintData || !userDocuments) {
@@ -54,7 +62,8 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         jobDescription: sprintData.jobDescription,
         resumeText: documentTexts.resumeText,
         coverLetterText: documentTexts.coverLetterText,
-        referenceText: documentTexts.referenceText
+        referenceText: documentTexts.referenceText,
+        debug: debugMode // Add debug flag to show content details
       };
 
       console.log("Calling analyze-job-fit edge function...");
@@ -151,6 +160,8 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     loading,
     result,
     error,
-    generateFitAnalysis
+    generateFitAnalysis,
+    debugMode,
+    setDebugMode
   };
 };

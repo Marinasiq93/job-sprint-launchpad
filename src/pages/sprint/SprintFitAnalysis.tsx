@@ -4,6 +4,8 @@ import { useLocation, useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useUserDocuments } from "@/hooks/useUserDocuments";
 import { useFitAnalysis } from "@/hooks/useFitAnalysis";
 import FitAnalysisResult from "@/components/sprint/fit-analysis/FitAnalysisResult";
@@ -54,7 +56,14 @@ const SprintFitAnalysis = () => {
     }
   }, [location.state, sprintId]);
 
-  const { loading: analyzeLoading, result: fitAnalysisResult, error: analyzeError, generateFitAnalysis } = useFitAnalysis({ 
+  const { 
+    loading: analyzeLoading, 
+    result: fitAnalysisResult, 
+    error: analyzeError, 
+    generateFitAnalysis,
+    debugMode,
+    setDebugMode
+  } = useFitAnalysis({ 
     sprintData, 
     userDocuments 
   });
@@ -102,10 +111,38 @@ const SprintFitAnalysis = () => {
     }
 
     if (!fitAnalysisResult) {
-      return <FitAnalysisPrompt onAnalyze={generateFitAnalysis} userDocuments={userDocuments} />;
+      return (
+        <>
+          <div className="flex items-center justify-end space-x-2 mb-4">
+            <Switch 
+              id="debug-mode" 
+              checked={debugMode} 
+              onCheckedChange={setDebugMode}
+            />
+            <Label htmlFor="debug-mode" className="text-xs text-gray-500">
+              Modo Debug
+            </Label>
+          </div>
+          <FitAnalysisPrompt onAnalyze={generateFitAnalysis} userDocuments={userDocuments} />
+        </>
+      );
     }
 
-    return <FitAnalysisResult result={fitAnalysisResult} loading={analyzeLoading} />;
+    return (
+      <>
+        <div className="flex items-center justify-end space-x-2 mb-4">
+          <Switch 
+            id="debug-mode" 
+            checked={debugMode} 
+            onCheckedChange={setDebugMode}
+          />
+          <Label htmlFor="debug-mode" className="text-xs text-gray-500">
+            Modo Debug
+          </Label>
+        </div>
+        <FitAnalysisResult result={fitAnalysisResult} loading={analyzeLoading} debugMode={debugMode} />
+      </>
+    );
   };
 
   return (

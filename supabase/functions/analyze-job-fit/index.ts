@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     console.log("Received analyze-job-fit request");
     const requestData = await req.json();
-    const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = requestData;
+    const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText, debug } = requestData;
 
     // Validate required fields
     if (!jobTitle || !jobDescription) {
@@ -56,6 +56,22 @@ serve(async (req) => {
     console.log("Cover letter text provided:", !!coverLetterText);
     console.log("Reference text provided:", !!referenceText);
     
+    // Log request details if in debug mode
+    if (debug) {
+      console.log("DEBUG MODE ENABLED - Request Content Preview:");
+      console.log("Job Title:", jobTitle);
+      console.log("Job Description (first 100 chars):", jobDescription.substring(0, 100) + "...");
+      console.log("Resume Text (first 100 chars):", resumeText.substring(0, 100) + "...");
+      
+      if (coverLetterText) {
+        console.log("Cover Letter Text (first 100 chars):", coverLetterText.substring(0, 100) + "...");
+      }
+      
+      if (referenceText) {
+        console.log("Reference Text (first 100 chars):", referenceText.substring(0, 100) + "...");
+      }
+    }
+    
     try {
       // Generate job fit analysis using OpenAI
       const fitAnalysisResult = await generateJobFitAnalysis({
@@ -68,9 +84,21 @@ serve(async (req) => {
 
       console.log("Analysis complete");
       
+      // Include input data summary in debug mode
+      const response = {
+        ...fitAnalysisResult,
+        inputSummary: debug ? {
+          jobTitleLength: jobTitle.length,
+          jobDescriptionLength: jobDescription.length,
+          resumeTextLength: resumeText.length,
+          coverLetterTextLength: coverLetterText?.length || 0,
+          referenceTextLength: referenceText?.length || 0
+        } : undefined
+      };
+      
       // Return the result
       return new Response(
-        JSON.stringify(fitAnalysisResult),
+        JSON.stringify(response),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (analyzeError) {
