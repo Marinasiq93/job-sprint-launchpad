@@ -43,32 +43,78 @@ export const extractFileContent = async (file: File): Promise<string> => {
     }
   }
   
-  // For PDFs, try our enhanced local extraction first
+  // For PDFs, try multiple extraction methods for better results
   if (file.type === 'application/pdf') {
     try {
-      console.log('Attempting local PDF extraction first...');
-      const pdfText = await extractPDFContent(file);
+      console.log('Starting enhanced PDF extraction process...');
+      
+      // Try our local extraction with multiple methods
+      let pdfText = await extractPDFContent(file);
       
       // If we got a reasonable amount of text from the PDF, use it
-      if (pdfText && pdfText.length > 1000) {
-        console.log(`Local PDF extraction successful: ${pdfText.length} characters`);
+      // More aggressive threshold - accept smaller text amounts
+      if (pdfText && pdfText.length > 100) {
+        console.log(`PDF extraction successful: ${pdfText.length} characters`);
         return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
       }
       
-      console.log(`Local PDF extraction yielded only ${pdfText?.length || 0} characters, falling back to Eden AI...`);
+      console.log(`Local PDF extraction yielded only ${pdfText?.length || 0} characters, trying Eden AI...`);
+      
+      // If local extraction didn't yield much text, try Eden AI
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      console.log('Calling extract-document edge function...');
+      const { data, error } = await supabase.functions.invoke('extract-document', {
+        body: formData,
+      });
+      
+      if (error) {
+        console.error('Error calling extract-document function:', error);
+        // If Eden AI fails but we have at least some text from local extraction, use that
+        if (pdfText && pdfText.length > 0) {
+          console.log(`Using partial local extraction: ${pdfText.length} characters`);
+          return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
+        }
+        return generatePlaceholderMessage(file);
+      }
+      
+      if (data && data.extracted_text && data.extracted_text.length > 200) {
+        console.log(`Eden AI extraction complete: ${data.extracted_text.length} characters`);
+        
+        // If Eden AI gave us good text, use that
+        return data.extracted_text;
+      } else if (pdfText && pdfText.length > 0) {
+        // If Eden AI didn't yield much but we have local extraction, use local
+        console.log(`Eden AI extraction insufficient, using local: ${pdfText.length} characters`);
+        return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
+      }
+      
+      // If both methods fail to get good text, use whatever we have
+      const combinedText = [
+        pdfText || '', 
+        data?.extracted_text || ''
+      ].filter(text => text.length > 0).join("\n\n");
+      
+      if (combinedText.length > 100) {
+        console.log(`Using combined extraction: ${combinedText.length} characters`);
+        return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${combinedText}`;
+      }
+      
+      return generatePlaceholderMessage(file);
     } catch (e) {
-      console.error("Error in local PDF extraction:", e);
-      // Continue to Eden AI as fallback
+      console.error("Error in PDF extraction:", e);
+      return generatePlaceholderMessage(file);
     }
   }
   
-  // For PDFs with insufficient local extraction and other document types, use Eden AI via Edge Function
+  // For other document types, use Eden AI via Edge Function
   try {
     // Create form data to send the file
     const formData = new FormData();
     formData.append('file', file);
     
-    console.log('Calling extract-document edge function...');
+    console.log('Calling extract-document edge function for non-PDF document...');
     const { data, error } = await supabase.functions.invoke('extract-document', {
       body: formData,
     });
@@ -78,16 +124,16 @@ export const extractFileContent = async (file: File): Promise<string> => {
       return generatePlaceholderMessage(file);
     }
     
-    if (!data.success || !data.extracted_text) {
-      console.warn('No text extracted by the service:', data.error || 'Unknown error');
-      return data.extracted_text || generatePlaceholderMessage(file);
+    if (!data.success || !data.extracted_text || data.extracted_text.length < 200) {
+      console.warn('Insufficient text extracted by the service:', data.error || 'Unknown error');
+      return generatePlaceholderMessage(file);
     }
     
     console.log(`Eden AI extraction complete. Extracted ${data.extracted_text.length} characters`);
     return data.extracted_text;
     
   } catch (e) {
-    console.error("Error in extraction process:", e);
+    console.error("Error in extraction process:", error);
     return generatePlaceholderMessage(file);
   }
 };
