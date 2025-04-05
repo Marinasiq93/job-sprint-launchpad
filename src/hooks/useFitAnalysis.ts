@@ -66,7 +66,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       
       // Call the edge function to analyze job fit
       const { data, error } = await supabase.functions.invoke('analyze-job-fit', {
-        body: JSON.stringify(requestData),
+        body: requestData,
       });
 
       if (error) {
@@ -79,9 +79,17 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         throw new Error("Nenhum dado retornado da análise");
       }
 
-      console.log("Analysis data received:", data);
-      setResult(data);
-      toast.success("Análise de fit concluída com sucesso!");
+      // Check if we received a fallback analysis due to an error
+      if (data.fallbackAnalysis) {
+        console.warn("Received fallback analysis due to error:", data.error);
+        setResult(data.fallbackAnalysis);
+        setError("Ocorreu um erro na análise detalhada: " + (data.error || "Erro desconhecido"));
+        toast.warning("Análise simplificada gerada devido a um erro");
+      } else {
+        console.log("Analysis data received:", data);
+        setResult(data);
+        toast.success("Análise de fit concluída com sucesso!");
+      }
     } catch (error) {
       console.error("Error generating fit analysis:", error);
       setError(error instanceof Error ? error.message : "Erro desconhecido");

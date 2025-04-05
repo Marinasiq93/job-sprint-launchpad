@@ -56,28 +56,69 @@ serve(async (req) => {
     console.log("Cover letter text provided:", !!coverLetterText);
     console.log("Reference text provided:", !!referenceText);
     
-    // Generate job fit analysis using OpenAI
-    const fitAnalysisResult = await generateJobFitAnalysis({
-      jobTitle, 
-      jobDescription, 
-      resumeText, 
-      coverLetterText, 
-      referenceText
-    });
+    try {
+      // Generate job fit analysis using OpenAI
+      const fitAnalysisResult = await generateJobFitAnalysis({
+        jobTitle, 
+        jobDescription, 
+        resumeText, 
+        coverLetterText, 
+        referenceText
+      });
 
-    console.log("Analysis complete");
-    
-    // Return the result
-    return new Response(
-      JSON.stringify(fitAnalysisResult),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      console.log("Analysis complete");
+      
+      // Return the result
+      return new Response(
+        JSON.stringify(fitAnalysisResult),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (analyzeError) {
+      console.error("Error in analysis:", analyzeError);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: analyzeError.message || "Error generating analysis",
+          fallbackAnalysis: {
+            compatibilityScore: "Não foi possível calcular (N/A)",
+            keySkills: [
+              "Não foi possível extrair habilidades do perfil",
+              "É recomendado revisar seu currículo",
+              "Verifique se seu perfil está com dados atualizados",
+              "Tente novamente mais tarde",
+              "Contate o suporte se o problema persistir"
+            ],
+            relevantExperiences: [
+              "Não foi possível extrair experiências relevantes",
+              "Verifique se seu currículo contém informações sobre experiências anteriores",
+              "Tente adicionar mais detalhes sobre projetos realizados",
+              "Inclua informações sobre cargos e responsabilidades",
+              "Descreva realizações e resultados obtidos"
+            ],
+            identifiedGaps: [
+              "Não foi possível identificar lacunas",
+              "Recomendamos verificar a descrição da vaga",
+              "Compare com suas experiências e habilidades",
+              "Procure por requisitos técnicos e comportamentais",
+              "Identifique áreas para desenvolvimento"
+            ]
+          }
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 // Return 200 even with fallback to avoid frontend errors
+        }
+      );
+    }
 
   } catch (error) {
     console.error("Error in analyze-job-fit function:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
+      JSON.stringify({ 
+        error: error.message || "Internal server error",
+        errorDetails: typeof error === 'object' ? JSON.stringify(error) : 'Unknown error'
+      }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500 

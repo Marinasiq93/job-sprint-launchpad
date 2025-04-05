@@ -68,9 +68,8 @@ Sua tarefa é fornecer uma análise estruturada de compatibilidade retornando ex
 4. identifiedGaps: Uma array com exatamente 5 lacunas ou requisitos importantes que foram identificados na vaga mas que não aparecem claramente no perfil do candidato ou precisam ser melhor desenvolvidos
 
 Seja preciso, detalhado e honesto em sua avaliação. Se o candidato não apresenta boa compatibilidade, sua análise deve refletir isso claramente. 
-Responda APENAS com o objeto JSON estruturado conforme solicitado, sem textos adicionais.
 
-Nota: Alguns documentos podem conter apenas nomes de arquivos se o texto não pôde ser extraído. Nesse caso, use quaisquer informações disponíveis e indique lacunas que precisam ser melhor exploradas.`;
+IMPORTANTE: Retorne APENAS o objeto JSON válido sem formatação Markdown ou qualquer outro texto adicional.`;
 
     // Create user message
     const userMessage = `VAGA: ${jobTitle}
@@ -116,9 +115,22 @@ ${userDocuments}`;
     
     console.log("OpenAI response received, parsing JSON...");
     
-    // Parse the JSON response
+    // Parse the JSON response, handling potential markdown formatting
     try {
-      const fitAnalysisResult = JSON.parse(content);
+      // Try to clean up the response in case it's wrapped in markdown code blocks
+      let cleanedContent = content;
+      
+      // Remove markdown code blocks if present
+      const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+      const match = cleanedContent.match(codeBlockRegex);
+      if (match && match[1]) {
+        cleanedContent = match[1];
+      }
+      
+      // Log the cleaned content for debugging
+      console.log("Cleaned content for parsing:", cleanedContent);
+      
+      const fitAnalysisResult = JSON.parse(cleanedContent);
       
       // Validate that all required fields are present
       if (!fitAnalysisResult.compatibilityScore || 
