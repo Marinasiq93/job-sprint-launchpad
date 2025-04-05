@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,9 +10,9 @@ interface CultureQuestionsProps {
   companyName: string;
   jobTitle: string;
   onQuestionChange: (questionIndex: number) => void;
+  sprintData: any;
 }
 
-// Define the questions for the Culture & Purpose phase
 const questions = [
   "Você se sente alinhado com a cultura e os valores da empresa? Por quê?",
   "Você se identifica com a missão da empresa? O que mais ressoou com você?",
@@ -22,12 +21,13 @@ const questions = [
   "Algum pensamento ou conexão sobre a história da fundação da empresa? O que mais chamou sua atenção?"
 ];
 
-const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQuestionsProps) => {
+const CultureQuestions = ({ companyName, jobTitle, onQuestionChange, sprintData }: CultureQuestionsProps) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill(""));
   const [isRecording, setIsRecording] = useState(false);
   const navigate = useNavigate();
   const { sprintId } = useParams();
+  const location = useLocation();
   
   const currentQuestion = questions[currentQuestionIndex];
   
@@ -37,10 +37,11 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQu
       setCurrentQuestionIndex(nextIndex);
       onQuestionChange(nextIndex);
     } else {
-      // This is the last question, navigate to Phase 2
       if (sprintId) {
         toast.success("Fase 1 concluída! Seguindo para Análise de Fit.");
-        navigate(`/dashboard/sprint/${sprintId}/fit-analysis`);
+        navigate(`/dashboard/sprint/${sprintId}/fit-analysis`, {
+          state: { sprintData }
+        });
       }
     }
   };
@@ -60,14 +61,11 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQu
   };
   
   const toggleRecording = () => {
-    // TODO: Implement speech-to-text functionality
     setIsRecording(!isRecording);
     
     if (!isRecording) {
-      // Start recording
       console.log("Recording started");
     } else {
-      // Stop recording
       console.log("Recording stopped");
     }
   };

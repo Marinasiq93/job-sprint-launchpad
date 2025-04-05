@@ -23,9 +23,11 @@ const SprintCultura = () => {
   useEffect(() => {
     // Get sprint data from location state or fetch it based on sprintId
     if (location.state?.sprintData) {
+      console.log("Using sprint data from location state:", location.state.sprintData);
       setSprintData(location.state.sprintData);
       setLoading(false);
     } else if (sprintId) {
+      console.log("No sprint data in location state, creating mock data for sprint ID:", sprintId);
       // TODO: In a real implementation, we would fetch the sprint data from the database
       // For now, we'll just set loading to false
       setLoading(false);
@@ -69,6 +71,7 @@ const SprintCultura = () => {
               companyName={sprintData?.companyName || ""} 
               jobTitle={sprintData?.jobTitle || ""}
               onQuestionChange={handleQuestionChange}
+              sprintData={sprintData} // Pass the entire sprintData object
             />
           </div>
         </div>

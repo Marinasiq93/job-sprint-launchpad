@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -14,6 +13,7 @@ import FitQuestionsSection from "@/components/sprint/fit-analysis/FitQuestionsSe
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/lib/toast";
 
 interface SprintData {
   jobTitle: string;
@@ -48,15 +48,19 @@ const SprintFitAnalysis = () => {
       setLoading(false);
     } else if (sprintId) {
       console.log("No sprint data in location state, creating mock data for sprint ID:", sprintId);
-      // TODO: In a real implementation, we would fetch the sprint data from the database
-      // For now, just set a mock data to demonstrate functionality
-      // In production, this would be a fetch from the database
+      
+      // In a real implementation, we would fetch the sprint data from the database based on sprintId
+      // For now, we'll create mock data for demonstration
       const mockData = {
         jobTitle: "Cargo não encontrado",
         companyName: "Empresa não encontrada",
         companyWebsite: "https://example.com",
         jobDescription: "Descrição da vaga não encontrada"
       };
+      
+      // Display a warning to the user that data wasn't properly passed
+      toast.warning("Informações da vaga não encontradas. Por favor, reinicie o processo de sprint.");
+      
       setSprintData(mockData);
       setTempJobDescription(mockData.jobDescription || "");
       setLoading(false);
