@@ -1,14 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
-import FitAnalysisPrompt from "./FitAnalysisPrompt";
-import FitAnalysisResult from "./FitAnalysisResult";
-import JobDescriptionWarning from "./JobDescriptionWarning";
 import { FitAnalysisResult as FitAnalysisResultType } from "@/hooks/useFitAnalysis";
+import LoadingState from "./states/LoadingState";
+import ErrorState from "./states/ErrorState";
+import InitialState from "./states/InitialState";
+import ResultState from "./states/ResultState";
+import DebugModeToggle from "./DebugModeToggle";
 
 interface AnalysisContentProps {
   analyzeLoading: boolean;
@@ -45,47 +42,24 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
   handleSaveJobDescription,
   handleCancelEditJobDescription
 }) => {
-  if (analyzeLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-      </div>
-    );
-  }
+  const renderContent = () => {
+    if (analyzeLoading) {
+      return <LoadingState />;
+    }
 
-  if (analyzeError) {
-    return (
-      <div className="p-4 border border-red-200 rounded-md bg-red-50">
-        <div className="flex items-center gap-2 text-red-600 mb-2">
-          <AlertCircle className="h-5 w-5" />
-          <h3 className="font-semibold">Erro na análise</h3>
-        </div>
-        <p className="text-sm text-red-600 mb-4">{analyzeError}</p>
-        <FitAnalysisPrompt onAnalyze={generateFitAnalysis} userDocuments={userDocuments} />
-      </div>
-    );
-  }
+    if (analyzeError) {
+      return (
+        <ErrorState 
+          errorMessage={analyzeError} 
+          onAnalyze={generateFitAnalysis} 
+          userDocuments={userDocuments} 
+        />
+      );
+    }
 
-  if (!fitAnalysisResult) {
-    return (
-      <>
-        <div className="flex items-center justify-end space-x-2 mb-4">
-          <Switch 
-            id="debug-mode" 
-            checked={debugMode} 
-            onCheckedChange={setDebugMode}
-          />
-          <Label htmlFor="debug-mode" className="text-xs text-gray-500">
-            Modo Debug
-          </Label>
-        </div>
-        
-        <JobDescriptionWarning
+    if (!fitAnalysisResult) {
+      return (
+        <InitialState
           isJobDescriptionShort={isJobDescriptionShort}
           editingJobDescription={editingJobDescription}
           tempJobDescription={tempJobDescription}
@@ -93,53 +67,33 @@ const AnalysisContent: React.FC<AnalysisContentProps> = ({
           handleEditJobDescription={handleEditJobDescription}
           handleSaveJobDescription={handleSaveJobDescription}
           handleCancelEditJobDescription={handleCancelEditJobDescription}
+          onAnalyze={generateFitAnalysis}
+          userDocuments={userDocuments}
         />
-        
-        <FitAnalysisPrompt onAnalyze={generateFitAnalysis} userDocuments={userDocuments} />
-      </>
+      );
+    }
+
+    return (
+      <ResultState
+        fitAnalysisResult={fitAnalysisResult}
+        analyzeLoading={analyzeLoading}
+        debugMode={debugMode}
+        isJobDescriptionShort={isJobDescriptionShort}
+        editingJobDescription={editingJobDescription}
+        sprintData={sprintData}
+        tempJobDescription={tempJobDescription}
+        setTempJobDescription={setTempJobDescription}
+        handleEditJobDescription={handleEditJobDescription}
+        handleSaveJobDescription={handleSaveJobDescription}
+        handleCancelEditJobDescription={handleCancelEditJobDescription}
+      />
     );
-  }
+  };
 
   return (
     <>
-      <div className="flex items-center justify-end space-x-2 mb-4">
-        <Switch 
-          id="debug-mode" 
-          checked={debugMode} 
-          onCheckedChange={setDebugMode}
-        />
-        <Label htmlFor="debug-mode" className="text-xs text-gray-500">
-          Modo Debug
-        </Label>
-      </div>
-      
-      {isJobDescriptionShort && debugMode && !editingJobDescription && (
-        <JobDescriptionWarning
-          isJobDescriptionShort={isJobDescriptionShort}
-          editingJobDescription={editingJobDescription}
-          debugMode={debugMode}
-          tempJobDescription={tempJobDescription}
-          setTempJobDescription={setTempJobDescription}
-          handleEditJobDescription={handleEditJobDescription}
-          handleSaveJobDescription={handleSaveJobDescription}
-          handleCancelEditJobDescription={handleCancelEditJobDescription}
-          sprintData={sprintData}
-        />
-      )}
-      
-      {editingJobDescription && (
-        <JobDescriptionWarning
-          isJobDescriptionShort={isJobDescriptionShort}
-          editingJobDescription={editingJobDescription}
-          tempJobDescription={tempJobDescription}
-          setTempJobDescription={setTempJobDescription}
-          handleEditJobDescription={handleEditJobDescription}
-          handleSaveJobDescription={handleSaveJobDescription}
-          handleCancelEditJobDescription={handleCancelEditJobDescription}
-        />
-      )}
-      
-      <FitAnalysisResult result={fitAnalysisResult} loading={analyzeLoading} debugMode={debugMode} />
+      <DebugModeToggle debugMode={debugMode} setDebugMode={setDebugMode} />
+      {renderContent()}
     </>
   );
 };
