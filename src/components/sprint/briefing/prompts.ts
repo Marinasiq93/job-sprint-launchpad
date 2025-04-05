@@ -30,28 +30,22 @@ export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Analise a empresa ${companyName} (${companyWebsite}).
     
-    Comece com um breve panorama dos produtos e serviços da empresa ${companyName}.
+    Apresente uma visão concisa (máximo 500 palavras total) dos produtos e mercado da empresa ${companyName}:
     
-    Divida sua análise nas seguintes seções, evitando repetições:
-
     ## Produtos e Serviços
-    - Principais produtos/serviços oferecidos
-    - Características e diferenciais principais
-    - Tecnologias ou inovações relevantes utilizadas
+    - Lista objetiva dos 3-5 principais produtos/serviços
+    - Diferenciais tecnológicos ou inovadores (apenas os mais relevantes)
     
     ## Perfil dos Clientes
-    - Perfil típico dos usuários/clientes
-    - Principais casos de uso e aplicações
+    - Segmentos de mercado atendidos
     - Problemas específicos que a solução resolve
     
     ## Mercado e Competição
-    - Tamanho e crescimento do mercado
-    - Principais concorrentes diretos
-    - Diferenciais competitivos (seja conciso e evite repetir informações já mencionadas)
-    - Tendências relevantes para o setor
+    - Principais concorrentes diretos (máximo 3)
+    - Diferenciais competitivos mais relevantes
+    - Uma tendência importante do setor
     
-    Seja objetivo e não repita as mesmas informações em seções diferentes. Para os diferenciais competitivos, 
-    foque apenas no que realmente distingue a empresa dos concorrentes sem repetir características já mencionadas.`,
+    Mantenha cada seção curta e evite completamente repetições de informações.`,
   
   [BRIEFING_CATEGORIES.LEADERSHIP]: (companyName: string, companyWebsite: string) => 
     `Analise a empresa ${companyName} (${companyWebsite}).
