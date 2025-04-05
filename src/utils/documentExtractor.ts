@@ -133,7 +133,7 @@ export const extractFileContent = async (file: File): Promise<string> => {
     return data.extracted_text;
     
   } catch (e) {
-    console.error("Error in extraction process:", error);
+    console.error("Error in extraction process:", e);
     return generatePlaceholderMessage(file);
   }
 };
