@@ -19,10 +19,13 @@ export async function callEdenAI(
     throw new Error("Invalid or empty file content provided");
   }
   
+  // Format the fileType correctly - Eden AI expects just the extension without the MIME prefix
+  const fileExtension = fileType.split('/')[1] || fileType;
+  
+  // Construct proper payload for Eden AI
   const edenAIPayload = {
     providers: provider,
-    file_base64: fileBase64,
-    file_type: fileType.split('/')[1] || fileType, // Extract just 'pdf' from 'application/pdf'
+    file_url: `data:${fileType};base64,${fileBase64}`, // Use data URL format instead of raw base64
     language: language,
     // Additional OCR settings for better quality
     ocr_settings: {
@@ -33,7 +36,7 @@ export async function callEdenAI(
     }
   };
   
-  console.log(`Sending ${fileBase64.length} bytes to Eden AI with ${provider}`);
+  console.log(`Sending request to Eden AI with ${provider} for file type: ${fileType}`);
   
   const response = await fetch("https://api.edenai.run/v2/ocr/ocr", {
     method: "POST",
