@@ -11,7 +11,7 @@ const MainContentSection = ({ overview }: MainContentSectionProps) => {
   return (
     <section className="overflow-auto">
       <div 
-        className="prose prose-sm max-w-none text-sm leading-relaxed"
+        className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: formattedContent }}
       />
     </section>

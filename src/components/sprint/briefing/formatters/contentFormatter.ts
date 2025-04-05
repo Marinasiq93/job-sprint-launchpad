@@ -19,6 +19,10 @@ export const formatContent = (content: string): string => {
     .replace(/#{3}\s+([^\n]+)/g, '<h3 class="text-xl font-semibold mt-8 mb-4">$1</h3>') 
     .replace(/#{2}\s+([^\n]+)/g, '<h2 class="text-2xl font-semibold mt-10 mb-4">$1</h2>')
     .replace(/#{1}\s+([^\n]+)/g, '<h1 class="text-3xl font-bold mt-10 mb-5">$1</h1>')
+    // Replace raw markdown headers (##, ###) that might have been missed
+    .replace(/^##(?!#)\s+/gm, '')
+    .replace(/^###\s+/gm, '')
+    .replace(/^####\s+/gm, '')
     
     // Format section headers in all caps with styling - be more specific to avoid false positives
     // Only match lines that are ENTIRELY in uppercase with minimum 3 chars
@@ -48,7 +52,10 @@ export const formatContent = (content: string): string => {
     .replace(/^[-]\s*([^:]+):(.*)$/gm, '<li class="ml-6 mb-2 list-disc"><strong>$1:</strong>$2</li>')
     
     // Handle numbered lists better (1. Item, 1) Item, etc.)
-    .replace(/^(\d+)[.):]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-decimal" value="$1">$2</li>');
+    .replace(/^(\d+)[.):]\s+(.+)$/gm, '<li class="ml-6 mb-2 list-decimal" value="$1">$2</li>')
+    
+    // Remove reference numbers in square brackets (like [1]) and convert them to superscript
+    .replace(/\[(\d+)\]/g, '<sup class="text-xs">$1</sup>');
   
   // Process lists with proper wrapping
   let listProcessed = '';
