@@ -13,7 +13,7 @@ interface FitAnalysisResult {
   compatibilityScore: string;
   keySkills: string[];
   relevantExperiences: string[];
-  improvementSuggestions: string[];
+  identifiedGaps: string[];
 }
 
 export async function generateJobFitAnalysis(input: JobFitAnalysisInput): Promise<FitAnalysisResult> {
@@ -49,7 +49,7 @@ Sua tarefa é fornecer uma análise estruturada de compatibilidade retornando ex
 
 3. relevantExperiences: Uma array com exatamente 5 experiências ou projetos do candidato que são mais relevantes para a vaga (explicando brevemente por quê)
 
-4. improvementSuggestions: Uma array com exatamente 5 sugestões específicas de como o candidato poderia melhorar seu currículo ou perfil para aumentar sua compatibilidade com a vaga
+4. identifiedGaps: Uma array com exatamente 5 lacunas ou requisitos importantes que foram identificados na vaga mas que não aparecem claramente no perfil do candidato ou precisam ser melhor desenvolvidos
 
 Seja preciso, detalhado e honesto em sua avaliação. Se o candidato não apresenta boa compatibilidade, sua análise deve refletir isso claramente. 
 Responda APENAS com o objeto JSON estruturado conforme solicitado, sem textos adicionais.`;
@@ -100,7 +100,7 @@ ${userDocuments}`;
       if (!fitAnalysisResult.compatibilityScore || 
           !Array.isArray(fitAnalysisResult.keySkills) || 
           !Array.isArray(fitAnalysisResult.relevantExperiences) ||
-          !Array.isArray(fitAnalysisResult.improvementSuggestions)) {
+          !Array.isArray(fitAnalysisResult.identifiedGaps)) {
         throw new Error("Invalid response format from OpenAI API");
       }
       
@@ -121,7 +121,7 @@ ${userDocuments}`;
         compatibilityScore: fitAnalysisResult.compatibilityScore,
         keySkills: ensureExactlyFive(fitAnalysisResult.keySkills, "Habilidades"),
         relevantExperiences: ensureExactlyFive(fitAnalysisResult.relevantExperiences, "Experiências"),
-        improvementSuggestions: ensureExactlyFive(fitAnalysisResult.improvementSuggestions, "Sugestões")
+        identifiedGaps: ensureExactlyFive(fitAnalysisResult.identifiedGaps, "Lacunas")
       };
       
     } catch (error) {

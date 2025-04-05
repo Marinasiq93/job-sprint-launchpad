@@ -22,7 +22,7 @@ interface FitAnalysisResult {
   compatibilityScore: string; // e.g. "Elevado (85%)"
   keySkills: string[];
   relevantExperiences: string[];
-  improvementSuggestions: string[];
+  identifiedGaps: string[];
 }
 
 const SprintFitAnalysis = () => {
@@ -160,10 +160,10 @@ const SprintFitAnalysis = () => {
         </div>
         
         <div>
-          <h3 className="font-semibold mb-2">Sugestões de Melhoria</h3>
+          <h3 className="font-semibold mb-2">Lacunas Identificadas</h3>
           <ul className="list-disc list-inside space-y-1">
-            {fitAnalysisResult.improvementSuggestions.map((suggestion, index) => (
-              <li key={index}>{suggestion}</li>
+            {fitAnalysisResult.identifiedGaps.map((gap, index) => (
+              <li key={index}>{gap}</li>
             ))}
           </ul>
         </div>
@@ -173,9 +173,9 @@ const SprintFitAnalysis = () => {
 
   // Questions that will appear in the right side
   const fitQuestions = [
-    "Como posso destacar melhor minha experiência com [skill] no currículo?",
+    "Como posso desenvolver as habilidades que faltam no meu perfil?",
     "Quais partes do meu perfil são mais relevantes para esta vaga?",
-    "O que falta no meu currículo para aumentar minha compatibilidade?"
+    "Como posso minimizar as lacunas identificadas no meu currículo?"
   ];
 
   return (
