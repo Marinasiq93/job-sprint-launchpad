@@ -1,6 +1,7 @@
 
 import { readFileAsText } from './fileUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { extractPDFContent } from './pdf';
 
 /**
  * Creates a placeholder message when content extraction fails

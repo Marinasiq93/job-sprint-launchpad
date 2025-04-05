@@ -1,0 +1,2 @@
+
+export { extractPDFContent } from './pdfTextExtractor';
