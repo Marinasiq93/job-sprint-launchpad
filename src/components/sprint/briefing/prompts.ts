@@ -78,26 +78,18 @@ export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.COMPANY_HISTORY]: (companyName: string, companyWebsite: string) => 
     `Analise a empresa ${companyName} (${companyWebsite}).
     
-    Sem repetir informações já abordadas em outros tópicos, foque exclusivamente na trajetória histórica da empresa:
+    Apresente uma versão concisa (máximo 400 palavras) da história da empresa com foco em:
     
-    ## Origem e Fundação
+    ## Fundação
     - Ano e local de fundação
-    - Contexto histórico e de mercado da época
-    - História dos fundadores específica à criação da empresa
-    - Motivação original para iniciar o negócio
+    - Motivação original e o problema que os fundadores buscaram resolver
+    - Contexto de mercado na época da fundação
     
-    ## Marcos Históricos
-    - Cronologia dos principais acontecimentos
-    - Lançamentos transformadores
-    - Pivôs estratégicos importantes
-    - Momentos de superação de desafios
+    ## Principais Marcos
+    - Lista objetiva de 3-5 momentos decisivos na trajetória da empresa
+    - Mudanças estratégicas importantes
+    - Principais pivôs ou transformações no modelo de negócio
     
-    ## Evolução e Crescimento
-    - Como a empresa se transformou ao longo do tempo
-    - Expansões geográficas ou de portfólio
-    - Aquisições e fusões importantes
-    - Mudanças significativas na estratégia ou posicionamento
-    
-    Apresente a história como uma narrativa que mostre a evolução da empresa e os aprendizados ao longo 
-    do caminho, evitando repetir detalhes sobre produtos atuais ou cultura que já foram abordados em outros tópicos.`
+    Evite detalhes excessivos e mantenha o foco nos eventos mais significativos
+    que ajudam a entender a evolução e os valores da empresa.`
 };
