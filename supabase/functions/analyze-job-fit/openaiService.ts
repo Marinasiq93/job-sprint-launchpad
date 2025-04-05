@@ -27,15 +27,22 @@ export async function generateJobFitAnalysis(input: JobFitAnalysisInput): Promis
 
     const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = input;
     
+    // Clean inputs to ensure we don't send malformed data
+    const cleanedResumeText = cleanDocumentText(resumeText);
+    
+    if (!cleanedResumeText || cleanedResumeText.trim().length < 10) {
+      throw new Error('Texto do currículo não encontrado ou muito curto para análise');
+    }
+    
     // Prepare documents for analysis
-    let userDocuments = `CURRÍCULO:\n${resumeText}\n\n`;
+    let userDocuments = `CURRÍCULO:\n${cleanedResumeText}\n\n`;
     
     if (coverLetterText && coverLetterText.trim() !== "") {
-      userDocuments += `CARTA DE APRESENTAÇÃO:\n${coverLetterText}\n\n`;
+      userDocuments += `CARTA DE APRESENTAÇÃO:\n${cleanDocumentText(coverLetterText)}\n\n`;
     }
     
     if (referenceText && referenceText.trim() !== "") {
-      userDocuments += `MATERIAIS DE REFERÊNCIA:\n${referenceText}`;
+      userDocuments += `MATERIAIS DE REFERÊNCIA:\n${cleanDocumentText(referenceText)}`;
     }
 
     // Create system message
@@ -65,7 +72,7 @@ DOCUMENTOS DO CANDIDATO:
 ${userDocuments}`;
 
     console.log("Calling OpenAI API with document lengths:", {
-      resumeLength: resumeText.length,
+      resumeLength: cleanedResumeText.length,
       coverLetterLength: coverLetterText?.length || 0,
       referenceTextLength: referenceText?.length || 0
     });
@@ -142,4 +149,19 @@ ${userDocuments}`;
     console.error("Error generating job fit analysis:", error);
     throw error;
   }
+}
+
+// Helper function to clean document text
+function cleanDocumentText(text: string | null | undefined): string {
+  if (!text) return '';
+  
+  // Handle auto-generated text from file uploads
+  if (text.startsWith('Conteúdo do arquivo:') && text.includes('(Texto extraído automaticamente)')) {
+    // For now, we'll just use the text as is, but this is where we could
+    // add more sophisticated text extraction logic in the future
+    return text;
+  }
+  
+  // Remove excessive whitespace, normalize line breaks
+  return text.replace(/\s+/g, ' ').trim();
 }

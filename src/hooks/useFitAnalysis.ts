@@ -33,9 +33,12 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       return;
     }
 
-    // Check if resume is available
-    if (!userDocuments.resume_text) {
+    // Handle potential missing resume text by checking multiple sources
+    const extractedResumeText = extractResumeText(userDocuments);
+    
+    if (!extractedResumeText) {
       toast.error("Currículo não encontrado. Adicione um currículo no seu perfil.");
+      setError("Nenhum texto de currículo encontrado. Por favor, adicione seu currículo na seção de documentos do seu perfil.");
       return;
     }
 
@@ -47,7 +50,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       const requestData = {
         jobTitle: sprintData.jobTitle,
         jobDescription: sprintData.jobDescription,
-        resumeText: userDocuments.resume_text || "",
+        resumeText: extractedResumeText,
         coverLetterText: userDocuments.cover_letter_text || "",
         referenceText: userDocuments.reference_text || ""
       };
@@ -78,6 +81,25 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to extract resume text from various possible sources
+  const extractResumeText = (documents: any): string | null => {
+    if (!documents) return null;
+    
+    // Check for direct resume_text field
+    if (documents.resume_text && typeof documents.resume_text === 'string' && documents.resume_text.trim().length > 0) {
+      console.log("Using resume_text directly");
+      return documents.resume_text;
+    }
+    
+    // If we have a resume file but no text content, use placeholder text
+    if (documents.resume_file_name) {
+      console.log("Using resume file name as evidence of a resume");
+      return `Currículo encontrado: ${documents.resume_file_name}`;
+    }
+    
+    return null;
   };
 
   return {

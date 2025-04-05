@@ -19,16 +19,30 @@ serve(async (req) => {
     const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = requestData;
 
     // Validate required fields
-    if (!jobTitle || !jobDescription || !resumeText) {
-      console.error("Missing required fields:", { 
+    if (!jobTitle || !jobDescription) {
+      console.error("Missing job information:", { 
         hasJobTitle: !!jobTitle, 
-        hasJobDescription: !!jobDescription, 
-        hasResumeText: !!resumeText 
+        hasJobDescription: !!jobDescription
       });
       
       return new Response(
         JSON.stringify({ 
-          error: "Missing required fields: job title, job description and resume text are required" 
+          error: "Missing job information: title and description are required" 
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+    
+    // Check for resume text
+    if (!resumeText || resumeText.trim().length < 10) {
+      console.error("Missing or insufficient resume text. Length:", resumeText?.length || 0);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Missing or insufficient resume text. Please ensure your resume is properly uploaded in your profile." 
         }),
         { 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
