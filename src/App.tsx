@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import NewSprint from "./pages/NewSprint";
 import SprintCultura from "./pages/sprint/SprintCultura";
+import SprintFitAnalysis from "./pages/sprint/SprintFitAnalysis";
 import TestRunnerPage from "./pages/TestRunner";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/dashboard/profile" element={<Profile />} />
           <Route path="/dashboard/new-sprint" element={<NewSprint />} />
           <Route path="/dashboard/sprint/:sprintId/cultura" element={<SprintCultura />} />
+          <Route path="/dashboard/sprint/:sprintId/fit-analysis" element={<SprintFitAnalysis />} />
           <Route path="/test-runner" element={<TestRunnerPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

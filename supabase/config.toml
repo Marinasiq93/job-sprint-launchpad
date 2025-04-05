@@ -1,22 +1,5 @@
 
-project_id = "fafxauxyastwevzfvugw"
+project_id = "your-project-id"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
-
-[db]
-port = 54322
-
-[studio]
-port = 54323
-
-[inbucket]
-port = 54324
-
-[storage]
-enabled = true
-
-[functions.generate-briefing]
+[functions.analyze-job-fit]
 verify_jwt = true
