@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { generateJobFitAnalysis } from "./openaiService.ts";
+import { AnalysisInput } from "./types.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,13 +75,15 @@ serve(async (req) => {
     
     try {
       // Generate job fit analysis using OpenAI
-      const fitAnalysisResult = await generateJobFitAnalysis({
+      const analysisInput: AnalysisInput = {
         jobTitle, 
         jobDescription, 
         resumeText, 
         coverLetterText, 
         referenceText
-      });
+      };
+      
+      const fitAnalysisResult = await generateJobFitAnalysis(analysisInput);
 
       console.log("Analysis complete");
       
