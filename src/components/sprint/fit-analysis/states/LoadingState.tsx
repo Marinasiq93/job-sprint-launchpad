@@ -3,6 +3,7 @@ import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LoadingState: React.FC = () => {
+  console.log("Rendering LoadingState component");
   return (
     <div className="space-y-4">
       <Skeleton className="h-4 w-3/4" />

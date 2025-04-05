@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,6 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange, sprintData 
   const [isRecording, setIsRecording] = useState(false);
   const navigate = useNavigate();
   const { sprintId } = useParams();
-  const location = useLocation();
   
   const currentQuestion = questions[currentQuestionIndex];
   
@@ -39,6 +39,7 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange, sprintData 
     } else {
       if (sprintId) {
         toast.success("Fase 1 concluída! Seguindo para Análise de Fit.");
+        // Make sure we're explicitly passing the full sprintData object
         navigate(`/dashboard/sprint/${sprintId}/fit-analysis`, {
           state: { sprintData }
         });
