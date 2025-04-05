@@ -46,9 +46,9 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
       return;
     }
 
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. O tamanho máximo é 2MB.");
+    // Check file size (max 5MB - increased from previous 2MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. O tamanho máximo é 5MB.");
       return;
     }
 
@@ -60,12 +60,10 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
           onFileUpload(file.name, text);
         }
       } else {
-        // For PDFs and DOCs, we'll extract what we can
-        // For now, we'll use a placeholder and store the filename
-        // In a real-world scenario, we would use a proper PDF extraction service
-        const placeholderText = await extractFileContent(file);
+        // For PDFs and DOCs, extract what we can
+        const extractedText = await extractFileContent(file);
         if (onFileUpload) {
-          onFileUpload(file.name, placeholderText);
+          onFileUpload(file.name, extractedText);
         }
       }
       
@@ -90,77 +88,148 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
     });
   };
   
-  // Function to attempt to extract content from files
+  // Enhanced function to extract content from files
   const extractFileContent = async (file: File): Promise<string> => {
-    // For now, we'll just extract what we can - basic text for PDFs
+    // For PDFs, use an improved text extraction approach
     if (file.type === 'application/pdf') {
       try {
-        // Get at least the first few kb of the file as a binary string
-        const binary = await readFileAsBinary(file);
+        // Get the file as an array buffer for better binary processing
+        const arrayBuffer = await readFileAsArrayBuffer(file);
         
-        // Very simple text extraction - this will only get plain text
-        // that isn't encoded in special ways within the PDF
-        const text = extractTextFromPDFBinary(binary);
+        // Convert to binary string for text extraction
+        const binary = arrayBufferToBinaryString(arrayBuffer);
         
-        if (text && text.length > 20) {
-          return text;
-        } else {
-          // If we couldn't extract meaningful text, store information about the file
-          return `Arquivo PDF: ${file.name}\nData de upload: ${new Date().toLocaleString()}\nTamanho: ${(file.size / 1024).toFixed(2)} KB`;
+        // Improved PDF text extraction
+        let text = extractTextFromPDFBinary(binary);
+        
+        // If extracted text is too short, try using file metadata as a fallback
+        if (!text || text.length < 100) {
+          console.log("Extracted text too short, using fallback extraction method");
+          text = await fallbackTextExtraction(file);
         }
+        
+        // Add file metadata to the extraction
+        const metadata = `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n`;
+        
+        return metadata + text;
       } catch (e) {
         console.error("Error extracting PDF content:", e);
-        return `Arquivo PDF: ${file.name}\nData de upload: ${new Date().toLocaleString()}\nTamanho: ${(file.size / 1024).toFixed(2)} KB`;
+        return fallbackTextExtraction(file);
       }
     }
     
-    // For word docs, we don't have a simple way to extract content in browser
-    return `Arquivo: ${file.name}\nTipo: ${file.type}\nData de upload: ${new Date().toLocaleString()}\nTamanho: ${(file.size / 1024).toFixed(2)} KB`;
+    // For Word docs, use metadata as we can't easily extract content in browser
+    return fallbackTextExtraction(file);
   };
   
-  const readFileAsBinary = (file: File): Promise<string> => {
+  const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
       reader.onerror = reject;
-      reader.readAsBinaryString(file);
+      reader.readAsArrayBuffer(file);
     });
   };
   
-  // Very simple PDF text extraction - only works for basic PDFs
-  // Real implementation would use a proper library
+  const arrayBufferToBinaryString = (buffer: ArrayBuffer): string => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return binary;
+  };
+  
+  // Improved PDF text extraction - more aggressive pattern matching
   const extractTextFromPDFBinary = (binary: string): string => {
     const text = [];
     let pos = 0;
-    let foundText = false;
+    let inText = false;
+    let currentWord = '';
     
-    // Very naive text extraction that looks for text markers in PDF
-    while (pos < binary.length) {
-      if (binary.substring(pos, pos + 2) === "BT") {
+    try {
+      // Look for text markers in PDF
+      while (pos < binary.length - 1) {
         // Beginning of text object
-        foundText = true;
-        pos += 2;
-      } else if (binary.substring(pos, pos + 2) === "ET") {
+        if (binary.substring(pos, pos + 2) === "BT") {
+          inText = true;
+          pos += 2;
+          continue;
+        }
+        
         // End of text object
-        foundText = false;
-        text.push(" ");
-        pos += 2;
-      } else if (foundText && binary.substring(pos, pos + 2) === "Tj") {
-        // Text element
-        text.push(" ");
-        pos += 2;
-      } else if (foundText && binary.charCodeAt(pos) >= 32 && binary.charCodeAt(pos) <= 126) {
-        // Printable ASCII
-        text.push(binary.charAt(pos));
-        pos += 1;
-      } else {
+        if (binary.substring(pos, pos + 2) === "ET") {
+          inText = false;
+          if (currentWord.trim()) {
+            text.push(currentWord.trim());
+            currentWord = '';
+          }
+          text.push(" ");
+          pos += 2;
+          continue;
+        }
+        
+        // Text showing operator
+        if (inText && (binary.substring(pos, pos + 2) === "Tj" || 
+                       binary.substring(pos, pos + 2) === "TJ" ||
+                       binary.substring(pos, pos + 3) === "Tm")) {
+          if (currentWord.trim()) {
+            text.push(currentWord.trim());
+            currentWord = '';
+          }
+          text.push(" ");
+          pos += 2;
+          continue;
+        }
+        
+        // Capture more text content
+        if (inText && binary.charCodeAt(pos) >= 32 && binary.charCodeAt(pos) <= 126) {
+          currentWord += binary.charAt(pos);
+        } else if (inText && binary.charAt(pos) === '\n') {
+          if (currentWord.trim()) {
+            text.push(currentWord.trim());
+            currentWord = '';
+          }
+          text.push(" ");
+        }
+        
         pos += 1;
       }
+      
+      if (currentWord.trim()) {
+        text.push(currentWord.trim());
+      }
+      
+      // Join text and clean it
+      return text.join(" ")
+        .replace(/\s+/g, " ")
+        .replace(/[^\x20-\x7E]/g, "") // Remove non-printable characters
+        .trim();
+    } catch (error) {
+      console.error("Error in PDF text extraction:", error);
+      return "";
     }
+  };
+  
+  // Fallback text extraction using file metadata
+  const fallbackTextExtraction = async (file: File): Promise<string> => {
+    // For this fallback, prompt the user to manually input resume text
+    const fileName = file.name || "unknown";
+    const fileType = file.type || "unknown";
+    const fileSize = (file.size / 1024).toFixed(2);
+    const uploadDate = new Date().toLocaleString();
     
-    return text.join("")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Create a descriptive message for manual handling
+    return `[ATENÇÃO: Este é um texto de preenchimento pois não foi possível extrair o conteúdo completo do arquivo]
+    
+Arquivo: ${fileName}
+Tipo: ${fileType}
+Tamanho: ${fileSize} KB
+Data de upload: ${uploadDate}
+
+Para obter melhores resultados na análise, por favor copie e cole o texto do seu currículo diretamente no campo de texto abaixo.
+    
+Este arquivo pode conter informações sobre sua formação acadêmica, experiência profissional, habilidades técnicas, certificações, e outras qualificações relevantes que serão usadas para análise.`;
   };
 
   return (
@@ -201,7 +270,7 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
               Atualizar Currículo
             </Button>
             <p className="text-sm text-gray-500">
-              Formatos aceitos: PDF, DOC, DOCX, TXT (máx. 2MB)
+              Formatos aceitos: PDF, DOC, DOCX, TXT (máx. 5MB)
             </p>
           </div>
         )}
@@ -211,7 +280,7 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
             value={resumeText || ""}
             onChange={onChange}
             placeholder="Cole o texto do seu currículo aqui..."
-            rows={5}
+            rows={10}
           />
         ) : (
           resumeText ? (

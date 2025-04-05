@@ -29,6 +29,11 @@ export async function generateJobFitAnalysis(input: AnalysisInput): Promise<Anal
     const prompt = createAnalysisPrompt(input);
     
     console.log("Sending request to OpenAI API");
+    console.log("Analyzing job fit for:", input.jobTitle);
+    console.log("Resume text length:", input.resumeText.length);
+    console.log("Job description length:", input.jobDescription.length);
+    console.log("Cover letter provided:", !!input.coverLetterText);
+    console.log("References provided:", !!input.referenceText);
     
     // Call the OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -46,7 +51,8 @@ export async function generateJobFitAnalysis(input: AnalysisInput): Promise<Anal
               "You are an expert career advisor specializing in job application analysis. " + 
               "Your task is to compare a candidate's profile with a job description and provide structured feedback. " +
               "Focus on being accurate, honest, and constructive. " + 
-              "All responses must be in Portuguese."
+              "All responses must be in Portuguese. " +
+              "VERY IMPORTANT: Your response must be in valid JSON format only with no markdown formatting."
           },
           {
             role: "user",
@@ -54,7 +60,7 @@ export async function generateJobFitAnalysis(input: AnalysisInput): Promise<Anal
           }
         ],
         temperature: 0.5,
-        max_tokens: 1000
+        max_tokens: 1500
       })
     });
     
@@ -85,9 +91,23 @@ export async function generateJobFitAnalysis(input: AnalysisInput): Promise<Anal
   }
 }
 
-// Create a prompt for the OpenAI API
+// Create a prompt for the OpenAI API with better handling of longer content
 function createAnalysisPrompt(input: AnalysisInput): string {
   const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = input;
+  
+  // Process job description - trim if too long
+  const maxJobDescriptionLength = 4000;
+  const processedJobDescription = 
+    jobDescription.length > maxJobDescriptionLength
+      ? jobDescription.substring(0, maxJobDescriptionLength) + "... (texto truncado devido ao tamanho)"
+      : jobDescription;
+
+  // Process resume text - trim if too long  
+  const maxResumeLength = 5000;
+  const processedResumeText = 
+    resumeText.length > maxResumeLength
+      ? resumeText.substring(0, maxResumeLength) + "... (texto truncado devido ao tamanho)"
+      : resumeText;
   
   let prompt = `
 Analise a compatibilidade entre o perfil do candidato e a vaga de emprego a seguir.
@@ -96,26 +116,38 @@ Analise a compatibilidade entre o perfil do candidato e a vaga de emprego a segu
 Título: ${jobTitle}
 
 Descrição:
-${jobDescription}
+${processedJobDescription}
 
 ## PERFIL DO CANDIDATO
 ### Currículo
-${resumeText}
+${processedResumeText}
 `;
 
-  // Add cover letter if available
+  // Add cover letter if available (trimmed if too long)
   if (coverLetterText && coverLetterText.trim() !== "") {
+    const maxCoverLetterLength = 2000;
+    const processedCoverLetter = 
+      coverLetterText.length > maxCoverLetterLength
+        ? coverLetterText.substring(0, maxCoverLetterLength) + "... (texto truncado devido ao tamanho)"
+        : coverLetterText;
+        
     prompt += `
 ### Carta de Apresentação
-${coverLetterText}
+${processedCoverLetter}
 `;
   }
 
-  // Add reference if available
+  // Add reference if available (trimmed if too long)
   if (referenceText && referenceText.trim() !== "") {
+    const maxReferenceLength = 1500;
+    const processedReferenceText = 
+      referenceText.length > maxReferenceLength
+        ? referenceText.substring(0, maxReferenceLength) + "... (texto truncado devido ao tamanho)"
+        : referenceText;
+        
     prompt += `
 ### Referências
-${referenceText}
+${processedReferenceText}
 `;
   }
 
@@ -132,13 +164,16 @@ Baseado na comparação entre o perfil do candidato e os requisitos da vaga, for
 
 4. Lacunas Identificadas: Uma lista de 3-5 habilidades ou experiências que o candidato precisaria desenvolver para se adequar melhor à vaga.
 
-Sua resposta deve estar em formato JSON com o seguinte padrão:
+IMPORTANTE: Sua resposta DEVE estar APENAS em formato JSON, sem formatação markdown, com o seguinte padrão:
+
 {
   "compatibilityScore": "Texto com classificação qualitativa e porcentagem",
   "keySkills": ["habilidade 1", "habilidade 2", "habilidade 3"],
   "relevantExperiences": ["experiência 1", "experiência 2", "experiência 3"],
   "identifiedGaps": ["lacuna 1", "lacuna 2", "lacuna 3"]
 }
+
+Não inclua markdown, código, ou comentários. Forneça APENAS o objeto JSON.
 `;
 
   // Log the prompt length
@@ -150,41 +185,47 @@ Sua resposta deve estar em formato JSON com o seguinte padrão:
 // Parse the response from the OpenAI API
 function parseAnalysisResponse(content: string): AnalysisResult {
   try {
-    // Try to find and extract JSON from the response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    console.log("Parsing OpenAI response");
+    
+    // Strip any markdown formatting that might be present
+    let cleanContent = content.replace(/```json|```/g, '').trim();
+    
+    // Try to extract a JSON object
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
     
     if (!jsonMatch) {
-      console.error("No JSON found in OpenAI response");
-      throw new Error("Formato de resposta inválido");
+      console.error("No valid JSON found in OpenAI response");
+      throw new Error("Formato de resposta inválido - JSON não encontrado");
     }
     
-    // Parse the JSON
+    // Extract and parse the JSON
     const jsonText = jsonMatch[0];
-    console.log("Found JSON in response:", jsonText.substring(0, 100) + "...");
     
-    // Remove any markdown formatting that might be in the JSON string
-    const cleanJsonText = jsonText.replace(/```json|```/g, '').trim();
-    
-    // Parse the cleaned JSON
-    const result = JSON.parse(cleanJsonText);
-    
-    // Validate the result has all the required fields
-    if (!result.compatibilityScore || !Array.isArray(result.keySkills) || 
-        !Array.isArray(result.relevantExperiences) || !Array.isArray(result.identifiedGaps)) {
-      console.error("Invalid response format, missing required fields:", result);
-      throw new Error("Formato de resposta inválido, campos obrigatórios ausentes");
+    try {
+      const result = JSON.parse(jsonText);
+      
+      // Validate the result has all the required fields
+      if (!result.compatibilityScore || !Array.isArray(result.keySkills) || 
+          !Array.isArray(result.relevantExperiences) || !Array.isArray(result.identifiedGaps)) {
+        console.error("Invalid response format, missing required fields:", result);
+        throw new Error("Formato de resposta inválido, campos obrigatórios ausentes");
+      }
+      
+      // Return the validated result
+      return {
+        compatibilityScore: result.compatibilityScore,
+        keySkills: result.keySkills,
+        relevantExperiences: result.relevantExperiences,
+        identifiedGaps: result.identifiedGaps
+      };
+    } catch (jsonError) {
+      console.error("Error parsing JSON:", jsonError);
+      console.error("Raw JSON string:", jsonText);
+      throw new Error(`Erro ao analisar JSON: ${jsonError.message}`);
     }
-    
-    // Return the validated result
-    return {
-      compatibilityScore: result.compatibilityScore,
-      keySkills: result.keySkills,
-      relevantExperiences: result.relevantExperiences,
-      identifiedGaps: result.identifiedGaps
-    };
   } catch (error) {
     console.error("Error parsing OpenAI response:", error);
-    console.error("Raw response content:", content);
+    console.error("Raw response content:", content.substring(0, 300) + "...");
     throw new Error(`Erro ao processar resposta da API: ${error.message}`);
   }
 }

@@ -12,6 +12,8 @@ import FitAnalysisResult from "@/components/sprint/fit-analysis/FitAnalysisResul
 import FitAnalysisPrompt from "@/components/sprint/fit-analysis/FitAnalysisPrompt";
 import FitQuestionsSection from "@/components/sprint/fit-analysis/FitQuestionsSection";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SprintData {
   jobTitle: string;
@@ -26,6 +28,8 @@ const SprintFitAnalysis = () => {
   const { sprintId } = useParams();
   const [sprintData, setSprintData] = useState<SprintData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingJobDescription, setEditingJobDescription] = useState(false);
+  const [tempJobDescription, setTempJobDescription] = useState("");
   const { isLoading: docsLoading, userDocuments } = useUserDocuments();
   
   // Questions that will appear in the right side
@@ -40,18 +44,21 @@ const SprintFitAnalysis = () => {
     if (location.state?.sprintData) {
       console.log("Using sprint data from location state:", location.state.sprintData);
       setSprintData(location.state.sprintData);
+      setTempJobDescription(location.state.sprintData.jobDescription || "");
       setLoading(false);
     } else if (sprintId) {
       console.log("No sprint data in location state, creating mock data for sprint ID:", sprintId);
       // TODO: In a real implementation, we would fetch the sprint data from the database
       // For now, just set a mock data to demonstrate functionality
       // In production, this would be a fetch from the database
-      setSprintData({
+      const mockData = {
         jobTitle: "Cargo não encontrado",
         companyName: "Empresa não encontrada",
         companyWebsite: "https://example.com",
         jobDescription: "Descrição da vaga não encontrada"
-      });
+      };
+      setSprintData(mockData);
+      setTempJobDescription(mockData.jobDescription || "");
       setLoading(false);
     }
   }, [location.state, sprintId]);
@@ -73,6 +80,28 @@ const SprintFitAnalysis = () => {
     console.log("Question clicked:", questionIndex);
   };
 
+  const handleEditJobDescription = () => {
+    setEditingJobDescription(true);
+  };
+
+  const handleSaveJobDescription = () => {
+    if (sprintData) {
+      const updatedSprintData = {
+        ...sprintData,
+        jobDescription: tempJobDescription
+      };
+      setSprintData(updatedSprintData);
+    }
+    setEditingJobDescription(false);
+  };
+
+  const handleCancelEditJobDescription = () => {
+    if (sprintData) {
+      setTempJobDescription(sprintData.jobDescription);
+    }
+    setEditingJobDescription(false);
+  };
+
   if (loading || docsLoading) {
     return (
       <DashboardLayout>
@@ -82,6 +111,8 @@ const SprintFitAnalysis = () => {
       </DashboardLayout>
     );
   }
+
+  const isJobDescriptionShort = sprintData && sprintData.jobDescription && sprintData.jobDescription.length < 100;
 
   const renderFitContent = () => {
     if (analyzeLoading) {
@@ -123,6 +154,44 @@ const SprintFitAnalysis = () => {
               Modo Debug
             </Label>
           </div>
+          
+          {isJobDescriptionShort && (
+            <div className="p-4 mb-4 border border-amber-200 rounded-md bg-amber-50">
+              <div className="flex items-center gap-2 text-amber-700 mb-2">
+                <AlertCircle className="h-5 w-5" />
+                <h3 className="font-semibold">Descrição da vaga muito curta</h3>
+              </div>
+              <p className="text-sm text-amber-700 mb-4">
+                A descrição da vaga parece muito curta, o que pode afetar a qualidade da análise. 
+                Recomendamos adicionar uma descrição mais detalhada da vaga.
+              </p>
+              
+              {editingJobDescription ? (
+                <div className="space-y-3">
+                  <Textarea 
+                    value={tempJobDescription}
+                    onChange={(e) => setTempJobDescription(e.target.value)}
+                    rows={8}
+                    placeholder="Cole aqui a descrição completa da vaga..."
+                    className="w-full"
+                  />
+                  <div className="flex space-x-2">
+                    <Button size="sm" onClick={handleSaveJobDescription}>
+                      Salvar descrição
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleCancelEditJobDescription}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button size="sm" variant="outline" onClick={handleEditJobDescription}>
+                  Editar descrição da vaga
+                </Button>
+              )}
+            </div>
+          )}
+          
           <FitAnalysisPrompt onAnalyze={generateFitAnalysis} userDocuments={userDocuments} />
         </>
       );
@@ -140,6 +209,43 @@ const SprintFitAnalysis = () => {
             Modo Debug
           </Label>
         </div>
+        
+        {isJobDescriptionShort && debugMode && !editingJobDescription && (
+          <div className="p-4 mb-4 border border-amber-200 rounded-md bg-amber-50">
+            <div className="flex items-center gap-2 text-amber-700 mb-2">
+              <AlertCircle className="h-5 w-5" />
+              <h3 className="font-semibold">Descrição da vaga muito curta</h3>
+            </div>
+            <p className="text-sm text-amber-700 mb-2">
+              A descrição da vaga é muito curta ({sprintData?.jobDescription.length} caracteres), o que pode afetar a qualidade da análise.
+            </p>
+            <Button size="sm" variant="outline" onClick={handleEditJobDescription}>
+              Editar descrição da vaga
+            </Button>
+          </div>
+        )}
+        
+        {editingJobDescription && (
+          <div className="space-y-3 mb-4 p-4 border rounded-md">
+            <h3 className="font-semibold">Editar descrição da vaga</h3>
+            <Textarea 
+              value={tempJobDescription}
+              onChange={(e) => setTempJobDescription(e.target.value)}
+              rows={8}
+              placeholder="Cole aqui a descrição completa da vaga..."
+              className="w-full"
+            />
+            <div className="flex space-x-2">
+              <Button size="sm" onClick={handleSaveJobDescription}>
+                Salvar descrição
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEditJobDescription}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+        
         <FitAnalysisResult result={fitAnalysisResult} loading={analyzeLoading} debugMode={debugMode} />
       </>
     );
