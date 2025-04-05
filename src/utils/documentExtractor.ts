@@ -103,6 +103,7 @@ export const extractFileContent = async (file: File): Promise<string> => {
       
       return generatePlaceholderMessage(file);
     } catch (e) {
+      // Fixed: Changed 'error' to 'e' to use the correct exception variable
       console.error("Error in PDF extraction:", e);
       return generatePlaceholderMessage(file);
     }
