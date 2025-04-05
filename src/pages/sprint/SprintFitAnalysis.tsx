@@ -9,7 +9,7 @@ import { useFitAnalysis } from "@/hooks/useFitAnalysis";
 import FitAnalysisResult from "@/components/sprint/fit-analysis/FitAnalysisResult";
 import FitAnalysisPrompt from "@/components/sprint/fit-analysis/FitAnalysisPrompt";
 import FitQuestionsSection from "@/components/sprint/fit-analysis/FitQuestionsSection";
-import { Alert, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 interface SprintData {
   jobTitle: string;
