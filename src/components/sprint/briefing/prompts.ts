@@ -18,14 +18,17 @@ export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Analise a empresa ${companyName} (${companyWebsite}).
     
-    Foque exclusivamente na missão, visão e propósito da empresa ${companyName}:
+    Apresente uma visão concisa (máximo 400 palavras) sobre a missão e visão da empresa ${companyName}:
+    
+    ## Missão e Visão
     - Apresente a missão oficial da empresa (por que ela existe)
     - Explique a visão oficial da empresa (onde deseja chegar no futuro)
-    - Detalhe o propósito maior ou impacto social que a empresa busca gerar
-    - Inclua citações inspiradoras dos fundadores ou liderança sobre o propósito da empresa
     
-    Liste também exemplos concretos de como a empresa está trabalhando para atingir sua missão,
-    como projetos específicos alinhados ao propósito declarado e iniciativas de impacto que refletem os valores.`,
+    ## Iniciativas Concretas
+    - Liste 2-3 exemplos práticos de como a empresa está trabalhando para cumprir sua missão
+    - Mencione projetos específicos ou iniciativas que demonstrem o alinhamento com a missão declarada
+    
+    Mantenha o conteúdo objetivo, factual e livre de linguagem promocional excessiva.`,
   
   [BRIEFING_CATEGORIES.PRODUCT_MARKET]: (companyName: string, companyWebsite: string) => 
     `Analise a empresa ${companyName} (${companyWebsite}).
