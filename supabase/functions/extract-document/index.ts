@@ -18,6 +18,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
+        success: false,
         extracted_text: "Erro ao processar o documento. Por favor, copie e cole o texto manualmente." 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }

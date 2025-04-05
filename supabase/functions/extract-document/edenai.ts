@@ -14,10 +14,15 @@ export async function callEdenAI(
 ): Promise<any> {
   console.log(`Calling Eden AI OCR API with ${provider} provider...`);
   
+  // Ensure we have a valid file content
+  if (!fileBase64 || fileBase64.length < 100) {
+    throw new Error("Invalid or empty file content provided");
+  }
+  
   const edenAIPayload = {
     providers: provider,
     file_base64: fileBase64,
-    file_type: fileType,
+    file_type: fileType.split('/')[1] || fileType, // Extract just 'pdf' from 'application/pdf'
     language: language,
     // Additional OCR settings for better quality
     ocr_settings: {
@@ -27,6 +32,8 @@ export async function callEdenAI(
       font_enhancement: true
     }
   };
+  
+  console.log(`Sending ${fileBase64.length} bytes to Eden AI with ${provider}`);
   
   const response = await fetch("https://api.edenai.run/v2/ocr/ocr", {
     method: "POST",
@@ -39,6 +46,7 @@ export async function callEdenAI(
   
   if (!response.ok) {
     const errorText = await response.text();
+    console.error(`Eden AI API error response (${response.status}):`, errorText);
     throw new Error(`Eden AI API error with ${provider}: ${errorText}`);
   }
   
@@ -55,6 +63,8 @@ export async function extractWithFallbacks(
   language: string, 
   fileName: string
 ): Promise<{ success: boolean, extracted_text: string }> {
+  let lastError = null;
+  
   // Try each provider in sequence
   for (const provider of providers) {
     try {
@@ -70,15 +80,16 @@ export async function extractWithFallbacks(
         return result;
       }
     } catch (error) {
+      lastError = error;
       console.error(`Error with provider ${provider}:`, error);
       // Continue to next provider
     }
   }
   
-  // If all providers failed, return error
+  // If all providers failed, return error with the last error message
   return {
     success: false,
-    extracted_text: `Não foi possível extrair o texto do arquivo: ${fileName}. Por favor, copie e cole o texto manualmente.`
+    extracted_text: `Não foi possível extrair o texto do arquivo: ${fileName}. Erro: ${lastError?.message || "Desconhecido"}. Por favor, copie e cole o texto manualmente.`
   };
 }
 
