@@ -39,7 +39,14 @@ const SprintFitAnalysis = () => {
       setLoading(false);
     } else if (sprintId) {
       // TODO: In a real implementation, we would fetch the sprint data from the database
-      // For now, we'll just set loading to false
+      // For now, just set a mock data to demonstrate functionality
+      // In production, this would be a fetch from the database
+      setSprintData({
+        jobTitle: "Cargo não encontrado",
+        companyName: "Empresa não encontrada",
+        companyWebsite: "https://example.com",
+        jobDescription: "Descrição da vaga não encontrada"
+      });
       setLoading(false);
     }
   }, [location.state, sprintId]);

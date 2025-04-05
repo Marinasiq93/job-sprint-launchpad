@@ -1,9 +1,11 @@
 
 import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Mic, MicOff, ArrowRight } from "lucide-react";
+import { toast } from "@/lib/toast";
 
 interface CultureQuestionsProps {
   companyName: string;
@@ -24,6 +26,8 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQu
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill(""));
   const [isRecording, setIsRecording] = useState(false);
+  const navigate = useNavigate();
+  const { sprintId } = useParams();
   
   const currentQuestion = questions[currentQuestionIndex];
   
@@ -32,6 +36,12 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQu
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
       onQuestionChange(nextIndex);
+    } else {
+      // This is the last question, navigate to Phase 2
+      if (sprintId) {
+        toast.success("Fase 1 concluída! Seguindo para Análise de Fit.");
+        navigate(`/dashboard/sprint/${sprintId}/fit-analysis`);
+      }
     }
   };
   
@@ -124,10 +134,10 @@ const CultureQuestions = ({ companyName, jobTitle, onQuestionChange }: CultureQu
         
         <Button
           onClick={handleNextQuestion}
-          disabled={isLastQuestion}
+          disabled={false}
           className="bg-jobsprint-pink hover:bg-jobsprint-pink/90 gap-1"
         >
-          Próxima
+          {isLastQuestion ? "Concluir e Avançar" : "Próxima"}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </CardFooter>
