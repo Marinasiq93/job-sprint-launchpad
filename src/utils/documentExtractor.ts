@@ -1,6 +1,6 @@
 
 import { readFileAsText } from './fileUtils';
-import { extractPDFContent } from './pdfUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Creates a placeholder message when content extraction fails
@@ -26,35 +26,13 @@ Este arquivo pode conter informações sobre sua formação acadêmica, experiê
 };
 
 /**
- * Enhanced function to extract content from files
+ * Extract content from files using Eden AI
  */
 export const extractFileContent = async (file: File): Promise<string> => {
   console.log(`Extracting content from ${file.name} (${file.type}), size: ${(file.size/1024).toFixed(2)}KB`);
   
-  // For PDFs, use our enhanced extraction methods
-  if (file.type === 'application/pdf') {
-    try {
-      // Extract text from PDF using our improved methods
-      let text = await extractPDFContent(file);
-      const extractedLength = text.length;
-      console.log(`PDF extraction complete. Extracted ${extractedLength} characters`);
-      
-      // If we got a reasonable amount of content, add file metadata and return it
-      if (extractedLength >= 100) {
-        // Add file metadata to the extraction
-        const metadata = `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n`;
-        return metadata + text;
-      }
-      
-      // If we got very little content, generate a placeholder message
-      console.log("Extracted text too short, using placeholder message");
-      return generatePlaceholderMessage(file);
-    } catch (e) {
-      console.error("Error extracting PDF content:", e);
-      return generatePlaceholderMessage(file);
-    }
-  } else if (file.type === 'text/plain') {
-    // For text files, read directly
+  // For text files, read directly without using Eden AI
+  if (file.type === 'text/plain') {
     try {
       const text = await readFileAsText(file);
       return `Arquivo: ${file.name}\nTipo: Texto\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${text}`;
@@ -64,6 +42,32 @@ export const extractFileContent = async (file: File): Promise<string> => {
     }
   }
   
-  // For Word docs and other types, use placeholder as we can't easily extract content in browser
-  return generatePlaceholderMessage(file);
+  // For PDFs and other document types, use Eden AI via Edge Function
+  try {
+    // Create form data to send the file
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    console.log('Calling extract-document edge function...');
+    const { data, error } = await supabase.functions.invoke('extract-document', {
+      body: formData,
+    });
+    
+    if (error) {
+      console.error('Error calling extract-document function:', error);
+      return generatePlaceholderMessage(file);
+    }
+    
+    if (!data.success || !data.extracted_text) {
+      console.warn('No text extracted by the service:', data.error || 'Unknown error');
+      return data.extracted_text || generatePlaceholderMessage(file);
+    }
+    
+    console.log(`Eden AI extraction complete. Extracted ${data.extracted_text.length} characters`);
+    return data.extracted_text;
+    
+  } catch (e) {
+    console.error("Error in extraction process:", e);
+    return generatePlaceholderMessage(file);
+  }
 };

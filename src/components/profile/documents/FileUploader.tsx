@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,15 +28,21 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     if (!file) return;
 
     // Check file type
-    if (file.type !== 'application/pdf' && 
-        file.type !== 'application/msword' && 
-        file.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' &&
-        file.type !== 'text/plain') {
-      toast.error("Formato inválido. Por favor, envie um arquivo PDF, DOC, DOCX ou TXT.");
+    const validFileTypes = [
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'image/jpeg',
+      'image/png'
+    ];
+    
+    if (!validFileTypes.includes(file.type)) {
+      toast.error("Formato inválido. Por favor, envie um arquivo PDF, DOC, DOCX, TXT, JPEG ou PNG.");
       return;
     }
 
-    // Check file size (max 15MB - increased from previous 10MB)
+    // Check file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       toast.error("Arquivo muito grande. O tamanho máximo é 15MB.");
       return;
@@ -52,17 +59,18 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         onFileUpload(file.name, text);
         toast.success(`Arquivo ${file.name} carregado com sucesso! (${text.length} caracteres)`);
       } else {
-        // For PDFs and DOCs, extract what we can
-        setExtractionProgress("Extraindo conteúdo do arquivo...");
+        // For other file types, use our enhanced extraction
+        setExtractionProgress("Extraindo conteúdo do arquivo com IA...");
         const extractedText = await extractFileContent(file);
         
         // Check if we got a reasonable amount of text
         const textLength = extractedText.length;
-        if (textLength < 300 && file.type === 'application/pdf') {
+        
+        if (textLength < 300) {
           setExtractionProgress("Extração limitada - tente copiar o texto manualmente para melhor resultado");
           toast.warning(`Extração limitada: apenas ${textLength} caracteres. A análise pode ser imprecisa.`);
         } else {
-          setExtractionProgress("Conteúdo extraído com sucesso");
+          setExtractionProgress("Conteúdo extraído com sucesso pela IA");
         }
         
         onFileUpload(file.name, extractedText);
@@ -90,7 +98,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
-        accept=".pdf,.doc,.docx,.txt" 
+        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" 
         onChange={handleFileChange}
       />
       <Button 
@@ -107,7 +115,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         <div className="text-xs text-muted-foreground mb-2">{extractionProgress}</div>
       )}
       <p className="text-sm text-gray-500">
-        Formatos aceitos: PDF, DOC, DOCX, TXT (máx. 15MB)
+        Formatos aceitos: PDF, DOC, DOCX, TXT, JPG, PNG (máx. 15MB)
       </p>
     </div>
   );
