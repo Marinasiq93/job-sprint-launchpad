@@ -46,9 +46,11 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     // Extract all document texts for analysis
     const documentTexts = extractDocumentTexts(userDocuments);
     
-    if (!documentTexts.resumeText || documentTexts.resumeText.trim().length < 10) {
-      toast.error("Currículo não encontrado ou muito curto. Adicione um currículo no seu perfil.");
-      setError("Nenhum texto de currículo válido encontrado. Por favor, adicione seu currículo na seção de documentos do seu perfil.");
+    // Check if resume text is valid - look for content after any metadata headers
+    const resumeContent = documentTexts.resumeText?.split('\n\n').slice(1).join('\n\n') || '';
+    if (!resumeContent || resumeContent.trim().length < 100) {
+      toast.error("Currículo não encontrado ou muito curto. Adicione um currículo com mais conteúdo no seu perfil.");
+      setError("Conteúdo do currículo insuficiente. Por favor, adicione um currículo mais completo na seção de documentos do seu perfil.");
       return;
     }
 
@@ -68,6 +70,8 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
 
       console.log("Calling analyze-job-fit edge function...");
       console.log("Document text lengths:", {
+        jobTitleLength: sprintData.jobTitle?.length || 0,
+        jobDescriptionLength: sprintData.jobDescription?.length || 0,
         resumeTextLength: documentTexts.resumeText?.length || 0,
         coverLetterTextLength: documentTexts.coverLetterText?.length || 0,
         referenceTextLength: documentTexts.referenceText?.length || 0
@@ -120,15 +124,23 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     let resumeText = '';
     if (documents.resume_text && typeof documents.resume_text === 'string' && documents.resume_text.trim().length > 0) {
       resumeText = documents.resume_text;
+      console.log("Using resume text from documents, length:", resumeText.length);
+      
+      // Check if this is a placeholder message
+      if (resumeText.includes("[ATENÇÃO: Este é um texto de preenchimento")) {
+        console.warn("Resume text appears to be a placeholder message");
+      }
     } else if (documents.resume_file_name) {
       // If we only have the file name, use that as evidence of a resume
       resumeText = `Currículo: ${documents.resume_file_name}`;
+      console.warn("Only resume filename available, no content");
     }
     
     // Get cover letter text
     let coverLetterText = '';
     if (documents.cover_letter_text && typeof documents.cover_letter_text === 'string' && documents.cover_letter_text.trim().length > 0) {
       coverLetterText = documents.cover_letter_text;
+      console.log("Using cover letter text, length:", coverLetterText.length);
     } else if (documents.cover_letter_file_name) {
       coverLetterText = `Carta de apresentação: ${documents.cover_letter_file_name}`;
     }
@@ -137,6 +149,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     let referenceText = '';
     if (documents.reference_text && typeof documents.reference_text === 'string' && documents.reference_text.trim().length > 0) {
       referenceText = documents.reference_text;
+      console.log("Using reference text, length:", referenceText.length);
     }
     
     // If the user has reference files, add their names to the reference text

@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,9 +35,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       return;
     }
 
-    // Check file size (max 10MB - increased from previous 5MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Arquivo muito grande. O tamanho máximo é 10MB.");
+    // Check file size (max 15MB - increased from previous 10MB)
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. O tamanho máximo é 15MB.");
       return;
     }
 
@@ -48,6 +47,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       
       if (file.type === 'text/plain') {
         // If it's a text file, read it directly
+        setExtractionProgress("Lendo arquivo de texto...");
         const text = await readFileAsText(file);
         onFileUpload(file.name, text);
         toast.success(`Arquivo ${file.name} carregado com sucesso! (${text.length} caracteres)`);
@@ -57,14 +57,16 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         const extractedText = await extractFileContent(file);
         
         // Check if we got a reasonable amount of text
-        if (extractedText.length < 200 && file.type === 'application/pdf') {
-          setExtractionProgress("Tentando método alternativo de extração...");
-          // Give the user feedback but still use what we have
-          toast.warning(`Extração limitada: apenas ${extractedText.length} caracteres. A análise pode ser imprecisa.`);
+        const textLength = extractedText.length;
+        if (textLength < 300 && file.type === 'application/pdf') {
+          setExtractionProgress("Extração limitada - tente copiar o texto manualmente para melhor resultado");
+          toast.warning(`Extração limitada: apenas ${textLength} caracteres. A análise pode ser imprecisa.`);
+        } else {
+          setExtractionProgress("Conteúdo extraído com sucesso");
         }
         
         onFileUpload(file.name, extractedText);
-        toast.success(`Arquivo ${file.name} processado! Extraído ${extractedText.length} caracteres.`);
+        toast.success(`Arquivo ${file.name} processado! Extraído ${textLength} caracteres.`);
       }
       
     } catch (error) {
@@ -72,7 +74,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       toast.error("Erro ao processar arquivo. Tente novamente.");
     } finally {
       setIsLoading(false);
-      setExtractionProgress(null);
+      // Keep the extraction progress message for 3 seconds then clear it
+      setTimeout(() => setExtractionProgress(null), 3000);
       
       // Reset the file input
       if (fileInputRef.current) {
@@ -104,7 +107,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         <div className="text-xs text-muted-foreground mb-2">{extractionProgress}</div>
       )}
       <p className="text-sm text-gray-500">
-        Formatos aceitos: PDF, DOC, DOCX, TXT (máx. 10MB)
+        Formatos aceitos: PDF, DOC, DOCX, TXT (máx. 15MB)
       </p>
     </div>
   );
