@@ -43,7 +43,26 @@ export const extractFileContent = async (file: File): Promise<string> => {
     }
   }
   
-  // For PDFs and other document types, use Eden AI via Edge Function
+  // For PDFs, try our enhanced local extraction first
+  if (file.type === 'application/pdf') {
+    try {
+      console.log('Attempting local PDF extraction first...');
+      const pdfText = await extractPDFContent(file);
+      
+      // If we got a reasonable amount of text from the PDF, use it
+      if (pdfText && pdfText.length > 1000) {
+        console.log(`Local PDF extraction successful: ${pdfText.length} characters`);
+        return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
+      }
+      
+      console.log(`Local PDF extraction yielded only ${pdfText?.length || 0} characters, falling back to Eden AI...`);
+    } catch (e) {
+      console.error("Error in local PDF extraction:", e);
+      // Continue to Eden AI as fallback
+    }
+  }
+  
+  // For PDFs with insufficient local extraction and other document types, use Eden AI via Edge Function
   try {
     // Create form data to send the file
     const formData = new FormData();

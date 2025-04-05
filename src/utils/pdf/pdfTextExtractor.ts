@@ -1,47 +1,82 @@
 
 import { readFileAsArrayBuffer, arrayBufferToBinaryString } from '../fileUtils';
-import { extractTextBetweenBTET, extractTextFromParentheses, extractTextFromStreams } from './extractionMethods';
-import { cleanExtractedText } from './textCleaner';
+import { 
+  extractTextBetweenBTET, 
+  extractTextFromParentheses, 
+  extractTextFromStreams,
+  extractUnicodeText,
+  extractFromDictionaries
+} from './extractionMethods';
+import { cleanExtractedText, postProcessText } from './textCleaner';
 
 /**
  * Extract text from PDF binary data using multiple methods
  */
 export const extractTextFromPDFBinary = (binary: string): string => {
   try {
-    let extractedText = '';
+    // Try all extraction methods and combine the results
+    const results = [];
     
-    // Method 1: Extract text between BT/ET markers
-    extractedText = extractTextBetweenBTET(binary);
+    // Method 1: BT/ET text extraction (basic PDF text objects)
+    const btEtText = extractTextBetweenBTET(binary);
+    if (btEtText && btEtText.length > 50) {
+      results.push({ text: btEtText, length: btEtText.length, method: "BT/ET" });
+    }
     
-    // Method 2: If first method returns insufficient text, try parentheses extraction
-    if (extractedText.length < 300) {
-      console.log("BT/ET extraction yielded insufficient text, trying parentheses extraction");
-      const parenthesesText = extractTextFromParentheses(binary);
-      
-      // Use the longer of the two methods
-      if (parenthesesText.length > extractedText.length) {
-        extractedText = parenthesesText;
+    // Method 2: Parentheses extraction (text strings in PDF)
+    const parenthesesText = extractTextFromParentheses(binary);
+    if (parenthesesText && parenthesesText.length > 50) {
+      results.push({ text: parenthesesText, length: parenthesesText.length, method: "Parentheses" });
+    }
+    
+    // Method 3: PDF stream content extraction
+    const streamText = extractTextFromStreams(binary);
+    if (streamText && streamText.length > 50) {
+      results.push({ text: streamText, length: streamText.length, method: "Streams" });
+    }
+    
+    // Method 4: Unicode text pattern extraction
+    const unicodeText = extractUnicodeText(binary);
+    if (unicodeText && unicodeText.length > 50) {
+      results.push({ text: unicodeText, length: unicodeText.length, method: "Unicode" });
+    }
+    
+    // Method 5: Dictionary object extraction
+    const dictText = extractFromDictionaries(binary);
+    if (dictText && dictText.length > 50) {
+      results.push({ text: dictText, length: dictText.length, method: "Dictionaries" });
+    }
+    
+    if (results.length === 0) {
+      console.warn("No text extraction methods yielded results");
+      return "";
+    }
+    
+    // Sort results by length (longest first)
+    results.sort((a, b) => b.length - a.length);
+    
+    // Log what we found
+    console.log(`PDF extraction results: ${results.length} methods succeeded`);
+    results.forEach(r => console.log(`- ${r.method}: ${r.length} characters`));
+    
+    // Get the longest result or combine if beneficial
+    let finalText = results[0].text;
+    
+    // If we have multiple good results, try to combine them
+    if (results.length > 1) {
+      // Check if second method provides significant additional content
+      if (results[1].length > results[0].length * 0.5) {
+        // Combine the top two methods
+        const combinedText = results[0].text + " " + results[1].text;
+        finalText = cleanExtractedText(combinedText);
+        console.log(`Combined top two methods: ${finalText.length} characters`);
       }
     }
     
-    // Method 3: Try stream content extraction if still insufficient
-    if (extractedText.length < 300) {
-      console.log("Still insufficient text, trying stream extraction");
-      const streamText = extractTextFromStreams(binary);
-      
-      // Use the longest extraction method
-      if (streamText.length > extractedText.length) {
-        extractedText = streamText;
-      }
-    }
+    // Final cleaning pass
+    finalText = postProcessText(finalText);
     
-    // If we got some content, clean it up
-    if (extractedText.length > 0) {
-      extractedText = cleanExtractedText(extractedText);
-    }
-    
-    console.log(`PDF extraction complete. Final text length: ${extractedText.length} characters`);
-    return extractedText;
+    return finalText;
   } catch (error) {
     console.error("Error in PDF text extraction:", error);
     return "";
@@ -49,25 +84,59 @@ export const extractTextFromPDFBinary = (binary: string): string => {
 };
 
 /**
- * Process PDF buffer directly as a last resort method
+ * Process PDF buffer directly as a robust extraction method
  */
 export const extractTextFromPDFBuffer = (arrayBuffer: ArrayBuffer): string => {
   try {
     const bytes = new Uint8Array(arrayBuffer);
-    let directText = "";
+    const textRuns = [];
+    let currentRun = "";
+    let consecutiveTextChars = 0;
     
-    // Direct processing of buffer to find text content
-    for (let i = 0; i < bytes.length - 1; i++) {
-      // Only add printable characters
-      if ((bytes[i] >= 32 && bytes[i] <= 126) || (bytes[i] >= 160 && bytes[i] <= 255)) {
-        directText += String.fromCharCode(bytes[i]);
-      } else if (bytes[i] === 10 || bytes[i] === 13) { // newlines
-        directText += " ";
+    // Enhanced direct buffer scanning
+    for (let i = 0; i < bytes.length; i++) {
+      const byte = bytes[i];
+      
+      // Only consider printable ASCII and common extended ASCII
+      if ((byte >= 32 && byte <= 126) || (byte >= 160 && byte <= 255)) {
+        currentRun += String.fromCharCode(byte);
+        consecutiveTextChars++;
+      } else if (byte === 10 || byte === 13) { // newlines
+        if (currentRun && consecutiveTextChars > 0) {
+          currentRun += " ";
+        }
+        consecutiveTextChars = 0;
+      } else {
+        // End of text run - save if meaningful
+        if (currentRun.length >= 4 && /[a-zA-Z]{2,}/.test(currentRun)) {
+          textRuns.push(currentRun);
+        }
+        currentRun = "";
+        consecutiveTextChars = 0;
+      }
+      
+      // Save runs when they get long enough
+      if (currentRun.length > 200) {
+        textRuns.push(currentRun);
+        currentRun = "";
+        consecutiveTextChars = 0;
       }
     }
     
-    // Clean the direct extraction
-    return cleanExtractedText(directText);
+    // Save the last run if it exists
+    if (currentRun.length >= 4 && /[a-zA-Z]{2,}/.test(currentRun)) {
+      textRuns.push(currentRun);
+    }
+    
+    // Join all text runs
+    let extractedText = textRuns.join(" ");
+    
+    // Clean and post-process
+    extractedText = cleanExtractedText(extractedText);
+    extractedText = postProcessText(extractedText);
+    
+    console.log(`Direct buffer extraction found ${extractedText.length} characters`);
+    return extractedText;
   } catch (error) {
     console.error("Error in direct PDF buffer extraction:", error);
     return "";
@@ -84,34 +153,43 @@ export const extractPDFContent = async (file: File): Promise<string> => {
     // Get the file as an array buffer
     const arrayBuffer = await readFileAsArrayBuffer(file);
     
-    // Convert to binary string for text extraction
-    const binary = arrayBufferToBinaryString(arrayBuffer);
-    console.log("PDF binary converted, length:", binary.length);
-    
-    // Extract text using our enhanced methods
-    let text = extractTextFromPDFBinary(binary);
-    console.log(`Initial extraction yielded ${text.length} characters`);
-    
-    // If extraction yielded very little text, try direct buffer processing as last resort
-    if (text.length < 300) {
-      console.log("Still insufficient text, attempting direct buffer processing");
-      const directText = extractTextFromPDFBuffer(arrayBuffer);
+    // Try multiple extraction methods in parallel for better results
+    const extractionPromises = [
+      // Extraction Method 1: Binary string parsing
+      (async () => {
+        const binary = arrayBufferToBinaryString(arrayBuffer);
+        const text = extractTextFromPDFBinary(binary);
+        return { text, method: "binary", length: text.length };
+      })(),
       
-      // If direct processing yields more text, use it
-      if (directText.length > text.length) {
-        text = directText;
-        console.log(`Direct processing found more text: ${text.length} characters`);
+      // Extraction Method 2: Direct buffer processing
+      (async () => {
+        const text = extractTextFromPDFBuffer(arrayBuffer);
+        return { text, method: "buffer", length: text.length };
+      })()
+    ];
+    
+    // Wait for all extraction methods to complete
+    const results = await Promise.all(extractionPromises);
+    
+    // Sort results by text length (longest first)
+    results.sort((a, b) => b.length - a.length);
+    
+    console.log(`PDF extraction complete. Best method: ${results[0].method} with ${results[0].length} characters`);
+    
+    // If the best result is still very short, try combining methods
+    if (results[0].length < 1000 && results.length > 1) {
+      const combinedText = results.map(r => r.text).join("\n\n");
+      const cleanedCombined = postProcessText(cleanExtractedText(combinedText));
+      
+      console.log(`Combined methods yielded ${cleanedCombined.length} characters`);
+      
+      if (cleanedCombined.length > results[0].length) {
+        return cleanedCombined;
       }
     }
     
-    // Log the extraction results
-    if (text.length < 100) {
-      console.warn("PDF extraction yielded very little text");
-    } else {
-      console.log(`PDF extraction successful: ${text.length} characters extracted`);
-    }
-    
-    return text;
+    return results[0].text;
   } catch (error) {
     console.error("Error extracting PDF content:", error);
     return "";

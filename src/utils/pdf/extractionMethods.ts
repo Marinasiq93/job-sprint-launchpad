@@ -1,3 +1,4 @@
+
 import { cleanExtractedText } from './textCleaner';
 
 /**
@@ -112,4 +113,92 @@ export const extractTextFromStreams = (binary: string): string => {
   }
   
   return streamTexts.join(" ");
+};
+
+/**
+ * New method: Enhanced text extraction using Unicode text patterns
+ */
+export const extractUnicodeText = (binary: string): string => {
+  // Look for common text patterns with Unicode characters
+  let extracted = '';
+  let textChunks: string[] = [];
+  let currentChunk = '';
+  let consecutivePrintable = 0;
+  
+  for (let i = 0; i < binary.length; i++) {
+    const charCode = binary.charCodeAt(i);
+    
+    // Consider only printable characters including extended ASCII
+    const isPrintable = (charCode >= 32 && charCode <= 126) || 
+                        (charCode >= 161 && charCode <= 255);
+    
+    if (isPrintable) {
+      currentChunk += binary.charAt(i);
+      consecutivePrintable++;
+    } else if (charCode === 10 || charCode === 13) { // newlines
+      if (currentChunk.length > 0) {
+        currentChunk += ' ';
+      }
+      consecutivePrintable = 0;
+    } else {
+      // If we have a good chunk of text, save it
+      if (consecutivePrintable > 3) {
+        textChunks.push(currentChunk);
+      }
+      currentChunk = '';
+      consecutivePrintable = 0;
+    }
+    
+    // Save chunks when they get long enough
+    if (currentChunk.length > 100) {
+      textChunks.push(currentChunk);
+      currentChunk = '';
+      consecutivePrintable = 0;
+    }
+  }
+  
+  // Add the last chunk if it exists
+  if (currentChunk.length > 3) {
+    textChunks.push(currentChunk);
+  }
+  
+  // Filter out chunks that are likely not meaningful text
+  textChunks = textChunks.filter(chunk => {
+    // Skip chunks that are mostly numbers or special characters
+    const letterCount = (chunk.match(/[a-zA-Z]/g) || []).length;
+    return letterCount > chunk.length * 0.15;
+  });
+  
+  extracted = textChunks.join(" ");
+  return cleanExtractedText(extracted);
+};
+
+/**
+ * Extract object/dictionary content from PDF
+ */
+export const extractFromDictionaries = (binary: string): string => {
+  const dictTexts = [];
+  const dictRegex = /<<([\s\S]*?)>>/g;
+  let dictMatch;
+  
+  while ((dictMatch = dictRegex.exec(binary)) !== null) {
+    if (dictMatch[1]) {
+      const content = dictMatch[1];
+      // Extract text parts from the dictionary
+      const textMatches = content.match(/\(([^\)]+)\)/g);
+      
+      if (textMatches && textMatches.length > 0) {
+        const extractedText = textMatches
+          .map(m => m.substring(1, m.length - 1))
+          .filter(t => t.length > 1 && /[a-zA-Z]/.test(t))
+          .join(' ');
+          
+        if (extractedText.length > 10) {
+          dictTexts.push(extractedText);
+        }
+      }
+    }
+  }
+  
+  return dictTexts.join(" ");
 };

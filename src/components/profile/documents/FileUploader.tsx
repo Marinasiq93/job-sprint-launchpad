@@ -58,23 +58,40 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         const text = await readFileAsText(file);
         onFileUpload(file.name, text);
         toast.success(`Arquivo ${file.name} carregado com sucesso! (${text.length} caracteres)`);
-      } else {
-        // For other file types, use our enhanced extraction
-        setExtractionProgress("Extraindo conteúdo do arquivo com IA...");
+      } else if (file.type === 'application/pdf') {
+        // For PDFs, try our enhanced local extraction first
+        setExtractionProgress("Extraindo texto do PDF localmente...");
         const extractedText = await extractFileContent(file);
         
         // Check if we got a reasonable amount of text
         const textLength = extractedText.length;
         
-        if (textLength < 300) {
+        if (textLength < 1000) {
+          setExtractionProgress("Conteúdo limitado extraído - considerando usar IA para melhorar resultado");
+          toast.warning(`Extração básica: ${textLength} caracteres. A análise pode ser imprecisa.`);
+        } else {
+          setExtractionProgress("Conteúdo extraído com sucesso!");
+          toast.success(`PDF processado com sucesso: ${textLength} caracteres extraídos.`);
+        }
+        
+        onFileUpload(file.name, extractedText);
+      } else {
+        // For other document types, use our AI extraction
+        setExtractionProgress("Extraindo conteúdo com assistência de IA...");
+        const extractedText = await extractFileContent(file);
+        
+        // Check if we got a reasonable amount of text
+        const textLength = extractedText.length;
+        
+        if (textLength < 500) {
           setExtractionProgress("Extração limitada - tente copiar o texto manualmente para melhor resultado");
           toast.warning(`Extração limitada: apenas ${textLength} caracteres. A análise pode ser imprecisa.`);
         } else {
           setExtractionProgress("Conteúdo extraído com sucesso pela IA");
+          toast.success(`Documento processado! Extraído ${textLength} caracteres.`);
         }
         
         onFileUpload(file.name, extractedText);
-        toast.success(`Arquivo ${file.name} processado! Extraído ${textLength} caracteres.`);
       }
       
     } catch (error) {
