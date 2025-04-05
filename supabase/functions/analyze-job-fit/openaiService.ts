@@ -27,14 +27,14 @@ export async function generateJobFitAnalysis(input: JobFitAnalysisInput): Promis
 
     const { jobTitle, jobDescription, resumeText, coverLetterText, referenceText } = input;
     
-    // Clean inputs to ensure we don't send malformed data
+    // Clean and validate inputs
     const cleanedResumeText = cleanDocumentText(resumeText);
     
     if (!cleanedResumeText || cleanedResumeText.trim().length < 10) {
       throw new Error('Texto do currículo não encontrado ou muito curto para análise');
     }
     
-    // Prepare documents for analysis
+    // Prepare documents for analysis, combining all available text
     let userDocuments = `CURRÍCULO:\n${cleanedResumeText}\n\n`;
     
     if (coverLetterText && coverLetterText.trim() !== "") {
@@ -44,6 +44,14 @@ export async function generateJobFitAnalysis(input: JobFitAnalysisInput): Promis
     if (referenceText && referenceText.trim() !== "") {
       userDocuments += `MATERIAIS DE REFERÊNCIA:\n${cleanDocumentText(referenceText)}`;
     }
+
+    // Log document sizes for debugging
+    console.log("Document sizes for analysis:", {
+      resumeTextLength: cleanedResumeText.length,
+      coverLetterTextLength: coverLetterText ? cleanDocumentText(coverLetterText).length : 0,
+      referenceTextLength: referenceText ? cleanDocumentText(referenceText).length : 0,
+      totalDocumentsLength: userDocuments.length
+    });
 
     // Create system message
     const systemMessage = `Você é um especialista em recrutamento e seleção com profundo conhecimento em análise de compatibilidade entre candidatos e vagas.
@@ -60,7 +68,9 @@ Sua tarefa é fornecer uma análise estruturada de compatibilidade retornando ex
 4. identifiedGaps: Uma array com exatamente 5 lacunas ou requisitos importantes que foram identificados na vaga mas que não aparecem claramente no perfil do candidato ou precisam ser melhor desenvolvidos
 
 Seja preciso, detalhado e honesto em sua avaliação. Se o candidato não apresenta boa compatibilidade, sua análise deve refletir isso claramente. 
-Responda APENAS com o objeto JSON estruturado conforme solicitado, sem textos adicionais.`;
+Responda APENAS com o objeto JSON estruturado conforme solicitado, sem textos adicionais.
+
+Nota: Alguns documentos podem conter apenas nomes de arquivos se o texto não pôde ser extraído. Nesse caso, use quaisquer informações disponíveis e indique lacunas que precisam ser melhor exploradas.`;
 
     // Create user message
     const userMessage = `VAGA: ${jobTitle}
@@ -157,8 +167,16 @@ function cleanDocumentText(text: string | null | undefined): string {
   
   // Handle auto-generated text from file uploads
   if (text.startsWith('Conteúdo do arquivo:') && text.includes('(Texto extraído automaticamente)')) {
-    // For now, we'll just use the text as is, but this is where we could
-    // add more sophisticated text extraction logic in the future
+    return text;
+  }
+  
+  // Handle text that's just a filename reference (from our extraction fallbacks)
+  if (text.startsWith('Arquivo:') || text.startsWith('Currículo:') || text.startsWith('Carta de apresentação:')) {
+    return text;
+  }
+  
+  // For PDF file references with some metadata
+  if (text.startsWith('Arquivo PDF:')) {
     return text;
   }
   

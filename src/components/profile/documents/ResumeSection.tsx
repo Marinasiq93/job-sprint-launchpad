@@ -60,13 +60,16 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
           onFileUpload(file.name, text);
         }
       } else {
-        // For PDFs and DOCs, we'll just capture the file name
-        // In a real implementation, you might want to extract text
-        // or use a service that could extract text from PDFs and DOCs
+        // For PDFs and DOCs, we'll extract what we can
+        // For now, we'll use a placeholder and store the filename
+        // In a real-world scenario, we would use a proper PDF extraction service
+        const placeholderText = await extractFileContent(file);
         if (onFileUpload) {
-          onFileUpload(file.name, `Conteúdo do arquivo: ${file.name} (Texto extraído automaticamente)`);
+          onFileUpload(file.name, placeholderText);
         }
       }
+      
+      toast.success("Arquivo carregado com sucesso!");
     } catch (error) {
       console.error("Erro ao processar arquivo:", error);
       toast.error("Erro ao processar arquivo. Tente novamente.");
@@ -85,6 +88,79 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
       reader.onerror = reject;
       reader.readAsText(file);
     });
+  };
+  
+  // Function to attempt to extract content from files
+  const extractFileContent = async (file: File): Promise<string> => {
+    // For now, we'll just extract what we can - basic text for PDFs
+    if (file.type === 'application/pdf') {
+      try {
+        // Get at least the first few kb of the file as a binary string
+        const binary = await readFileAsBinary(file);
+        
+        // Very simple text extraction - this will only get plain text
+        // that isn't encoded in special ways within the PDF
+        const text = extractTextFromPDFBinary(binary);
+        
+        if (text && text.length > 20) {
+          return text;
+        } else {
+          // If we couldn't extract meaningful text, store information about the file
+          return `Arquivo PDF: ${file.name}\nData de upload: ${new Date().toLocaleString()}\nTamanho: ${(file.size / 1024).toFixed(2)} KB`;
+        }
+      } catch (e) {
+        console.error("Error extracting PDF content:", e);
+        return `Arquivo PDF: ${file.name}\nData de upload: ${new Date().toLocaleString()}\nTamanho: ${(file.size / 1024).toFixed(2)} KB`;
+      }
+    }
+    
+    // For word docs, we don't have a simple way to extract content in browser
+    return `Arquivo: ${file.name}\nTipo: ${file.type}\nData de upload: ${new Date().toLocaleString()}\nTamanho: ${(file.size / 1024).toFixed(2)} KB`;
+  };
+  
+  const readFileAsBinary = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = reject;
+      reader.readAsBinaryString(file);
+    });
+  };
+  
+  // Very simple PDF text extraction - only works for basic PDFs
+  // Real implementation would use a proper library
+  const extractTextFromPDFBinary = (binary: string): string => {
+    const text = [];
+    let pos = 0;
+    let foundText = false;
+    
+    // Very naive text extraction that looks for text markers in PDF
+    while (pos < binary.length) {
+      if (binary.substring(pos, pos + 2) === "BT") {
+        // Beginning of text object
+        foundText = true;
+        pos += 2;
+      } else if (binary.substring(pos, pos + 2) === "ET") {
+        // End of text object
+        foundText = false;
+        text.push(" ");
+        pos += 2;
+      } else if (foundText && binary.substring(pos, pos + 2) === "Tj") {
+        // Text element
+        text.push(" ");
+        pos += 2;
+      } else if (foundText && binary.charCodeAt(pos) >= 32 && binary.charCodeAt(pos) <= 126) {
+        // Printable ASCII
+        text.push(binary.charAt(pos));
+        pos += 1;
+      } else {
+        pos += 1;
+      }
+    }
+    
+    return text.join("")
+      .replace(/\s+/g, " ")
+      .trim();
   };
 
   return (

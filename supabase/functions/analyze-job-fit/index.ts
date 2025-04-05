@@ -37,7 +37,7 @@ serve(async (req) => {
     }
     
     // Check for resume text
-    if (!resumeText || resumeText.trim().length < 10) {
+    if (!resumeText || (typeof resumeText === 'string' && resumeText.trim().length < 10)) {
       console.error("Missing or insufficient resume text. Length:", resumeText?.length || 0);
       
       return new Response(
@@ -53,6 +53,8 @@ serve(async (req) => {
 
     console.log("Analyzing job fit for:", jobTitle);
     console.log("Resume text length:", resumeText.length);
+    console.log("Cover letter text provided:", !!coverLetterText);
+    console.log("Reference text provided:", !!referenceText);
     
     // Generate job fit analysis using OpenAI
     const fitAnalysisResult = await generateJobFitAnalysis({
