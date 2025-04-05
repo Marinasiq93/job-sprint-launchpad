@@ -46,7 +46,10 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({
         )}
 
         {isEditing && onFileUpload && (
-          <FileUploader onFileUpload={onFileUpload} />
+          <FileUploader 
+            onFileUpload={onFileUpload} 
+            uploadButtonLabel="Atualizar Currículo"
+          />
         )}
 
         {isEditing ? (

@@ -8,9 +8,13 @@ import { readFileAsText } from "@/utils/fileUtils";
 
 interface FileUploaderProps {
   onFileUpload: (fileName: string, fileContent: string) => void;
+  uploadButtonLabel?: string;
 }
 
-export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
+export const FileUploader: React.FC<FileUploaderProps> = ({ 
+  onFileUpload,
+  uploadButtonLabel = "Atualizar Arquivo" 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = () => {
@@ -75,7 +79,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         onClick={handleFileSelect}
       >
         <Upload className="mr-2 h-4 w-4" />
-        Atualizar Currículo
+        {uploadButtonLabel}
       </Button>
       <p className="text-sm text-gray-500">
         Formatos aceitos: PDF, DOC, DOCX, TXT (máx. 5MB)
