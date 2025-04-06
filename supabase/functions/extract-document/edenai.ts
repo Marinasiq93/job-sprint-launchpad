@@ -19,14 +19,14 @@ export async function callEdenAI(
     throw new Error("Invalid or empty file content provided");
   }
   
-  // Format the fileType correctly - Eden AI expects just the extension without the MIME prefix
-  const fileExtension = fileType.split('/')[1] || fileType;
+  // Format the fileType correctly for Eden AI
+  const fileExtension = fileType.split('/')[1] || 'pdf';
   
-  // Construct proper payload for Eden AI
+  // Construct proper payload for Eden AI with file_base64 parameter
   const edenAIPayload = {
     providers: provider,
     file_base64: fileBase64,
-    file_type: fileExtension, // Just pass the extension like 'pdf', 'png', etc.
+    file_type: fileExtension, // Pass just the extension like 'pdf', 'png', etc
     language: language,
     // Additional OCR settings for better quality
     ocr_settings: {
@@ -37,7 +37,7 @@ export async function callEdenAI(
     }
   };
   
-  console.log(`Sending request to Eden AI with ${provider} for file type: ${fileType}`);
+  console.log(`Sending request to Eden AI with ${provider} for file type: ${fileExtension}`);
   
   const response = await fetch("https://api.edenai.run/v2/ocr/ocr", {
     method: "POST",
@@ -151,6 +151,18 @@ export function processEdenAIResponse(data: any, provider: string, fileName: str
     // Clean up and improve extracted text
     extractedText = cleanExtractedText(extractedText);
     
+    // Check for binary data in the extracted text
+    const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(extractedText);
+    const hasEnoughText = extractedText.length > 100;
+    
+    if (hasBinaryData || !hasEnoughText) {
+      console.log(`Text quality issues detected: binary data = ${hasBinaryData}, length = ${extractedText.length}`);
+      return {
+        success: false,
+        extracted_text: `Não foi possível extrair o texto corretamente. Por favor, copie e cole manualmente o texto.`
+      };
+    }
+    
     // Add metadata to the text
     const metadata = `Arquivo: ${fileName}\nTipo: Documento processado por IA\nData de extração: ${new Date().toLocaleString()}\n\n`;
     const fullText = metadata + extractedText;
@@ -178,5 +190,7 @@ function cleanExtractedText(text: string): string {
     // Remove excessive spaces
     .replace(/[ \t]{3,}/g, " ")
     // Normalize whitespace around punctuation
-    .replace(/\s+([.,;:!?])/g, "$1");
+    .replace(/\s+([.,;:!?])/g, "$1")
+    // Remove any non-printable characters
+    .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t ]/g, "");
 }

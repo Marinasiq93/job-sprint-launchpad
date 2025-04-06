@@ -1,6 +1,5 @@
-
 import React, { useRef, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/lib/toast";
 import { extractFileContent } from "@/utils/documentExtractor";
@@ -18,6 +17,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const handleFileSelect = () => {
     fileInputRef.current?.click();
@@ -59,51 +59,63 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         onFileUpload(file.name, text);
         toast.success(`Arquivo ${file.name} carregado com sucesso! (${text.length} caracteres)`);
       } else if (file.type === 'application/pdf') {
-        // For PDFs, try our enhanced local extraction first
-        setExtractionProgress("Extraindo texto do PDF localmente...");
+        // For PDFs, try enhanced extraction
+        setExtractionProgress("Extraindo texto do PDF...");
         const extractedText = await extractFileContent(file);
         
-        // Check if the text appears to be binary or corrupt
-        const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(extractedText);
-        const hasHighLetterRatio = (extractedText.match(/[a-zA-Z]/g) || []).length > extractedText.length * 0.1;
-        const isTooLong = extractedText.length > 100000;
-        
-        if (hasBinaryData || !hasHighLetterRatio || isTooLong) {
-          setExtractionProgress("Falha na extração automática - solicite ajuda manual");
-          toast.error("Não foi possível extrair o texto corretamente. Por favor, copie e cole manualmente o texto.");
-        } else if (extractedText.length < 500) {
-          setExtractionProgress("Conteúdo limitado extraído - considere inserir o texto manualmente");
-          toast.warning(`Extração limitada: ${extractedText.length} caracteres. A análise pode ser imprecisa.`);
-          onFileUpload(file.name, extractedText);
+        // Check if the text appears to be a placeholder message or corrupted
+        if (extractedText.includes("ATENÇÃO: Este é um texto de preenchimento") || 
+            extractedText.includes("Não foi possível extrair o texto") || 
+            /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(extractedText)) {
+          
+          // If this is our first try, retry with different extraction method
+          if (retryCount === 0) {
+            setRetryCount(1);
+            setExtractionProgress("Tentando método alternativo de extração...");
+            
+            // Try again with a slight delay to ensure different approach
+            setTimeout(async () => {
+              try {
+                const retryText = await extractFileContent(file);
+                processPdfResult(retryText, file.name);
+              } catch (retryError) {
+                handleExtractionError(file.name);
+              }
+            }, 500);
+            return;
+          }
+          
+          handleExtractionError(file.name);
         } else {
-          setExtractionProgress("Conteúdo extraído com sucesso!");
-          toast.success(`PDF processado com sucesso: ${extractedText.length} caracteres extraídos.`);
+          // Success with extracted text
+          const wordCount = extractedText.split(/\s+/).length;
+          setExtractionProgress("Texto extraído com sucesso!");
+          toast.success(`PDF processado: ${wordCount} palavras extraídas.`);
           onFileUpload(file.name, extractedText);
         }
       } else {
-        // For other document types, use our AI extraction
-        setExtractionProgress("Extraindo conteúdo com assistência de IA...");
+        // For other document types
+        setExtractionProgress("Extraindo conteúdo do documento...");
         const extractedText = await extractFileContent(file);
         
-        // Check if we got a reasonable amount of text
-        const textLength = extractedText.length;
-        
-        if (textLength < 500) {
-          setExtractionProgress("Extração limitada - tente copiar o texto manualmente para melhor resultado");
-          toast.warning(`Extração limitada: apenas ${textLength} caracteres. A análise pode ser imprecisa.`);
+        // Check if we got a proper extraction or a placeholder message
+        if (extractedText.includes("ATENÇÃO: Este é um texto de preenchimento") || 
+            extractedText.includes("Não foi possível extrair o texto")) {
+          handleExtractionError(file.name);
         } else {
-          setExtractionProgress("Conteúdo extraído com sucesso pela IA");
-          toast.success(`Documento processado! Extraído ${textLength} caracteres.`);
+          const wordCount = extractedText.split(/\s+/).length;
+          setExtractionProgress("Conteúdo extraído com sucesso!");
+          toast.success(`Documento processado: ${wordCount} palavras extraídas.`);
+          onFileUpload(file.name, extractedText);
         }
-        
-        onFileUpload(file.name, extractedText);
       }
-      
     } catch (error) {
       console.error("Erro ao processar arquivo:", error);
-      toast.error("Erro ao processar arquivo. Tente novamente.");
+      handleExtractionError(file.name);
     } finally {
       setIsLoading(false);
+      setRetryCount(0);
+      
       // Keep the extraction progress message for 3 seconds then clear it
       setTimeout(() => setExtractionProgress(null), 3000);
       
@@ -112,6 +124,46 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         fileInputRef.current.value = '';
       }
     }
+  };
+  
+  // Helper to process PDF extraction result
+  const processPdfResult = (extractedText: string, fileName: string) => {
+    // Check for binary data in the extracted text
+    const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(extractedText);
+    
+    // Calculate letter ratio
+    const letterCount = (extractedText.match(/[a-zA-Z0-9]/g) || []).length;
+    const totalLength = extractedText.length || 1;
+    const letterRatio = letterCount / totalLength;
+    
+    console.log(`PDF quality check: binary=${hasBinaryData}, letterRatio=${letterRatio.toFixed(2)}, length=${extractedText.length}`);
+    
+    if (hasBinaryData || letterRatio < 0.2 || extractedText.length > 100000 || 
+        extractedText.includes("ATENÇÃO: Este é um texto de preenchimento") ||
+        extractedText.includes("Não foi possível extrair o texto")) {
+      handleExtractionError(fileName);
+    } else if (letterRatio < 0.3 || extractedText.length < 1000) {
+      setExtractionProgress("Extração limitada - considere inserir o texto manualmente");
+      toast.warning(`Extração limitada do PDF. A análise pode ser imprecisa.`);
+      onFileUpload(fileName, extractedText);
+    } else {
+      const wordCount = extractedText.split(/\s+/).length;
+      setExtractionProgress("Texto extraído com sucesso!");
+      toast.success(`PDF processado: ${wordCount} palavras extraídas.`);
+      onFileUpload(fileName, extractedText);
+    }
+  };
+  
+  // Helper for handling extraction errors
+  const handleExtractionError = (fileName: string) => {
+    setExtractionProgress("Falha na extração - por favor insira o texto manualmente");
+    toast.error("Não foi possível extrair o texto corretamente. Por favor, copie e cole manualmente o texto.", {
+      duration: 6000,
+      icon: <AlertCircle className="h-4 w-4 text-destructive" />
+    });
+    
+    // Still upload the file name but with a placeholder message
+    onFileUpload(fileName, `Arquivo: ${fileName}\nTipo: Documento\nData de upload: ${new Date().toLocaleString()}\n\n[Por favor, copie e cole o conteúdo do documento aqui manualmente]`);
   };
 
   return (
@@ -134,7 +186,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         {isLoading ? "Processando..." : uploadButtonLabel}
       </Button>
       {extractionProgress && (
-        <div className="text-xs text-muted-foreground mb-2">{extractionProgress}</div>
+        <div className={`text-xs mb-2 ${extractionProgress.includes("Falha") ? "text-destructive" : "text-muted-foreground"}`}>
+          {extractionProgress.includes("Falha") && <AlertCircle className="inline h-3 w-3 mr-1" />}
+          {extractionProgress}
+        </div>
       )}
       <p className="text-sm text-gray-500">
         Formatos aceitos: PDF, DOC, DOCX, TXT, JPG, PNG (máx. 15MB)
