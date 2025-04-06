@@ -25,7 +25,8 @@ export async function callEdenAI(
   // Construct proper payload for Eden AI
   const edenAIPayload = {
     providers: provider,
-    file_url: `data:${fileType};base64,${fileBase64}`, // Use data URL format instead of raw base64
+    file_base64: fileBase64,
+    file_type: fileExtension, // Just pass the extension like 'pdf', 'png', etc.
     language: language,
     // Additional OCR settings for better quality
     ocr_settings: {
