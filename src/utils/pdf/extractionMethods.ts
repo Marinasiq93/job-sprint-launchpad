@@ -46,9 +46,9 @@ export const extractTextBetweenBTET = (binary: string): string => {
       continue;
     }
     
-    // Capture text content with improved range
+    // Capture text content with improved range - only include printable ASCII characters
     if (inText && ((binary.charCodeAt(pos) >= 32 && binary.charCodeAt(pos) <= 126) ||
-                   (binary.charCodeAt(pos) >= 128 && binary.charCodeAt(pos) <= 255))) {
+                   (binary.charCodeAt(pos) >= 160 && binary.charCodeAt(pos) <= 255))) {
       currentWord += binary.charAt(pos);
     } else if (inText && (binary.charAt(pos) === '\n' || binary.charAt(pos) === '\r')) {
       if (currentWord.trim()) {

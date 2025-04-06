@@ -51,9 +51,42 @@ export const extractFileContent = async (file: File): Promise<string> => {
       // Try our local extraction with multiple methods
       let pdfText = await extractPDFContent(file);
       
-      // If we got a reasonable amount of text from the PDF, use it
-      // More aggressive threshold - accept smaller text amounts
-      if (pdfText && pdfText.length > 100) {
+      // Check if the extracted text contains binary data or is corrupted
+      const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(pdfText);
+      const hasHighLetterRatio = (pdfText.match(/[a-zA-Z]/g) || []).length > pdfText.length * 0.1;
+      
+      // If we have binary data or corrupted text, clean it or try Eden AI
+      if (hasBinaryData || !hasHighLetterRatio || pdfText.length > 100000) {
+        console.log(`PDF extraction yielded potentially corrupted text: ${pdfText.length} characters, binary: ${hasBinaryData}, letter ratio: ${hasHighLetterRatio}`);
+        
+        // If local extraction has issues, try Eden AI right away
+        console.log('Local extraction has issues, trying Eden AI...');
+        
+        // Create form data to send the file
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        console.log('Calling extract-document edge function...');
+        const { data, error } = await supabase.functions.invoke('extract-document', {
+          body: formData,
+        });
+        
+        if (error) {
+          console.error('Error calling extract-document function:', error);
+          return generatePlaceholderMessage(file);
+        }
+        
+        if (data && data.extracted_text && data.extracted_text.length > 200) {
+          console.log(`Eden AI extraction complete: ${data.extracted_text.length} characters`);
+          return data.extracted_text;
+        }
+        
+        // If Eden AI also failed, use a placeholder
+        return generatePlaceholderMessage(file);
+      }
+      
+      // If we got a reasonable amount of clean text from the PDF, use it
+      if (pdfText && pdfText.length > 200 && pdfText.length < 100000) {
         console.log(`PDF extraction successful: ${pdfText.length} characters`);
         return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
       }
@@ -72,7 +105,7 @@ export const extractFileContent = async (file: File): Promise<string> => {
       if (error) {
         console.error('Error calling extract-document function:', error);
         // If Eden AI fails but we have at least some text from local extraction, use that
-        if (pdfText && pdfText.length > 0) {
+        if (pdfText && pdfText.length > 0 && pdfText.length < 100000) {
           console.log(`Using partial local extraction: ${pdfText.length} characters`);
           return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
         }
@@ -84,26 +117,11 @@ export const extractFileContent = async (file: File): Promise<string> => {
         
         // If Eden AI gave us good text, use that
         return data.extracted_text;
-      } else if (pdfText && pdfText.length > 0) {
-        // If Eden AI didn't yield much but we have local extraction, use local
-        console.log(`Eden AI extraction insufficient, using local: ${pdfText.length} characters`);
-        return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
-      }
+      } 
       
-      // If both methods fail to get good text, use whatever we have
-      const combinedText = [
-        pdfText || '', 
-        data?.extracted_text || ''
-      ].filter(text => text.length > 0).join("\n\n");
-      
-      if (combinedText.length > 100) {
-        console.log(`Using combined extraction: ${combinedText.length} characters`);
-        return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${combinedText}`;
-      }
-      
+      // If all methods fail to get good text, use the placeholder
       return generatePlaceholderMessage(file);
     } catch (e) {
-      // Fixed: Changed 'error' to 'e' to use the correct exception variable
       console.error("Error in PDF extraction:", e);
       return generatePlaceholderMessage(file);
     }

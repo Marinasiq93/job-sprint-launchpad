@@ -63,18 +63,23 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         setExtractionProgress("Extraindo texto do PDF localmente...");
         const extractedText = await extractFileContent(file);
         
-        // Check if we got a reasonable amount of text
-        const textLength = extractedText.length;
+        // Check if the text appears to be binary or corrupt
+        const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(extractedText);
+        const hasHighLetterRatio = (extractedText.match(/[a-zA-Z]/g) || []).length > extractedText.length * 0.1;
+        const isTooLong = extractedText.length > 100000;
         
-        if (textLength < 1000) {
-          setExtractionProgress("Conteúdo limitado extraído - considerando usar IA para melhorar resultado");
-          toast.warning(`Extração básica: ${textLength} caracteres. A análise pode ser imprecisa.`);
+        if (hasBinaryData || !hasHighLetterRatio || isTooLong) {
+          setExtractionProgress("Falha na extração automática - solicite ajuda manual");
+          toast.error("Não foi possível extrair o texto corretamente. Por favor, copie e cole manualmente o texto.");
+        } else if (extractedText.length < 500) {
+          setExtractionProgress("Conteúdo limitado extraído - considere inserir o texto manualmente");
+          toast.warning(`Extração limitada: ${extractedText.length} caracteres. A análise pode ser imprecisa.`);
+          onFileUpload(file.name, extractedText);
         } else {
           setExtractionProgress("Conteúdo extraído com sucesso!");
-          toast.success(`PDF processado com sucesso: ${textLength} caracteres extraídos.`);
+          toast.success(`PDF processado com sucesso: ${extractedText.length} caracteres extraídos.`);
+          onFileUpload(file.name, extractedText);
         }
-        
-        onFileUpload(file.name, extractedText);
       } else {
         // For other document types, use our AI extraction
         setExtractionProgress("Extraindo conteúdo com assistência de IA...");
