@@ -5,7 +5,7 @@ import { extractWithFallbacks } from "./edenai.ts";
 
 // Define config for Eden AI workflow
 const USE_WORKFLOW = true; // Set to true to use workflow
-const WORKFLOW_ID = "your-workflow-id-here"; // Replace with your actual workflow ID
+const WORKFLOW_ID = "297546a6-33e9-460e-83bb-a6eeeabc3144"; // Your Eden AI workflow ID
 
 /**
  * Process an OCR request and extract text from the uploaded file

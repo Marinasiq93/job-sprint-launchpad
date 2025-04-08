@@ -1,4 +1,3 @@
-
 import { corsHeaders } from "./cors.ts";
 
 const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY");
@@ -50,22 +49,27 @@ async function callEdenAIWorkflow(
   
   console.log(`Sending request to Eden AI workflow for file type: ${fileExtension}`);
   
-  const response = await fetch("https://api.edenai.run/v2/workflows/execute", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(workflowPayload)
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`Eden AI Workflow API error response (${response.status}):`, errorText);
-    throw new Error(`Eden AI Workflow error: ${errorText}`);
+  try {
+    const response = await fetch("https://api.edenai.run/v2/workflows/execute", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(workflowPayload)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Eden AI Workflow API error response (${response.status}):`, errorText);
+      throw new Error(`Eden AI Workflow error: ${errorText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error calling Eden AI workflow: ${error.message}`);
+    throw error;
   }
-  
-  return await response.json();
 }
 
 /**
@@ -143,16 +147,30 @@ export async function extractWithFallbacks(
       // Process the workflow response
       if (data && data.workflow_result && typeof data.workflow_result === 'string') {
         console.log(`Workflow successful with ${data.workflow_result.length} chars`);
-        return {
-          success: true,
-          extracted_text: data.workflow_result
-        };
+        
+        // Check if the text contains binary data
+        const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(data.workflow_result);
+        if (hasBinaryData) {
+          console.warn(`Workflow result contains binary data, will try OCR providers instead`);
+        } else {
+          return {
+            success: true,
+            extracted_text: `Arquivo: ${fileName}\nTipo: Documento processado por workflow\nData de extração: ${new Date().toLocaleString()}\n\n${data.workflow_result}`
+          };
+        }
       } else if (data && data.workflow_result && data.workflow_result.extracted_text) {
         console.log(`Workflow successful with ${data.workflow_result.extracted_text.length} chars`);
-        return {
-          success: true,
-          extracted_text: data.workflow_result.extracted_text
-        };
+        
+        // Check for binary data in extracted text
+        const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(data.workflow_result.extracted_text);
+        if (hasBinaryData) {
+          console.warn(`Workflow result contains binary data, will try OCR providers instead`);
+        } else {
+          return {
+            success: true,
+            extracted_text: `Arquivo: ${fileName}\nTipo: Documento processado por workflow\nData de extração: ${new Date().toLocaleString()}\n\n${data.workflow_result.extracted_text}`
+          };
+        }
       } else if (data && data.workflow_result) {
         // Try to find any text content in the workflow result object
         const workflowResultString = JSON.stringify(data.workflow_result);
