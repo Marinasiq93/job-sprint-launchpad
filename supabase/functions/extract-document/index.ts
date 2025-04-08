@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleOCRRequest } from "./ocr.ts";
-import { corsHeaders } from "./cors.ts";
+import { corsHeaders } from "./utils.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests

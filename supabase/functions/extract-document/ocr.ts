@@ -1,7 +1,7 @@
 
-import { corsHeaders } from "./cors.ts";
+import { corsHeaders } from "./utils.ts";
 import { selectProviders } from "./providers.ts";
-import { extractWithFallbacks } from "./edenai.ts";
+import { extractWithFallbacks } from "./extractor.ts";
 
 // Define config for Eden AI workflow
 const USE_WORKFLOW = true; // Set to true to use workflow
