@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { FitAnalysisResult, UseFitAnalysisProps } from "@/types/fitAnalysis";
@@ -27,7 +26,6 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
                          documentTexts.resumeText || '';
     
     // Validate the resume content but with more lenient validation
-    // Fix: Pass validation options as a single object parameter
     const validationOptions = {
       minLength: 50, // Lower the minimum length requirement
       requireLetters: true,

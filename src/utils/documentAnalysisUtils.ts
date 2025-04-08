@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for document analysis and processing
  */
@@ -91,7 +90,28 @@ export const extractDocumentTexts = (documents: any) => {
 /**
  * Validates content quality for analysis - with more lenient approach
  */
-export const validateDocumentContent = (resumeContent: string): { isValid: boolean; error: string | null } => {
+export interface ValidationOptions {
+  minLength?: number;
+  requireLetters?: boolean;
+  requireNumbers?: boolean;
+  letterRatio?: number;
+}
+
+export const validateDocumentContent = (
+  resumeContent: string, 
+  options?: ValidationOptions
+): { isValid: boolean; error: string | null } => {
+  // Default options
+  const defaultOptions: ValidationOptions = {
+    minLength: 20,
+    requireLetters: true,
+    requireNumbers: false,
+    letterRatio: 0.1
+  };
+  
+  // Merge provided options with defaults
+  const validationOptions = { ...defaultOptions, ...options };
+  
   // Check if the resume text appears to be binary or corrupted
   const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(resumeContent);
   
@@ -108,7 +128,7 @@ export const validateDocumentContent = (resumeContent: string): { isValid: boole
   }
   
   // Much more lenient minimum content check - accept almost anything
-  if (!resumeContent || resumeContent.trim().length < 20) {
+  if (!resumeContent || resumeContent.trim().length < validationOptions.minLength) {
     return {
       isValid: false,
       error: "Conteúdo do currículo muito limitado. A análise poderá ser menos precisa."
