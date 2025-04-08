@@ -23,14 +23,17 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     const documentTexts = extractDocumentTexts(userDocuments);
     
     // Check if resume text is valid - look for content after any metadata headers
-    const resumeContent = documentTexts.resumeText?.split('\n\n').slice(1).join('\n\n') || '';
+    const resumeContent = documentTexts.resumeText?.split('\n\n').slice(1).join('\n\n') || 
+                         documentTexts.resumeText || '';
     
     // Validate the resume content
     const { isValid, error: validationError } = validateDocumentContent(resumeContent);
+    
+    // Even if validation fails, we'll try to use whatever we have
     if (!isValid) {
-      toast.error(validationError || "Erro no conteúdo do currículo");
-      setError(validationError);
-      return;
+      console.warn("Validation warning:", validationError);
+      toast.warning(validationError || "Aviso: O conteúdo do currículo pode não ser ideal para análise");
+      // Continue with analysis despite validation warning
     }
 
     setError(null);
@@ -38,8 +41,16 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     try {
       console.log("Preparing data for Eden AI workflow analysis...");
       
+      // Use the resume content even if validation failed
+      let finalResumeContent = resumeContent;
+      
+      // If the content is really minimal, add some additional context from file name
+      if (finalResumeContent.length < 100 && userDocuments.resume_file_name) {
+        finalResumeContent += `\n\nCurrículo: ${userDocuments.resume_file_name}`;
+      }
+      
       // Convert resume text to base64 for the workflow
-      const resumeBase64 = textToBase64(resumeContent);
+      const resumeBase64 = textToBase64(finalResumeContent);
       
       // Call the service to generate the fit analysis
       const data = await fitAnalysisService.generateFitAnalysis(

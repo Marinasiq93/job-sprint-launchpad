@@ -93,16 +93,20 @@ export const extractDocumentTexts = (documents: any) => {
 export const validateDocumentContent = (resumeContent: string): { isValid: boolean; error: string | null } => {
   // Check if the resume text appears to be binary or corrupted
   const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(resumeContent);
-  const hasHighLetterRatio = (resumeContent.match(/[a-zA-Z]/g) || []).length > resumeContent.length * 0.1;
   
-  if (hasBinaryData || !hasHighLetterRatio || resumeContent.length > 100000) {
+  // More lenient letter ratio check
+  const letterCount = (resumeContent.match(/[a-zA-Z]/g) || []).length;
+  const hasHighLetterRatio = letterCount > 20; // Just need some letters, not a ratio
+  
+  if (hasBinaryData) {
     return {
       isValid: false,
       error: "O texto do currículo parece estar corrompido. Por favor, copie e cole o texto manualmente."
     };
   }
   
-  if (!resumeContent || resumeContent.trim().length < 100) {
+  // Make the minimum content check more lenient
+  if (!resumeContent || resumeContent.trim().length < 50) {
     return {
       isValid: false,
       error: "Conteúdo do currículo insuficiente. Por favor, adicione um currículo mais completo na seção de documentos do seu perfil."

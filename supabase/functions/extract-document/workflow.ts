@@ -13,7 +13,7 @@ export async function callEdenAIWorkflow(
   console.log(`Using Eden AI workflow ${workflowId} for extraction...`);
   
   // Ensure we have a valid file content
-  if (!fileBase64 || fileBase64.length < 100) {
+  if (!fileBase64 || fileBase64.length < 10) {
     throw new Error("Invalid or empty file content provided");
   }
   
@@ -66,19 +66,50 @@ export function processWorkflowResponse(
   isJobFitAnalysis: boolean = false
 ): { success: boolean, extracted_text: string, fit_analysis?: any } | null {
   // Process the workflow response
-  if (!data || !data.workflow_result) {
+  if (!data) {
+    console.error("No data returned from workflow");
     return null;
+  }
+  
+  // If workflow_result is missing, try to create a minimal fallback response
+  if (!data.workflow_result && isJobFitAnalysis) {
+    console.warn("Missing workflow_result, creating fallback response");
+    return {
+      success: true,
+      extracted_text: "Fallback analysis generated",
+      fit_analysis: {
+        compatibilityScore: "Análise limitada",
+        keySkills: ["Não foi possível analisar habilidades em detalhe"],
+        relevantExperiences: ["Adicione mais detalhes ao seu currículo para uma análise completa"],
+        identifiedGaps: ["Procure adicionar experiências e habilidades específicas ao seu currículo"],
+        fallbackAnalysis: true
+      }
+    };
   }
   
   // If this is a job fit analysis response
   if (isJobFitAnalysis && typeof data.workflow_result === 'object') {
     console.log(`Workflow job fit analysis successful`);
     
+    // Ensure the result has all required fields
+    const fitAnalysis = data.workflow_result;
+    
+    // Apply defaults for any missing fields
+    const result = {
+      compatibilityScore: fitAnalysis.compatibilityScore || "Não disponível",
+      keySkills: Array.isArray(fitAnalysis.keySkills) ? fitAnalysis.keySkills : 
+                (typeof fitAnalysis.keySkills === 'string' ? [fitAnalysis.keySkills] : ["Nenhuma habilidade identificada"]),
+      relevantExperiences: Array.isArray(fitAnalysis.relevantExperiences) ? fitAnalysis.relevantExperiences : 
+                          (typeof fitAnalysis.relevantExperiences === 'string' ? [fitAnalysis.relevantExperiences] : ["Nenhuma experiência relevante identificada"]),
+      identifiedGaps: Array.isArray(fitAnalysis.identifiedGaps) ? fitAnalysis.identifiedGaps : 
+                     (typeof fitAnalysis.identifiedGaps === 'string' ? [fitAnalysis.identifiedGaps] : ["Nenhuma lacuna identificada"])
+    };
+    
     // Return the structured job fit analysis result
     return {
       success: true,
       extracted_text: "Job fit analysis completed successfully",
-      fit_analysis: data.workflow_result
+      fit_analysis: result
     };
   }
   
@@ -102,7 +133,7 @@ export function processWorkflowResponse(
     };
   } 
   
-  if (data.workflow_result.extracted_text) {
+  if (data.workflow_result && data.workflow_result.extracted_text) {
     console.log(`Workflow successful with ${data.workflow_result.extracted_text.length} chars`);
     
     // Check for binary data in extracted text

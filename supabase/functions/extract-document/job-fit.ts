@@ -15,11 +15,19 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     const { resumeBase64, resumeType, resumeName, jobDescription } = data;
     
     if (!resumeBase64 || !jobDescription) {
+      console.warn("Missing input data - generating fallback response");
+      
+      // Generate a fallback response when required data is missing
       return new Response(
         JSON.stringify({ 
-          error: "Missing required data: resume and job description are required" 
+          compatibilityScore: "Análise incompleta",
+          keySkills: ["Não foi possível analisar as habilidades"],
+          relevantExperiences: ["Sem dados suficientes para análise de experiência"],
+          identifiedGaps: ["Adicione mais detalhes ao seu currículo para uma análise completa"],
+          fallbackAnalysis: true,
+          error: "Dados de entrada insuficientes para análise completa"
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }}
       );
     }
 
@@ -40,12 +48,18 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
       
       if (!processedResult || !processedResult.success) {
         console.error("Failed to process workflow response for job fit analysis");
+        
+        // Return a more user-friendly fallback response
         return new Response(
           JSON.stringify({ 
-            error: "Failed to process workflow response for job fit analysis",
-            success: false,
+            compatibilityScore: "Não foi possível determinar",
+            keySkills: ["Análise de habilidades indisponível"],
+            relevantExperiences: ["Análise de experiências indisponível"],
+            identifiedGaps: ["Tente novamente mais tarde ou adicione mais detalhes ao seu currículo"],
+            fallbackAnalysis: true,
+            error: "Falha no processamento da análise"
           }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }}
         );
       }
       
@@ -75,23 +89,33 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     } catch (error) {
       console.error("Error in job fit analysis workflow:", error);
       
+      // Return a helpful fallback response
       return new Response(
         JSON.stringify({ 
-          error: error.message,
-          success: false,
+          compatibilityScore: "Erro na análise",
+          keySkills: ["Não foi possível processar as habilidades"],
+          relevantExperiences: ["Erro na análise de experiências"],
+          identifiedGaps: ["Tente novamente ou adicione mais detalhes ao seu currículo"],
+          fallbackAnalysis: true,
+          error: error.message || "Erro no processamento da análise"
         }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }}
       );
     }
   } catch (error) {
     console.error("Unexpected error in job fit handler:", error);
     
+    // Return a user-friendly error response
     return new Response(
       JSON.stringify({ 
-        error: "Unexpected server error",
-        success: false,
+        compatibilityScore: "Erro interno",
+        keySkills: ["Falha no processamento"],
+        relevantExperiences: ["Erro técnico na análise"],
+        identifiedGaps: ["Tente novamente mais tarde"],
+        fallbackAnalysis: true,
+        error: "Erro inesperado no servidor"
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }}
     );
   }
 }

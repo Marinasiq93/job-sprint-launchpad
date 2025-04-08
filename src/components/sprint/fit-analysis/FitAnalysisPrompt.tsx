@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { UserDocument } from "@/types/documents";
-import { FileCheck, FileText, AlertCircle, AlertTriangle } from "lucide-react";
+import { FileCheck, FileText, AlertCircle, AlertTriangle, FileEdit } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface FitAnalysisPromptProps {
@@ -13,6 +13,8 @@ interface FitAnalysisPromptProps {
 const FitAnalysisPrompt: React.FC<FitAnalysisPromptProps> = ({ onAnalyze, userDocuments }) => {
   // Check for any resume content (text or file)
   const hasResume = userDocuments?.resume_text || userDocuments?.resume_file_name;
+  // Check if resume content is potentially too short
+  const hasShortResume = userDocuments?.resume_text && userDocuments.resume_text.length < 300;
   // Check for any cover letter content
   const hasCoverLetter = userDocuments?.cover_letter_text || userDocuments?.cover_letter_file_name;
   // Check for any reference content
@@ -58,6 +60,22 @@ const FitAnalysisPrompt: React.FC<FitAnalysisPromptProps> = ({ onAnalyze, userDo
         </div>
       )}
       
+      {userDocuments && hasResume && hasShortResume && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex items-center gap-2 text-amber-600 mb-1">
+            <FileEdit className="h-4 w-4" />
+            <span className="font-medium">Conteúdo do currículo limitado</span>
+          </div>
+          <p className="text-sm text-amber-600 mb-2">
+            O conteúdo do seu currículo é curto, o que pode limitar a qualidade da análise.
+            Recomendamos adicionar mais detalhes sobre suas experiências e habilidades.
+          </p>
+          <Link to="/profile" className="text-sm font-medium text-amber-700 hover:text-amber-800 underline">
+            Editar meu currículo
+          </Link>
+        </div>
+      )}
+      
       {userDocuments && hasResume && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
           <div className="flex items-center gap-2 text-green-600 mb-1">
@@ -71,6 +89,9 @@ const FitAnalysisPrompt: React.FC<FitAnalysisPromptProps> = ({ onAnalyze, userDo
               <p className="flex items-center">
                 <FileText className="h-3 w-3 mr-1" />
                 Currículo: {userDocuments.resume_file_name || "Texto fornecido"}
+                {hasShortResume && (
+                  <span className="ml-1 text-amber-500 text-xs">(conteúdo limitado)</span>
+                )}
               </p>
             )}
             {hasCoverLetter && (
@@ -98,6 +119,12 @@ const FitAnalysisPrompt: React.FC<FitAnalysisPromptProps> = ({ onAnalyze, userDo
       >
         Analisar Compatibilidade
       </Button>
+      
+      {userDocuments && hasResume && hasShortResume && (
+        <p className="text-xs text-muted-foreground mt-3">
+          A análise será feita com o conteúdo disponível, mas pode ter limitações devido ao conteúdo reduzido.
+        </p>
+      )}
     </div>
   );
 };
