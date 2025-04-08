@@ -32,6 +32,16 @@ export async function callEdenAIWorkflow(
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Eden AI Workflow API error response (${response.status}):`, errorText);
+      
+      // Log more details about the request
+      console.error("Request details:", {
+        url: "https://api.edenai.run/v2/workflows/execute",
+        method: "POST",
+        workflow_id: workflowPayload.workflow_id,
+        response_status: response.status,
+        response_text: errorText.substring(0, 200) // Log first 200 chars of error
+      });
+      
       throw new Error(`Eden AI Workflow error: ${response.status} ${errorText}`);
     }
     
@@ -76,7 +86,8 @@ export function processWorkflowResponse(
         keySkills: ["Não foi possível analisar habilidades em detalhe"],
         relevantExperiences: ["Adicione mais detalhes ao seu currículo para uma análise completa"],
         identifiedGaps: ["Procure adicionar experiências e habilidades específicas ao seu currículo"],
-        fallbackAnalysis: true
+        fallbackAnalysis: true,
+        rawAnalysis: "Não foi possível obter análise detalhada devido a um erro técnico."
       }
     };
   }
@@ -96,7 +107,8 @@ export function processWorkflowResponse(
       relevantExperiences: Array.isArray(fitAnalysis.relevantExperiences) ? fitAnalysis.relevantExperiences : 
                           (typeof fitAnalysis.relevantExperiences === 'string' ? [fitAnalysis.relevantExperiences] : ["Nenhuma experiência relevante identificada"]),
       identifiedGaps: Array.isArray(fitAnalysis.identifiedGaps) ? fitAnalysis.identifiedGaps : 
-                     (typeof fitAnalysis.identifiedGaps === 'string' ? [fitAnalysis.identifiedGaps] : ["Nenhuma lacuna identificada"])
+                     (typeof fitAnalysis.identifiedGaps === 'string' ? [fitAnalysis.identifiedGaps] : ["Nenhuma lacuna identificada"]),
+      rawAnalysis: fitAnalysis.rawAnalysis || null
     };
     
     // Return the structured job fit analysis result

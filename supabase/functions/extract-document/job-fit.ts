@@ -37,7 +37,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     console.log(`Resume base64 data length: ${resumeBase64?.length || 0}`);
     
     try {
-      // Prepare data for Eden AI workflow based on the workflow schema you shared
+      // Prepare data for Eden AI workflow based on the workflow schema
       const workflowPayload = {
         workflow_id: JOB_FIT_WORKFLOW_ID,
         async: false,
@@ -80,7 +80,8 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
             relevantExperiences: ["Análise de experiências indisponível"],
             identifiedGaps: ["Tente novamente mais tarde ou adicione mais detalhes ao seu currículo"],
             fallbackAnalysis: true,
-            error: "Falha na comunicação com o serviço de análise"
+            error: "Falha na comunicação com o serviço de análise",
+            rawAnalysis: "Não foi possível obter análise detalhada devido a um erro de comunicação."
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }}
         );
@@ -94,6 +95,9 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
         
         // Try to extract structured information from the text
         const analysisResult = extractStructuredAnalysis(jobFitFeedbackText);
+        
+        // Add the raw analysis text to help with debugging
+        analysisResult.rawAnalysis = jobFitFeedbackText;
         
         // Add input summary for debugging if needed
         if (data.debug) {
@@ -138,7 +142,8 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
           relevantExperiences: ["Erro na análise de experiências"],
           identifiedGaps: ["Tente novamente ou adicione mais detalhes ao seu currículo"],
           fallbackAnalysis: true,
-          error: error.message || "Erro no processamento da análise"
+          error: error.message || "Erro no processamento da análise",
+          rawAnalysis: "Ocorreu um erro técnico ao processar sua análise. Por favor, tente novamente mais tarde."
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }}
       );
@@ -154,7 +159,8 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
         relevantExperiences: ["Erro técnico na análise"],
         identifiedGaps: ["Tente novamente mais tarde"],
         fallbackAnalysis: true,
-        error: "Erro inesperado no servidor"
+        error: "Erro inesperado no servidor",
+        rawAnalysis: "Um erro inesperado ocorreu durante o processamento. Nossa equipe técnica foi notificada."
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }}
     );
@@ -197,16 +203,10 @@ function extractStructuredAnalysis(text: string): any {
       }
     }
     
-    // If we couldn't extract structured data, add the full text as a raw analysis
-    if (result.keySkills.length === 0 && result.identifiedGaps.length === 0) {
-      result.rawAnalysis = text;
-    }
-    
     return result;
   } catch (error) {
     console.error("Error extracting structured analysis:", error);
-    // Return partial analysis with raw text
-    result.rawAnalysis = text;
+    // Return partial analysis
     return result;
   }
 }

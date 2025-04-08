@@ -27,12 +27,17 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
                          documentTexts.resumeText || '';
     
     // Validate the resume content but with more lenient validation
-    const { isValid, error: validationError } = validateDocumentContent(resumeContent);
+    const { isValid, error: validationError } = validateDocumentContent(resumeContent, {
+      minLength: 50, // Lower the minimum length requirement
+      requireLetters: true,
+      requireNumbers: false,
+      letterRatio: 0.2 // Lower the letter ratio requirement
+    });
     
     // Even if validation fails, we'll try to use whatever we have
     if (!isValid) {
       console.warn("Validation warning:", validationError);
-      toast.warning(validationError || "Aviso: O conteúdo do currículo pode não ser ideal para análise");
+      toast.warning("O conteúdo do currículo é limitado, mas tentaremos gerar uma análise básica");
       // Continue with analysis despite validation warning
     }
 
@@ -91,7 +96,8 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         relevantExperiences: ["Erro na análise de experiências"],
         identifiedGaps: ["Tente novamente mais tarde"],
         fallbackAnalysis: true,
-        error: error instanceof Error ? error.message : "Erro desconhecido"
+        error: error instanceof Error ? error.message : "Erro desconhecido",
+        rawAnalysis: "Ocorreu um erro técnico ao processar sua análise. Por favor, tente novamente mais tarde."
       };
       
       setResult(fallbackResult);
