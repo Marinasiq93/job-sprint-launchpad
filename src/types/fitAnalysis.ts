@@ -11,6 +11,7 @@ export interface FitAnalysisResult {
   keySkills: string[];
   relevantExperiences: string[];
   identifiedGaps: string[];
+  rawAnalysis?: string;
   fallbackAnalysis?: boolean;
   error?: string;
   inputSummary?: {
