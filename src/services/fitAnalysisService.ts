@@ -43,13 +43,13 @@ export const fitAnalysisService = {
     });
     
     // Call the edge function with the '/job-fit' path parameter
+    // Fix: Use params instead of query for routing parameter in function invoke
     const { data, error } = await supabase.functions.invoke('extract-document', {
       body: requestData,
       headers: {
         'Content-Type': 'application/json'
       },
-      // Pass route parameter through query string
-      query: { route: 'job-fit' }
+      params: { route: 'job-fit' }
     });
     
     if (error) {
