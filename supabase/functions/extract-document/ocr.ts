@@ -1,88 +1,76 @@
 
-import { corsHeaders } from "./utils.ts";
-import { selectProviders } from "./providers.ts";
 import { extractWithFallbacks } from "./extractor.ts";
-
-// Define config for Eden AI workflow
-const USE_WORKFLOW = true; // Set to true to use workflow
-const WORKFLOW_ID = "297546a6-33e9-460e-83bb-a6eeeabc3144"; // Your Eden AI workflow ID
+import { PROVIDERS, DEFAULT_LANGUAGE } from "./providers.ts";
+import { corsHeaders } from "./utils.ts";
 
 /**
- * Process an OCR request and extract text from the uploaded file
+ * Handle OCR document extraction request
  */
 export async function handleOCRRequest(req: Request): Promise<Response> {
   try {
-    // Parse the request body
-    const formData = await req.formData();
-    const file = formData.get("file");
+    console.log("Starting document extraction process");
     
-    if (!file || !(file instanceof File)) {
-      return new Response(
-        JSON.stringify({ error: "No file provided or invalid file" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${file.size} bytes`);
-    
-    // Validate maximum file size (15MB)
-    if (file.size > 15 * 1024 * 1024) {
-      return new Response(
-        JSON.stringify({ error: "File too large. Maximum size is 15MB." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-    
-    // Convert the file to base64
-    const fileBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(fileBuffer);
-    const base64String = btoa(
-      Array.from(uint8Array)
-        .map(byte => String.fromCharCode(byte))
-        .join('')
-    );
-    
-    console.log(`Successfully converted ${file.size} bytes to base64 (${base64String.length} chars)`);
-    
-    // Determine optimal providers based on file type
-    const { providers, language } = selectProviders(file);
-    
-    // Main provider is the first in the list
-    const mainProvider = providers[0];
-    
-    // Log whether we're using workflow or traditional OCR
-    if (USE_WORKFLOW && WORKFLOW_ID) {
-      console.log(`Using Eden AI workflow: ${WORKFLOW_ID} for file type: ${file.type}`);
-    } else {
-      console.log(`Using primary provider: ${mainProvider} for file type: ${file.type}`);
-    }
-
-    try {
-      // Extract text with fallbacks if the primary provider fails
+    // Check if a file was uploaded
+    if (req.headers.get("content-type")?.includes("multipart/form-data")) {
+      // Handle file upload (form data)
+      const formData = await req.formData();
+      const file = formData.get("file") as File;
+      
+      if (!file) {
+        console.error("No file found in form data");
+        return new Response(
+          JSON.stringify({ success: false, extracted_text: "Nenhum arquivo encontrado na requisição" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+      
+      console.log(`File received: ${file.name}, type: ${file.type}, size: ${(file.size/1024).toFixed(2)}KB`);
+      
+      // Convert file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const base64String = btoa(String.fromCharCode(...uint8Array));
+      
+      // Call extraction with fallbacks
       const result = await extractWithFallbacks(
         base64String, 
-        file.type, 
-        providers,
-        language, 
-        file.name,
-        USE_WORKFLOW, 
-        WORKFLOW_ID
+        file.type,
+        PROVIDERS, 
+        DEFAULT_LANGUAGE,
+        file.name
       );
       
       return new Response(
         JSON.stringify(result),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    } catch (error) {
-      console.error("Error processing file:", error);
+    } else {
+      // Handle JSON request (base64 data)
+      const data = await req.json();
+      const { fileBase64, fileType, fileName, language } = data;
+      
+      if (!fileBase64 || !fileType) {
+        console.error("Missing required fields in request");
+        return new Response(
+          JSON.stringify({ success: false, extracted_text: "Dados inválidos na requisição" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
+      }
+      
+      console.log(`Processing document: ${fileName || "unknown"}, type: ${fileType}`);
+      
+      // Call extraction with fallbacks
+      const result = await extractWithFallbacks(
+        fileBase64, 
+        fileType, 
+        PROVIDERS, 
+        language || DEFAULT_LANGUAGE,
+        fileName || "document"
+      );
       
       return new Response(
-        JSON.stringify({ 
-          error: error.message,
-          success: false,
-          extracted_text: `Não foi possível extrair o texto do arquivo: ${file.name}. Erro: ${error.message}. Por favor, copie e cole o texto manualmente.` 
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
@@ -90,9 +78,8 @@ export async function handleOCRRequest(req: Request): Promise<Response> {
     
     return new Response(
       JSON.stringify({ 
-        error: "Unexpected server error",
-        success: false,
-        extracted_text: "Erro inesperado ao processar o documento. Por favor, copie e cole o texto manualmente." 
+        success: false, 
+        extracted_text: `Erro ao processar o documento: ${error.message}. Por favor, copie e cole o texto manualmente.` 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );

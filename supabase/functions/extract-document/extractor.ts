@@ -1,5 +1,5 @@
 
-import { callEdenAIWorkflow, processWorkflowResponse } from "./workflow.ts";
+import { callEdenAIWorkflow, processDocumentExtractionResponse } from "./workflow.ts";
 import { callEdenAIOCR, processEdenAIResponse } from "./ocr-api.ts";
 
 /**
@@ -15,7 +15,15 @@ export async function callEdenAI(
 ): Promise<any> {
   if (useWorkflow && workflowId) {
     console.log(`Calling Eden AI workflow ${workflowId}...`);
-    return callEdenAIWorkflow(fileBase64, fileType, workflowId);
+    // Create payload for document extraction workflow
+    const workflowPayload = {
+      workflow_id: workflowId,
+      async: false,
+      inputs: {
+        document: fileBase64
+      }
+    };
+    return callEdenAIWorkflow(workflowPayload, workflowId);
   } else {
     console.log(`Calling Eden AI OCR API with ${provider} provider...`);
     return callEdenAIOCR(fileBase64, fileType, provider, language);
@@ -40,10 +48,18 @@ export async function extractWithFallbacks(
   if (useWorkflow && workflowId) {
     try {
       console.log(`Trying Eden AI workflow: ${workflowId}`);
-      const data = await callEdenAIWorkflow(fileBase64, fileType, workflowId);
+      // Create payload for document extraction workflow
+      const workflowPayload = {
+        workflow_id: workflowId,
+        async: false,
+        inputs: {
+          document: fileBase64
+        }
+      };
+      const data = await callEdenAIWorkflow(workflowPayload, workflowId);
       
       // Process the workflow response
-      const workflowResult = processWorkflowResponse(data, fileName);
+      const workflowResult = processDocumentExtractionResponse(data, fileName);
       if (workflowResult) {
         return workflowResult;
       }
