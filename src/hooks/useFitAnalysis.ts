@@ -26,7 +26,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     const resumeContent = documentTexts.resumeText?.split('\n\n').slice(1).join('\n\n') || 
                          documentTexts.resumeText || '';
     
-    // Validate the resume content
+    // Validate the resume content but with more lenient validation
     const { isValid, error: validationError } = validateDocumentContent(resumeContent);
     
     // Even if validation fails, we'll try to use whatever we have
@@ -66,10 +66,16 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
 
       // Check if we received a fallback analysis due to an error
       if (data.fallbackAnalysis) {
-        console.warn("Received fallback analysis due to error:", data.error);
+        console.warn("Received fallback analysis:", data);
         setResult(data);
-        setError("Ocorreu um erro na análise detalhada: " + (data.error || "Erro desconhecido"));
-        toast.warning("Análise simplificada gerada devido a um erro");
+        setError(data.error ? `Análise simplificada: ${data.error}` : null);
+        
+        if (data.error) {
+          toast.warning("Análise simplificada gerada devido a um erro");
+        } else {
+          // Even with fallback, if there's no explicit error, we consider it somewhat successful
+          toast.success("Análise básica concluída");
+        }
       } else {
         console.log("Analysis data received:", data);
         setResult(data);
@@ -77,6 +83,18 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       }
     } catch (error) {
       console.error("Error generating fit analysis:", error);
+      
+      // Create a fallback result for better user experience
+      const fallbackResult = {
+        compatibilityScore: "Análise não disponível",
+        keySkills: ["Não foi possível analisar as habilidades"],
+        relevantExperiences: ["Erro na análise de experiências"],
+        identifiedGaps: ["Tente novamente mais tarde"],
+        fallbackAnalysis: true,
+        error: error instanceof Error ? error.message : "Erro desconhecido"
+      };
+      
+      setResult(fallbackResult);
       setError(error instanceof Error ? error.message : "Erro desconhecido");
       toast.error("Erro ao gerar análise de compatibilidade");
     } finally {

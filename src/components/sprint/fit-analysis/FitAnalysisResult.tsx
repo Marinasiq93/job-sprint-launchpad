@@ -95,32 +95,68 @@ const FitAnalysisResult: React.FC<FitAnalysisResultProps> = ({ result, loading, 
         <p className="text-lg font-bold text-jobsprint-blue">{result.compatibilityScore}</p>
       </div>
       
-      <div>
-        <h3 className="font-semibold mb-2">Principais Habilidades Identificadas</h3>
-        <ul className="list-disc list-inside space-y-1">
-          {result.keySkills.map((skill, index) => (
-            <li key={index}>{skill}</li>
-          ))}
-        </ul>
-      </div>
+      {/* Display raw analysis if available */}
+      {result.rawAnalysis && (
+        <div className="bg-white p-4 border rounded-lg">
+          <h3 className="font-semibold mb-2">Análise Completa</h3>
+          <div className="whitespace-pre-wrap text-sm">
+            {result.rawAnalysis}
+          </div>
+        </div>
+      )}
       
-      <div>
-        <h3 className="font-semibold mb-2">Experiências ou Projetos Relevantes</h3>
-        <ul className="list-disc list-inside space-y-1">
-          {result.relevantExperiences.map((exp, index) => (
-            <li key={index}>{exp}</li>
-          ))}
-        </ul>
-      </div>
+      {/* Only show structured analysis if we don't have raw analysis or if in debug mode */}
+      {(!result.rawAnalysis || debugMode) && (
+        <>
+          <div>
+            <h3 className="font-semibold mb-2">Principais Habilidades Identificadas</h3>
+            <ul className="list-disc list-inside space-y-1">
+              {result.keySkills && result.keySkills.length > 0 ? (
+                result.keySkills.map((skill, index) => (
+                  <li key={index}>{skill}</li>
+                ))
+              ) : (
+                <li>Nenhuma habilidade específica identificada</li>
+              )}
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Experiências ou Projetos Relevantes</h3>
+            <ul className="list-disc list-inside space-y-1">
+              {result.relevantExperiences && result.relevantExperiences.length > 0 ? (
+                result.relevantExperiences.map((exp, index) => (
+                  <li key={index}>{exp}</li>
+                ))
+              ) : (
+                <li>Nenhuma experiência específica identificada</li>
+              )}
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Lacunas Identificadas</h3>
+            <ul className="list-disc list-inside space-y-1">
+              {result.identifiedGaps && result.identifiedGaps.length > 0 ? (
+                result.identifiedGaps.map((gap, index) => (
+                  <li key={index}>{gap}</li>
+                ))
+              ) : (
+                <li>Nenhuma lacuna específica identificada</li>
+              )}
+            </ul>
+          </div>
+        </>
+      )}
       
-      <div>
-        <h3 className="font-semibold mb-2">Lacunas Identificadas</h3>
-        <ul className="list-disc list-inside space-y-1">
-          {result.identifiedGaps.map((gap, index) => (
-            <li key={index}>{gap}</li>
-          ))}
-        </ul>
-      </div>
+      {result.fallbackAnalysis && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700">
+          <p className="font-medium mb-1">Nota: Esta é uma análise simplificada</p>
+          <p>Devido a limitações nos dados fornecidos ou problemas técnicos, esta é uma análise básica. 
+             Para uma análise mais detalhada, considere adicionar mais informações ao seu currículo ou 
+             fornecer uma descrição de vaga mais completa.</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for document analysis and processing
  */
@@ -88,28 +89,37 @@ export const extractDocumentTexts = (documents: any) => {
 };
 
 /**
- * Validates content quality for analysis
+ * Validates content quality for analysis - with more lenient approach
  */
 export const validateDocumentContent = (resumeContent: string): { isValid: boolean; error: string | null } => {
   // Check if the resume text appears to be binary or corrupted
   const hasBinaryData = /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(resumeContent);
   
-  // More lenient letter ratio check
+  // More lenient letter ratio check - just need some text content
   const letterCount = (resumeContent.match(/[a-zA-Z]/g) || []).length;
-  const hasHighLetterRatio = letterCount > 20; // Just need some letters, not a ratio
+  const hasLetters = letterCount > 10; // Very minimal check
   
   if (hasBinaryData) {
+    // Even if it has binary data, we'll try to use it but warn the user
     return {
       isValid: false,
-      error: "O texto do currículo parece estar corrompido. Por favor, copie e cole o texto manualmente."
+      error: "O texto do currículo pode estar parcialmente corrompido, mas tentaremos analisar o que for possível."
     };
   }
   
-  // Make the minimum content check more lenient
-  if (!resumeContent || resumeContent.trim().length < 50) {
+  // Much more lenient minimum content check - accept almost anything
+  if (!resumeContent || resumeContent.trim().length < 20) {
     return {
       isValid: false,
-      error: "Conteúdo do currículo insuficiente. Por favor, adicione um currículo mais completo na seção de documentos do seu perfil."
+      error: "Conteúdo do currículo muito limitado. A análise poderá ser menos precisa."
+    };
+  }
+  
+  // Accept content that's very short but still has some meaningful text
+  if (resumeContent.trim().length < 100) {
+    return {
+      isValid: true, // Consider it valid but with warning
+      error: "Conteúdo do currículo limitado. Para uma análise mais precisa, adicione mais detalhes."
     };
   }
   

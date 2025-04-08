@@ -31,7 +31,7 @@ export const fitAnalysisService = {
       coverLetterText,
       referenceText,
       debug,
-      route: 'job-fit' // Include route in the request body instead
+      route: 'job-fit' // Include route in the request body
     };
     
     // Log document text lengths for debugging
@@ -43,12 +43,9 @@ export const fitAnalysisService = {
       referenceTextLength: referenceText?.length || 0
     });
     
-    // Call the edge function directly without using query or params
+    // Call the edge function with route in the body
     const { data, error } = await supabase.functions.invoke('extract-document', {
-      body: requestData,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      body: requestData
     });
     
     if (error) {
@@ -59,6 +56,12 @@ export const fitAnalysisService = {
     if (!data) {
       console.error("No data returned from edge function");
       throw new Error("Nenhum dado retornado da análise");
+    }
+    
+    // Check if response contains error but still has fallback analysis
+    if (data.error && data.fallbackAnalysis) {
+      console.warn("Received fallback analysis due to error:", data.error);
+      // We'll still return the fallback data, but log the error
     }
     
     return data as FitAnalysisResult;

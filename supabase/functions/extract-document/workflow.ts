@@ -2,39 +2,23 @@
 import { EDEN_AI_API_KEY, hasBinaryData, formatDocumentWithMetadata } from "./utils.ts";
 
 /**
- * Calls Eden AI Workflow API
+ * Calls Eden AI Workflow API with custom payload format
  */
 export async function callEdenAIWorkflow(
-  fileBase64: string,
-  fileType: string,
-  workflowId: string,
-  jobDescription?: string
+  workflowPayload: any,
+  workflowId: string
 ): Promise<any> {
   console.log(`Using Eden AI workflow ${workflowId} for extraction...`);
   
-  // Ensure we have a valid file content
-  if (!fileBase64 || fileBase64.length < 10) {
-    throw new Error("Invalid or empty file content provided");
+  // Ensure we have valid API key
+  if (!EDEN_AI_API_KEY) {
+    throw new Error("Missing Eden AI API key");
   }
   
-  // Format the fileType correctly for Eden AI
-  const fileExtension = fileType.split('/')[1] || 'pdf';
-  
-  // Construct payload for Eden AI workflow
-  const workflowPayload: Record<string, any> = {
-    workflow_id: workflowId,
-    file_base64: fileBase64,
-    file_type: fileExtension
-  };
-  
-  // Add job description if provided (for job fit analysis)
-  if (jobDescription) {
-    workflowPayload.jobDescription = jobDescription;
-  }
-  
-  console.log(`Sending request to Eden AI workflow for file type: ${fileExtension}`);
+  console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
   
   try {
+    // Call the Eden AI workflow API
     const response = await fetch("https://api.edenai.run/v2/workflows/execute", {
       method: "POST",
       headers: {
@@ -44,13 +28,23 @@ export async function callEdenAIWorkflow(
       body: JSON.stringify(workflowPayload)
     });
     
+    // Check if the request was successful
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Eden AI Workflow API error response (${response.status}):`, errorText);
-      throw new Error(`Eden AI Workflow error: ${errorText}`);
+      throw new Error(`Eden AI Workflow error: ${response.status} ${errorText}`);
     }
     
-    return await response.json();
+    // Parse the response
+    const data = await response.json();
+    console.log("Eden AI workflow response structure:", JSON.stringify({
+      has_response: !!data,
+      has_outputs: data && data.outputs ? true : false,
+      output_keys: data && data.outputs ? Object.keys(data.outputs) : []
+    }));
+    
+    // Return the outputs from the workflow response
+    return data.outputs || {};
   } catch (error) {
     console.error(`Error calling Eden AI workflow: ${error.message}`);
     throw error;
