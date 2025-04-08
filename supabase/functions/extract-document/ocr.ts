@@ -3,6 +3,10 @@ import { corsHeaders } from "./cors.ts";
 import { selectProviders } from "./providers.ts";
 import { extractWithFallbacks } from "./edenai.ts";
 
+// Define config for Eden AI workflow
+const USE_WORKFLOW = true; // Set to true to use workflow
+const WORKFLOW_ID = "your-workflow-id-here"; // Replace with your actual workflow ID
+
 /**
  * Process an OCR request and extract text from the uploaded file
  */
@@ -45,7 +49,13 @@ export async function handleOCRRequest(req: Request): Promise<Response> {
     
     // Main provider is the first in the list
     const mainProvider = providers[0];
-    console.log(`Using primary provider: ${mainProvider} for file type: ${file.type}`);
+    
+    // Log whether we're using workflow or traditional OCR
+    if (USE_WORKFLOW && WORKFLOW_ID) {
+      console.log(`Using Eden AI workflow: ${WORKFLOW_ID} for file type: ${file.type}`);
+    } else {
+      console.log(`Using primary provider: ${mainProvider} for file type: ${file.type}`);
+    }
 
     try {
       // Extract text with fallbacks if the primary provider fails
@@ -54,7 +64,9 @@ export async function handleOCRRequest(req: Request): Promise<Response> {
         file.type, 
         providers,
         language, 
-        file.name
+        file.name,
+        USE_WORKFLOW, 
+        WORKFLOW_ID
       );
       
       return new Response(

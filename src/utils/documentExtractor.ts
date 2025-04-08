@@ -67,8 +67,8 @@ export const extractFileContent = async (file: File): Promise<string> => {
         return `Arquivo: ${file.name}\nTipo: PDF\nTamanho: ${(file.size / 1024).toFixed(2)} KB\nData de upload: ${new Date().toLocaleString()}\n\n${pdfText}`;
       }
       
-      // If local extraction has issues, try Eden AI
-      console.log('Local extraction has quality issues, trying Eden AI...');
+      // If local extraction has issues, try Eden AI workflow
+      console.log('Local extraction has quality issues, trying Eden AI workflow...');
       
       // Create form data to send the file
       const formData = new FormData();
