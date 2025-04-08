@@ -14,7 +14,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     
     // Check if route parameter is present in query string (for Supabase function.invoke)
-    // Support both older query params and newer params approach
+    // Support both query params for compatibility
     const queryRoute = url.searchParams.get('route');
     
     // Check the endpoint path to determine how to handle the request
