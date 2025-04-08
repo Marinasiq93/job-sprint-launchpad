@@ -30,7 +30,8 @@ export const fitAnalysisService = {
       jobTitle,
       coverLetterText,
       referenceText,
-      debug
+      debug,
+      route: 'job-fit' // Include route in the request body instead
     };
     
     // Log document text lengths for debugging
@@ -42,14 +43,12 @@ export const fitAnalysisService = {
       referenceTextLength: referenceText?.length || 0
     });
     
-    // Call the edge function with the '/job-fit' path parameter
-    // Use query instead of params for compatibility with Supabase JS client
+    // Call the edge function directly without using query or params
     const { data, error } = await supabase.functions.invoke('extract-document', {
       body: requestData,
       headers: {
         'Content-Type': 'application/json'
-      },
-      query: { route: 'job-fit' }
+      }
     });
     
     if (error) {
