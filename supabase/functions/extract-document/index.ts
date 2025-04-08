@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handleOCRRequest } from "./ocr.ts";
+import { handleJobFitRequest } from "./job-fit.ts";
 import { corsHeaders } from "./utils.ts";
 
 serve(async (req) => {
@@ -10,8 +11,16 @@ serve(async (req) => {
   }
 
   try {
-    // Process the OCR request
-    return await handleOCRRequest(req);
+    const url = new URL(req.url);
+    
+    // Check the endpoint path to determine how to handle the request
+    if (url.pathname.endsWith('/job-fit')) {
+      // Handle job fit analysis using Eden AI workflow
+      return await handleJobFitRequest(req);
+    } else {
+      // Handle regular OCR document extraction
+      return await handleOCRRequest(req);
+    }
   } catch (error) {
     console.error("Unhandled error in extract-document:", error);
     

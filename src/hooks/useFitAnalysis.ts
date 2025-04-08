@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast";
@@ -36,6 +37,13 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
   const [error, setError] = useState<string | null>(null);
   const [debugMode, setDebugMode] = useState(false);
 
+  /**
+   * Convert a text string to base64
+   */
+  const textToBase64 = (text: string): string => {
+    return btoa(unescape(encodeURIComponent(text)));
+  };
+
   const generateFitAnalysis = async () => {
     if (!sprintData || !userDocuments) {
       toast.error("Necessário ter dados da vaga e documentos do usuário");
@@ -67,29 +75,36 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     setError(null);
     setLoading(true);
     try {
-      console.log("Preparing data for analysis...");
-      // Prepare the data for analysis with all available texts
+      console.log("Preparing data for Eden AI workflow analysis...");
+      
+      // Convert resume text to base64 for the workflow
+      const resumeBase64 = textToBase64(resumeContent);
+      
+      // Prepare the request payload for our job fit workflow
       const requestData = {
-        jobTitle: sprintData.jobTitle,
+        resumeBase64,
+        resumeType: "application/pdf", // Treat as PDF for the workflow
+        resumeName: userDocuments.resume_file_name || "resume.pdf",
         jobDescription: sprintData.jobDescription,
-        resumeText: documentTexts.resumeText,
+        jobTitle: sprintData.jobTitle,
         coverLetterText: documentTexts.coverLetterText,
         referenceText: documentTexts.referenceText,
         debug: debugMode // Add debug flag to show content details
       };
 
-      console.log("Calling analyze-job-fit edge function...");
+      console.log("Calling extract-document/job-fit edge function...");
       console.log("Document text lengths:", {
         jobTitleLength: sprintData.jobTitle?.length || 0,
         jobDescriptionLength: sprintData.jobDescription?.length || 0,
-        resumeTextLength: documentTexts.resumeText?.length || 0,
+        resumeTextLength: resumeContent?.length || 0,
         coverLetterTextLength: documentTexts.coverLetterText?.length || 0,
         referenceTextLength: documentTexts.referenceText?.length || 0
       });
       
-      // Call the edge function to analyze job fit
-      const { data, error } = await supabase.functions.invoke('analyze-job-fit', {
+      // Call the edge function to analyze job fit using Eden AI workflow
+      const { data, error } = await supabase.functions.invoke('extract-document', {
         body: requestData,
+        url: '/job-fit' // Add this URL parameter to route to the job fit handler
       });
 
       if (error) {

@@ -7,7 +7,8 @@ import { EDEN_AI_API_KEY, hasBinaryData, formatDocumentWithMetadata } from "./ut
 export async function callEdenAIWorkflow(
   fileBase64: string,
   fileType: string,
-  workflowId: string
+  workflowId: string,
+  jobDescription?: string
 ): Promise<any> {
   console.log(`Using Eden AI workflow ${workflowId} for extraction...`);
   
@@ -20,11 +21,16 @@ export async function callEdenAIWorkflow(
   const fileExtension = fileType.split('/')[1] || 'pdf';
   
   // Construct payload for Eden AI workflow
-  const workflowPayload = {
+  const workflowPayload: Record<string, any> = {
     workflow_id: workflowId,
     file_base64: fileBase64,
     file_type: fileExtension
   };
+  
+  // Add job description if provided (for job fit analysis)
+  if (jobDescription) {
+    workflowPayload.jobDescription = jobDescription;
+  }
   
   console.log(`Sending request to Eden AI workflow for file type: ${fileExtension}`);
   
@@ -56,10 +62,28 @@ export async function callEdenAIWorkflow(
  */
 export function processWorkflowResponse(
   data: any, 
-  fileName: string
-): { success: boolean, extracted_text: string } | null {
+  fileName: string,
+  isJobFitAnalysis: boolean = false
+): { success: boolean, extracted_text: string, fit_analysis?: any } | null {
   // Process the workflow response
-  if (data && data.workflow_result && typeof data.workflow_result === 'string') {
+  if (!data || !data.workflow_result) {
+    return null;
+  }
+  
+  // If this is a job fit analysis response
+  if (isJobFitAnalysis && typeof data.workflow_result === 'object') {
+    console.log(`Workflow job fit analysis successful`);
+    
+    // Return the structured job fit analysis result
+    return {
+      success: true,
+      extracted_text: "Job fit analysis completed successfully",
+      fit_analysis: data.workflow_result
+    };
+  }
+  
+  // Standard document extraction response processing
+  if (typeof data.workflow_result === 'string') {
     console.log(`Workflow successful with ${data.workflow_result.length} chars`);
     
     // Check if the text contains binary data
@@ -78,7 +102,7 @@ export function processWorkflowResponse(
     };
   } 
   
-  if (data && data.workflow_result && data.workflow_result.extracted_text) {
+  if (data.workflow_result.extracted_text) {
     console.log(`Workflow successful with ${data.workflow_result.extracted_text.length} chars`);
     
     // Check for binary data in extracted text
@@ -97,7 +121,7 @@ export function processWorkflowResponse(
     };
   } 
   
-  if (data && data.workflow_result) {
+  if (data.workflow_result) {
     // Try to find any text content in the workflow result object
     const workflowResultString = JSON.stringify(data.workflow_result);
     if (workflowResultString.length > 100) {
