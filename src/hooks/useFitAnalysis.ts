@@ -27,12 +27,15 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
                          documentTexts.resumeText || '';
     
     // Validate the resume content but with more lenient validation
-    const { isValid, error: validationError } = validateDocumentContent(resumeContent, {
+    // Fix: Pass validation options as a single object parameter
+    const validationOptions = {
       minLength: 50, // Lower the minimum length requirement
       requireLetters: true,
       requireNumbers: false,
       letterRatio: 0.2 // Lower the letter ratio requirement
-    });
+    };
+    
+    const { isValid, error: validationError } = validateDocumentContent(resumeContent, validationOptions);
     
     // Even if validation fails, we'll try to use whatever we have
     if (!isValid) {
