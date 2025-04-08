@@ -13,8 +13,11 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     
+    // Check if route parameter is present in query string (for Supabase function.invoke)
+    const queryRoute = url.searchParams.get('route');
+    
     // Check the endpoint path to determine how to handle the request
-    if (url.pathname.endsWith('/job-fit')) {
+    if (url.pathname.endsWith('/job-fit') || queryRoute === 'job-fit') {
       // Handle job fit analysis using Eden AI workflow
       return await handleJobFitRequest(req);
     } else {
