@@ -42,6 +42,11 @@ export async function callEdenAIWorkflow(
         response_text: errorText.substring(0, 200) // Log first 200 chars of error
       });
       
+      // If 404, the workflow might no longer exist
+      if (response.status === 404) {
+        throw new Error(`Eden AI Workflow ID ${workflowId} not found (404). The workflow may have been deleted or is no longer accessible.`);
+      }
+      
       throw new Error(`Eden AI Workflow error: ${response.status} ${errorText}`);
     }
     
