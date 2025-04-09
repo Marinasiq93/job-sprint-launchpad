@@ -1,61 +1,51 @@
 
-import { EDEN_AI_API_KEY, hasBinaryData, formatDocumentWithMetadata } from "./utils.ts";
+import { EDEN_AI_API_KEY } from "./utils.ts";
 
 /**
- * Calls Eden AI Workflow API with proper payload format based on documentation
+ * Calls Eden AI workflow API
  */
 export async function callEdenAIWorkflow(
-  workflowPayload: any,
+  inputs: Record<string, any>,
   workflowId: string
 ): Promise<any> {
-  console.log(`Using Eden AI workflow ${workflowId} for extraction...`);
-  
-  // Ensure we have valid API key
   if (!EDEN_AI_API_KEY) {
-    throw new Error("Missing Eden AI API key");
+    throw new Error("Eden AI API key is not configured");
   }
   
   console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
   
   try {
-    // According to documentation, we need to send inputs directly as top-level parameters
-    // So we extract the inputs from the payload and send them directly
+    // According to Eden AI documentation, we need to send inputs directly as top-level parameters
     const response = await fetch(`https://api.edenai.run/v2/workflow/${workflowId}/execution/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(workflowPayload.inputs) // Send inputs directly as top-level properties
+      body: JSON.stringify(inputs) // Send inputs directly as top-level properties
     });
     
     // Check if the request was successful
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Eden AI Workflow API error response (${response.status}):`, errorText);
-      
-      // Log more details about the request
-      console.error("Request details:", {
-        url: `https://api.edenai.run/v2/workflow/${workflowId}/execution/`,
-        method: "POST",
-        workflow_id: workflowId,
-        response_status: response.status,
-        response_text: errorText.substring(0, 200) // Log first 200 chars of error
-      });
-      
-      // If 404, the workflow might no longer exist
+      // Check for specific error codes
       if (response.status === 404) {
-        throw new Error(`Eden AI Workflow ID ${workflowId} not found (404). The workflow may have been deleted or is no longer accessible.`);
+        throw new Error(`Workflow ID ${workflowId} not found`);
+      } else if (response.status === 401) {
+        throw new Error('Unauthorized: Check your Eden AI API key');
       }
       
-      throw new Error(`Eden AI Workflow error: ${response.status} ${errorText}`);
+      // For other error codes, try to get more details from the response
+      const errorBody = await response.text();
+      throw new Error(`Eden AI API request failed: ${response.status} - ${errorBody}`);
     }
     
     // Parse the response
     const data = await response.json();
+    
+    // Log the response structure to help with debugging
     console.log("Eden AI workflow response structure:", JSON.stringify({
-      has_response: !!data,
       status: data.status,
+      has_content: !!data.content,
       has_results: data && data.results ? true : false
     }));
     
@@ -64,106 +54,42 @@ export async function callEdenAIWorkflow(
       return data.results;
     }
     
-    // If workflow is still processing
-    if (data.status === 'processing') {
-      console.log("Workflow is still processing, consider using async approach in future");
-      return { workflow_processing: true };
+    if (data.content && typeof data.content === 'object') {
+      return data.content;
     }
     
-    // Return whatever data we have
+    // If we can't find results in the expected locations, return the whole data
+    console.warn("Eden AI workflow response format unexpected, returning raw data");
     return data;
   } catch (error) {
-    console.error(`Error calling Eden AI workflow: ${error.message}`);
+    console.error("Error calling Eden AI workflow:", error);
     throw error;
   }
 }
 
 /**
- * Process workflow response for document extraction
+ * Processes document extraction response from workflow
  */
-export function processDocumentExtractionResponse(
-  data: any, 
-  fileName: string
-): { success: boolean, extracted_text: string } | null {
-  // Process the workflow response for document extraction
-  if (!data) {
-    console.error("No data returned from workflow");
-    return null;
-  }
+export function processDocumentExtractionResponse(data: any, fileName: string): { success: boolean, extracted_text: string } | null {
+  if (!data) return null;
   
-  // Handle the case where we're getting a direct text result
-  if (typeof data === 'string') {
-    console.log(`Workflow successful with ${data.length} chars of string data`);
-    
-    // Check if the text contains binary data
-    if (hasBinaryData(data)) {
-      console.warn(`Workflow result contains binary data, will try OCR providers instead`);
-      return null;
-    }
-    
-    return {
-      success: true,
-      extracted_text: formatDocumentWithMetadata(
-        fileName, 
-        "Documento processado por workflow", 
-        data
-      )
-    };
-  }
-  
-  // Standard document extraction response processing
-  if (data.job_fit_feedback) {
-    console.log(`Workflow returned job fit feedback with ${data.job_fit_feedback.length} chars`);
-    return {
-      success: true,
-      extracted_text: formatDocumentWithMetadata(
-        fileName, 
-        "Documento processado por workflow", 
-        data.job_fit_feedback
-      )
-    };
-  }
-  
-  if (data.extracted_text) {
-    console.log(`Workflow successful with ${data.extracted_text.length} chars`);
-    
-    // Check for binary data in extracted text
-    if (hasBinaryData(data.extracted_text)) {
-      console.warn(`Workflow result contains binary data, will try OCR providers instead`);
-      return null;
-    }
-    
-    return {
-      success: true,
-      extracted_text: formatDocumentWithMetadata(
-        fileName, 
-        "Documento processado por workflow", 
-        data.extracted_text
-      )
-    };
-  } 
-  
-  if (data.workflow_processing) {
-    console.log("Workflow is still processing, returning null");
-    return null;
-  }
-  
-  // Try to find any text content in the workflow result object
-  if (data) {
-    // Convert to string if it's an object
-    const workflowResultString = typeof data === 'object' ? JSON.stringify(data) : String(data);
-    if (workflowResultString && workflowResultString.length > 100) {
-      console.log(`Using workflow result data: ${workflowResultString.substring(0, 100)}...`);
+  try {
+    // Extract the text from the workflow response based on the expected structure
+    if (data.workflow_result && typeof data.workflow_result === 'string') {
       return {
         success: true,
-        extracted_text: formatDocumentWithMetadata(
-          fileName, 
-          "Documento processado por IA", 
-          workflowResultString
-        )
+        extracted_text: data.workflow_result
+      };
+    } else if (data.extracted_text && typeof data.extracted_text === 'string') {
+      return {
+        success: true,
+        extracted_text: data.extracted_text
       };
     }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error processing workflow response for ${fileName}:`, error);
+    return null;
   }
-  
-  return null;
 }

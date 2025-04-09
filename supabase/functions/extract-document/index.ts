@@ -33,6 +33,8 @@ serve(async (req) => {
       }
     }
     
+    console.log(`Request is job fit request: ${isJobFitRequest}`);
+    
     // Handle according to the determined request type
     if (isJobFitRequest) {
       // Handle job fit analysis using Eden AI workflow

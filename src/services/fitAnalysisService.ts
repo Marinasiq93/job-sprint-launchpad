@@ -57,7 +57,7 @@ export const fitAnalysisService = {
     });
     
     try {
-      // Call the edge function with route in the body
+      // Call the edge function with explicit route path
       const { data, error } = await supabase.functions.invoke('extract-document', {
         body: requestData
       });

@@ -25,19 +25,14 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Prepare data for Eden AI workflow based on the workflow schema
-      // Following documentation: inputs should be top-level parameters
-      const workflowPayload = {
-        workflow_id: workflowId,
-        async: false,
-        inputs: {
-          // These are the actual input parameters that will be sent at the top level
-          Resume: resumeBase64,
-          Jobdescription: jobDescription
-        }
+      // Format inputs exactly as expected by the Eden AI API
+      // According to documentation, inputs should be sent as direct top-level properties
+      const workflowInputs = {
+        Resume: resumeBase64,
+        Jobdescription: jobDescription
       };
       
-      console.log("Calling Eden AI workflow with payload:", JSON.stringify({
+      console.log("Calling Eden AI workflow with inputs:", JSON.stringify({
         workflow_id: workflowId,
         input_sizes: {
           jobDescription_length: jobDescription?.length || 0,
@@ -47,7 +42,7 @@ export async function callEdenAIWorkflows(
       
       // Call the Eden AI workflow with our prepared payload
       const result = await callEdenAIWorkflow(
-        workflowPayload,
+        workflowInputs,
         workflowId
       );
       
