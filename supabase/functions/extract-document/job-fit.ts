@@ -52,7 +52,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
       return createMissingDataResponse("Resume data is too short or invalid");
     }
 
-    console.log(`Processing job fit analysis with available workflows`);
+    console.log(`Processing job fit analysis with workflow ID: ${JOB_FIT_WORKFLOW_IDS[0]}`);
     console.log(`Resume name: ${resumeName}, type: ${resumeType}, job description length: ${jobDescription.length}`);
     console.log(`Resume base64 data length: ${resumeBase64?.length || 0}`);
     console.log(`Job title provided: ${jobTitle ? 'Yes' : 'No'}`);
@@ -78,8 +78,8 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
         return workflowResponse;
       }
       
-      // If all workflows failed, use our fallback analysis
-      console.log("All Eden AI workflows failed, using fallback analysis");
+      // If workflow failed, use our fallback analysis
+      console.log("Eden AI workflow failed, using fallback analysis");
       return generateFallbackAnalysis(resumeBase64, jobDescription);
       
     } catch (error) {

@@ -3,11 +3,10 @@ import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
 import { corsHeaders, EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
-// Updated workflow ID to the new one provided by the user
+// Updated workflow ID to only use the new one provided by the user
 export const JOB_FIT_WORKFLOW_IDS = [
   "7be3c4b4-b371-4d03-abae-afbce8415b37", // Primary workflow ID
-  "297546a6-33e9-460e-83bb-a6eeeabc3144", // Fallback workflow ID
-  // Add any alternative workflow IDs here if needed
+  // No fallback workflows - old one has been deleted
 ];
 
 /**
@@ -29,7 +28,7 @@ export async function callEdenAIWorkflows(
   }
   
   console.log("Starting Eden AI workflow call with API key:", 
-              EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 5)}...` : "No API key found");
+              EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 3)}...` : "No API key found");
   console.log("Job fit workflow IDs:", workflowIds);
   console.log("Resume base64 length:", resumeBase64?.length || 0);
   console.log("Job description length:", jobDescription?.length || 0);
@@ -129,11 +128,12 @@ export async function callEdenAIWorkflows(
     } catch (workflowError) {
       console.error(`Error with workflow ${workflowId}:`, workflowError);
       lastError = workflowError;
-      // Continue to try the next workflow ID
+      // Since there's only one workflow now, no need to continue
+      break;
     }
   }
   
   // All workflow attempts failed
-  console.warn("All Eden AI workflows failed");
+  console.warn("Eden AI workflow failed");
   return null;
 }
