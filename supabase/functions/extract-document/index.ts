@@ -6,6 +6,7 @@ import { corsHeaders } from "./utils.ts";
 
 serve(async (req) => {
   console.log("Extract document function called with method:", req.method);
+  console.log("Request URL:", req.url);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -32,12 +33,21 @@ serve(async (req) => {
         try {
           body = await clonedReq.json();
           console.log("Request body parsed successfully as JSON");
+          console.log("Request route from body:", body.route);
+          
+          // For JSON requests, check the route parameter
+          if (body && body.route === 'job-fit') {
+            console.log("Job fit route detected in request body");
+            isJobFitRequest = true;
+          }
         } catch (jsonError) {
+          console.log("JSON parsing error:", jsonError.message);
           // If JSON parsing fails, check if it's form data
           console.log("Request is not JSON. Checking if it's form data...");
           try {
             const formData = await req.clone().formData();
             const routeValue = formData.get('route');
+            console.log("Form data route value:", routeValue);
             if (routeValue === 'job-fit') {
               console.log("Job fit route detected in form data");
               isJobFitRequest = true;
@@ -45,21 +55,17 @@ serve(async (req) => {
             // Re-parse the form data in a way that doesn't consume the body stream
             return handleRequestByType(isJobFitRequest, req);
           } catch (formError) {
+            console.log("Form data parsing error:", formError.message);
             console.log("Not form data either. Checking query parameters.");
             // If it's neither JSON nor form data, check query params
             const queryRoute = url.searchParams.get('route');
+            console.log("URL query route parameter:", queryRoute);
             if (queryRoute === 'job-fit') {
               console.log("Job fit route detected in query parameters");
               isJobFitRequest = true;
             }
             return handleRequestByType(isJobFitRequest, req);
           }
-        }
-        
-        // For JSON requests, check the route parameter
-        if (body && body.route === 'job-fit') {
-          console.log("Job fit route detected in request body");
-          isJobFitRequest = true;
         }
       } catch (e) {
         console.log("Error determining request type:", e.message);
@@ -95,6 +101,9 @@ serve(async (req) => {
  */
 async function handleRequestByType(isJobFitRequest: boolean, req: Request): Promise<Response> {
   try {
+    // Log the request content type
+    console.log("Request content type:", req.headers.get("content-type"));
+    
     // Handle according to the determined request type
     if (isJobFitRequest) {
       // Handle job fit analysis using Eden AI workflow

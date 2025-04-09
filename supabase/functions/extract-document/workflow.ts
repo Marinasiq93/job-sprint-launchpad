@@ -9,6 +9,7 @@ export async function callEdenAIWorkflow(
   workflowId: string
 ): Promise<any> {
   if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20) {
+    console.error("Eden AI API key issue:", EDEN_AI_API_KEY ? "Key too short" : "Key not found");
     throw new Error("Eden AI API key is not configured correctly");
   }
   
@@ -16,10 +17,14 @@ export async function callEdenAIWorkflow(
   console.log(`Input keys: ${Object.keys(inputs).join(', ')}`);
   
   try {
-    console.log(`Sending request to Eden AI workflow API endpoint: https://api.edenai.run/v2/workflow/${workflowId}/execution/`);
+    const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/`;
+    console.log(`Sending request to Eden AI workflow API endpoint: ${apiUrl}`);
+    
+    // Log the request payload for debugging (excluding actual content)
+    console.log("Request payload keys:", Object.keys(inputs));
     
     // According to Eden AI documentation, we need to send inputs directly as top-level parameters
-    const response = await fetch(`https://api.edenai.run/v2/workflow/${workflowId}/execution/`, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
@@ -28,8 +33,9 @@ export async function callEdenAIWorkflow(
       body: JSON.stringify(inputs)
     });
     
-    // Log the response status
+    // Log the response status and headers
     console.log(`Eden AI API response status: ${response.status}`);
+    console.log(`Eden AI API response headers:`, Object.fromEntries([...response.headers]));
     
     // Check if the request was successful
     if (!response.ok) {
@@ -44,6 +50,8 @@ export async function callEdenAIWorkflow(
         throw new Error('Unauthorized: Check your Eden AI API key');
       } else if (response.status === 400) {
         throw new Error(`Bad request: ${errorText}`);
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded: Too many requests to Eden AI');
       }
       
       // For other error codes, throw a generic error

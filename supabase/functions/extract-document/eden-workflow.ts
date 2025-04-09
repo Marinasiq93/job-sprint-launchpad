@@ -23,6 +23,7 @@ export async function callEdenAIWorkflows(
   
   console.log("Starting Eden AI workflow call with API key:", 
               EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 10)}...` : "No API key found");
+  console.log("Job fit workflow IDs:", workflowIds);
   
   // Try each workflow ID until one works
   for (const workflowId of workflowIds) {
@@ -30,7 +31,7 @@ export async function callEdenAIWorkflows(
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
       // Format inputs exactly as expected by the Eden AI workflow
-      // The actual parameter names required by Eden AI workflows
+      // IMPORTANT: Use lowercase keys as required by Eden AI
       const workflowInputs = {
         resume: resumeBase64,
         job_description: jobDescription
@@ -42,6 +43,7 @@ export async function callEdenAIWorkflows(
       }
       
       console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));
+      console.log("Input sample sizes - resume:", resumeBase64.length, "job description:", jobDescription.length);
       
       // Call the Eden AI workflow with our prepared payload
       const result = await callEdenAIWorkflow(
@@ -58,7 +60,7 @@ export async function callEdenAIWorkflows(
       
       // Check if we got a valid response from Eden AI
       if (!result || (!result.job_fit_feedback && !result.workflow_result && !result.analysis && !result.results)) {
-        console.error("Invalid response from Eden AI workflow", JSON.stringify(result));
+        console.error("Invalid response from Eden AI workflow", result ? JSON.stringify(result) : "null response");
         continue; // Try next workflow ID
       }
       

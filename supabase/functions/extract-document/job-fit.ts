@@ -17,10 +17,21 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     const data = await req.json();
     const { resumeBase64, resumeType, resumeName, jobDescription, jobTitle } = data;
     
-    // Check for required input data
-    if (!resumeBase64 || !jobDescription) {
-      console.warn("Missing input data - generating fallback response");
-      return createMissingDataResponse();
+    // More detailed validation
+    if (!resumeBase64) {
+      console.warn("Missing resume data");
+      return createMissingDataResponse("Resume data is required");
+    }
+    
+    if (!jobDescription) {
+      console.warn("Missing job description");
+      return createMissingDataResponse("Job description is required");
+    }
+    
+    // Check for likely invalid data
+    if (resumeBase64.length < 100) {
+      console.warn("Resume base64 data too short:", resumeBase64.length);
+      return createMissingDataResponse("Resume data is too short or invalid");
     }
 
     console.log(`Processing job fit analysis with available workflows`);

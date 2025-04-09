@@ -1,3 +1,4 @@
+
 /**
  * Shared utility functions and constants for document extraction
  */
