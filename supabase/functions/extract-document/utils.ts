@@ -1,4 +1,3 @@
-
 /**
  * Shared utility functions and constants for document extraction
  */
@@ -8,6 +7,10 @@ export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Export the Eden AI API key - use environment variable if set, otherwise use provided key
+export const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY") || 
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDYxODMwYzctYTVlOC00NTk5LWI0ODEtMDk3YmU5NjU4OGRmIiwidHlwZSI6ImFwaV90b2tlbiJ9.K_UQL-aA_lIGArvk96ZepwaD-EBUSFXSF3Qlu1iO2zc";
 
 /**
  * Clean up and normalize extracted text
@@ -38,6 +41,3 @@ export function formatDocumentWithMetadata(fileName: string, type: string, conte
   const metadata = `Arquivo: ${fileName}\nTipo: ${type}\nData de extração: ${new Date().toLocaleString()}\n\n`;
   return metadata + content;
 }
-
-// API Key for Eden AI
-export const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY");

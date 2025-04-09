@@ -1,7 +1,7 @@
 
 import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
-import { corsHeaders } from "./utils.ts";
+import { corsHeaders, EDEN_AI_API_KEY } from "./utils.ts";
 
 // Updated workflow IDs - using a fallback approach
 export const JOB_FIT_WORKFLOW_IDS = [
@@ -21,13 +21,16 @@ export async function callEdenAIWorkflows(
 ): Promise<Response | null> {
   let lastError = null;
   
+  console.log("Starting Eden AI workflow call with API key:", 
+              EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 10)}...` : "No API key found");
+  
   // Try each workflow ID until one works
   for (const workflowId of workflowIds) {
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
       // Format inputs exactly as expected by the Eden AI workflow
-      // Note: Input names must exactly match what's configured in the Eden AI workflow
+      // The actual parameter names required by Eden AI workflows
       const workflowInputs = {
         resume: resumeBase64,
         job_description: jobDescription
@@ -54,7 +57,7 @@ export async function callEdenAIWorkflows(
       }));
       
       // Check if we got a valid response from Eden AI
-      if (!result || (!result.job_fit_feedback && !result.workflow_result && !result.analysis)) {
+      if (!result || (!result.job_fit_feedback && !result.workflow_result && !result.analysis && !result.results)) {
         console.error("Invalid response from Eden AI workflow", JSON.stringify(result));
         continue; // Try next workflow ID
       }
@@ -65,6 +68,7 @@ export async function callEdenAIWorkflows(
         const jobFitFeedbackText = result.job_fit_feedback || 
                                    result.workflow_result || 
                                    result.analysis || 
+                                   result.results?.output ||
                                    "";
                                    
         console.log("Job fit feedback text sample:", jobFitFeedbackText.substring(0, 100) + "...");
@@ -105,7 +109,7 @@ export async function callEdenAIWorkflows(
             keySkills: ["Veja a análise completa abaixo"],
             relevantExperiences: ["Análise detalhada disponível"],
             identifiedGaps: ["Consulte a análise completa abaixo"],
-            rawAnalysis: result.job_fit_feedback || result.workflow_result || result.analysis || "Sem dados de análise disponíveis",
+            rawAnalysis: result.job_fit_feedback || result.workflow_result || result.analysis || result.results?.output || "Sem dados de análise disponíveis",
             fallbackAnalysis: false
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }

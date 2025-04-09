@@ -8,14 +8,16 @@ export async function callEdenAIWorkflow(
   inputs: Record<string, any>,
   workflowId: string
 ): Promise<any> {
-  if (!EDEN_AI_API_KEY) {
-    throw new Error("Eden AI API key is not configured");
+  if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20) {
+    throw new Error("Eden AI API key is not configured correctly");
   }
   
   console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
   console.log(`Input keys: ${Object.keys(inputs).join(', ')}`);
   
   try {
+    console.log(`Sending request to Eden AI workflow API endpoint: https://api.edenai.run/v2/workflow/${workflowId}/execution/`);
+    
     // According to Eden AI documentation, we need to send inputs directly as top-level parameters
     const response = await fetch(`https://api.edenai.run/v2/workflow/${workflowId}/execution/`, {
       method: "POST",
@@ -25,6 +27,9 @@ export async function callEdenAIWorkflow(
       },
       body: JSON.stringify(inputs)
     });
+    
+    // Log the response status
+    console.log(`Eden AI API response status: ${response.status}`);
     
     // Check if the request was successful
     if (!response.ok) {
