@@ -32,7 +32,8 @@ export async function callEdenAIWorkflow(
     );
     console.log("Full request payload structure:", JSON.stringify(inputsDebug));
     
-    // According to Eden AI documentation, we need to send inputs directly as top-level parameters
+    // According to Eden AI documentation and the workflow screenshot, we need to send inputs 
+    // directly as top-level parameters with exact capitalization matching the workflow
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {

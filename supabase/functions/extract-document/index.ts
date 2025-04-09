@@ -7,6 +7,7 @@ import { corsHeaders } from "./utils.ts";
 serve(async (req) => {
   console.log("Extract document function called with method:", req.method);
   console.log("Request URL:", req.url);
+  console.log("Request headers:", Object.fromEntries([...req.headers]));
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -35,9 +36,10 @@ serve(async (req) => {
         if (req.headers.get("content-type")?.includes("application/json")) {
           try {
             const body = await clonedReq.json();
+            console.log("Request JSON body keys:", Object.keys(body));
             console.log("Request JSON body route:", body.route);
             
-            if (body && body.route === 'job-fit') {
+            if (body && (body.route === 'job-fit' || body.resumeBase64)) {
               console.log("Job fit route detected in request body");
               isJobFitRequest = true;
             }

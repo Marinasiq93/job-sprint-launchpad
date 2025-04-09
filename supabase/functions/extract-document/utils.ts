@@ -8,12 +8,23 @@ export const corsHeaders = {
 // Get Eden AI API key from environment variables
 export const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY");
 
-// Check if API key is properly set
+// Check if API key is properly set with more detailed logging
 export function validateAPIKey() {
-  if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20) {
-    console.error("Eden AI API key issue:", EDEN_AI_API_KEY ? "Key too short" : "Key not found");
+  if (!EDEN_AI_API_KEY) {
+    console.error("Eden AI API key issue: Key not found in environment variables");
     return false;
   }
+  
+  if (EDEN_AI_API_KEY.length < 20) {
+    console.error("Eden AI API key issue: Key too short (length:", EDEN_AI_API_KEY.length, ")");
+    return false;
+  }
+  
+  // Log first and last 3 characters of key for debugging (without exposing full key)
+  const keyStart = EDEN_AI_API_KEY.substring(0, 3);
+  const keyEnd = EDEN_AI_API_KEY.substring(EDEN_AI_API_KEY.length - 3);
+  console.log(`API key validated (starts with ${keyStart}..., ends with ...${keyEnd}), length: ${EDEN_AI_API_KEY.length}`);
+  
   return true;
 }
 

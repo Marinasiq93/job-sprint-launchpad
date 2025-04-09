@@ -34,7 +34,7 @@ export const fitAnalysisService = {
       };
     }
     
-    // Prepare the request payload for our job fit workflow
+    // Prepare the request payload for our job fit workflow - match the input names from the workflow
     const requestData = {
       resumeBase64,
       resumeType,

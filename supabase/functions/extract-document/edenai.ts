@@ -13,5 +13,6 @@ export {
   extractWithFallbacks,
   callEdenAI,
   processEdenAIResponse,
-  corsHeaders
+  corsHeaders,
+  EDEN_AI_API_KEY
 };

@@ -3,9 +3,10 @@ import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
 import { corsHeaders, EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
-// Updated workflow IDs - using a fallback approach
+// Updated workflow ID to the new one provided by the user
 export const JOB_FIT_WORKFLOW_IDS = [
-  "297546a6-33e9-460e-83bb-a6eeeabc3144", // Primary workflow ID
+  "7be3c4b4-b371-4d03-abae-afbce8415b37", // Primary workflow ID
+  "297546a6-33e9-460e-83bb-a6eeeabc3144", // Fallback workflow ID
   // Add any alternative workflow IDs here if needed
 ];
 
@@ -38,16 +39,15 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Format inputs EXACTLY as the workflow expects based on screenshots
-      // IMPORTANT: These must match the exact case and spelling in the Eden AI workflow
+      // Format inputs EXACTLY as the workflow expects based on the image
+      // The input field names must match what's in the Eden AI workflow (case-sensitive)
       const workflowInputs = {
-        Resume: resumeBase64,
-        Jobdescription: jobDescription
+        Jobdescription: jobDescription,
+        Resume: resumeBase64
       };
       
-      // Add job title if provided
+      // Add job title if provided (only if the workflow expects it)
       if (jobTitle) {
-        // Only include job_title if it's expected by the workflow
         workflowInputs["job_title"] = jobTitle;
       }
       

@@ -17,6 +17,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     try {
       data = await req.json();
       console.log("Request body parsed successfully");
+      console.log("Request body keys:", Object.keys(data));
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
       return createErrorResponse(new Error("Erro ao processar os dados da solicitação"), 400);
