@@ -20,8 +20,16 @@ export async function callEdenAIWorkflow(
     const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/`;
     console.log(`Sending request to Eden AI workflow API endpoint: ${apiUrl}`);
     
-    // Log the request payload for debugging (excluding actual content)
-    console.log("Request payload keys:", Object.keys(inputs));
+    // Log the full input structure for debugging (excluding content length)
+    const inputsDebug = Object.fromEntries(
+      Object.entries(inputs).map(([key, value]) => {
+        if (typeof value === 'string' && value.length > 100) {
+          return [key, `${value.substring(0, 50)}... (truncated, length: ${value.length})`];
+        }
+        return [key, value];
+      })
+    );
+    console.log("Full request payload structure:", JSON.stringify(inputsDebug));
     
     // According to Eden AI documentation, we need to send inputs directly as top-level parameters
     const response = await fetch(apiUrl, {

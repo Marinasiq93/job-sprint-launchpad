@@ -1,7 +1,10 @@
 
 import { extractWithFallbacks } from "./extractor.ts";
-import { PROVIDERS, DEFAULT_LANGUAGE } from "./providers.ts";
+import { PROVIDERS } from "./providers.ts";
 import { corsHeaders } from "./utils.ts";
+
+// Define DEFAULT_LANGUAGE here since it's not exported from providers.ts
+const DEFAULT_LANGUAGE = 'pt';
 
 /**
  * Handle OCR document extraction request

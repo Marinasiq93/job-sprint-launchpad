@@ -30,20 +30,20 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Format inputs exactly as expected by the Eden AI workflow
-      // IMPORTANT: Use lowercase keys as required by Eden AI
+      // Format inputs EXACTLY as expected by the Eden AI workflow
+      // IMPORTANT: Use the exact case-sensitive names shown in your workflow screenshots
       const workflowInputs = {
-        resume: resumeBase64,
-        job_description: jobDescription
+        Resume: resumeBase64,
+        Jobdescription: jobDescription
       };
       
-      // Add job title if provided
-      if (jobTitle) {
+      // Add job title if provided - note: only add if your workflow actually has this input
+      if (jobTitle && workflowIds.includes("job_title")) {
         workflowInputs['job_title'] = jobTitle;
       }
       
       console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));
-      console.log("Input sample sizes - resume:", resumeBase64.length, "job description:", jobDescription.length);
+      console.log("Input sample sizes - Resume:", resumeBase64.length, "Jobdescription:", jobDescription.length);
       
       // Call the Eden AI workflow with our prepared payload
       const result = await callEdenAIWorkflow(
