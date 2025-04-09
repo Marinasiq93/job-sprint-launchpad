@@ -1,3 +1,4 @@
+
 import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
 import { corsHeaders } from "./utils.ts";
@@ -27,7 +28,6 @@ export async function callEdenAIWorkflows(
       // Prepare data for Eden AI workflow based on the workflow schema
       // Following documentation: inputs should be top-level parameters
       const workflowPayload = {
-        // We'll keep the workflow_id field to maintain compatibility with our function signature
         workflow_id: workflowId,
         async: false,
         inputs: {

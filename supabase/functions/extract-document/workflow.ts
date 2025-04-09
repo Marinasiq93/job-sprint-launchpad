@@ -18,15 +18,15 @@ export async function callEdenAIWorkflow(
   console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
   
   try {
-    // Call the Eden AI workflow execution API with updated payload format
-    // According to documentation, we send input parameters directly as top-level properties
+    // According to documentation, we need to send inputs directly as top-level parameters
+    // So we extract the inputs from the payload and send them directly
     const response = await fetch(`https://api.edenai.run/v2/workflow/${workflowId}/execution/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(workflowPayload.inputs)  // Send inputs directly as top-level properties
+      body: JSON.stringify(workflowPayload.inputs) // Send inputs directly as top-level properties
     });
     
     // Check if the request was successful
@@ -59,8 +59,7 @@ export async function callEdenAIWorkflow(
       has_results: data && data.results ? true : false
     }));
     
-    // Return the results from the workflow response
-    // According to documentation, results are in the 'results' field
+    // Return the results from the workflow response according to documentation
     if (data.status === 'success' && data.results) {
       return data.results;
     }
