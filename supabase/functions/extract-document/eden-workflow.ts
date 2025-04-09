@@ -5,8 +5,8 @@ import { corsHeaders } from "./utils.ts";
 
 // Updated workflow IDs - using a fallback approach
 export const JOB_FIT_WORKFLOW_IDS = [
-  "297546a6-33e9-460e-83bb-a6eeeabc3144", // Original ID that returned 404
-  // Add any alternative workflow IDs your account might have
+  "297546a6-33e9-460e-83bb-a6eeeabc3144", // Primary workflow ID
+  // Add any alternative workflow IDs here if needed
 ];
 
 /**
@@ -15,6 +15,7 @@ export const JOB_FIT_WORKFLOW_IDS = [
 export async function callEdenAIWorkflows(
   resumeBase64: string,
   jobDescription: string,
+  jobTitle: string = "",
   workflowIds: string[],
   debug: boolean = false
 ): Promise<Response | null> {
@@ -25,20 +26,19 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Format inputs exactly as expected by the Eden AI API
-      // According to documentation, inputs should be sent as direct top-level properties
+      // Format inputs exactly as expected by the Eden AI workflow
+      // Note: Input names must exactly match what's configured in the Eden AI workflow
       const workflowInputs = {
-        Resume: resumeBase64,
-        Jobdescription: jobDescription
+        resume: resumeBase64,
+        job_description: jobDescription
       };
       
-      console.log("Calling Eden AI workflow with inputs:", JSON.stringify({
-        workflow_id: workflowId,
-        input_sizes: {
-          jobDescription_length: jobDescription?.length || 0,
-          resumeBase64_length: resumeBase64?.length || 0
-        }
-      }));
+      // Add job title if provided
+      if (jobTitle) {
+        workflowInputs['job_title'] = jobTitle;
+      }
+      
+      console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));
       
       // Call the Eden AI workflow with our prepared payload
       const result = await callEdenAIWorkflow(
@@ -49,11 +49,12 @@ export async function callEdenAIWorkflows(
       console.log("Eden AI workflow response received", JSON.stringify({
         has_result: !!result,
         result_type: result ? typeof result : 'undefined',
-        has_job_fit_feedback: result?.job_fit_feedback ? true : false
+        has_job_fit_feedback: result?.job_fit_feedback ? true : false,
+        result_keys: result ? Object.keys(result) : []
       }));
       
       // Check if we got a valid response from Eden AI
-      if (!result || (!result.job_fit_feedback && !result.workflow_result)) {
+      if (!result || (!result.job_fit_feedback && !result.workflow_result && !result.analysis)) {
         console.error("Invalid response from Eden AI workflow", JSON.stringify(result));
         continue; // Try next workflow ID
       }
@@ -61,11 +62,15 @@ export async function callEdenAIWorkflows(
       // Process the response from Eden AI
       try {
         // Get the text from the workflow response
-        const jobFitFeedbackText = result.job_fit_feedback || result.workflow_result || "";
+        const jobFitFeedbackText = result.job_fit_feedback || 
+                                   result.workflow_result || 
+                                   result.analysis || 
+                                   "";
+                                   
         console.log("Job fit feedback text sample:", jobFitFeedbackText.substring(0, 100) + "...");
         
         // Skip if feedback is too short
-        if (jobFitFeedbackText.length < 100) {
+        if (jobFitFeedbackText.length < 50) {
           console.warn("Job fit feedback too short, trying next workflow");
           continue;
         }
@@ -100,7 +105,7 @@ export async function callEdenAIWorkflows(
             keySkills: ["Veja a análise completa abaixo"],
             relevantExperiences: ["Análise detalhada disponível"],
             identifiedGaps: ["Consulte a análise completa abaixo"],
-            rawAnalysis: result.job_fit_feedback || result.workflow_result || "Sem dados de análise disponíveis",
+            rawAnalysis: result.job_fit_feedback || result.workflow_result || result.analysis || "Sem dados de análise disponíveis",
             fallbackAnalysis: false
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }

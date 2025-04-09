@@ -51,12 +51,14 @@ export const fitAnalysisService = {
     console.log("Document text lengths:", {
       jobTitleLength: jobTitle?.length || 0,
       jobDescriptionLength: jobDescription?.length || 0,
-      resumeTextLength: resumeBase64?.length || 0,
+      resumeBase64Length: resumeBase64?.length || 0,
       coverLetterTextLength: coverLetterText?.length || 0,
       referenceTextLength: referenceText?.length || 0
     });
     
     try {
+      console.log("Sending request to extract-document function");
+      
       // Call the edge function with explicit route path
       const { data, error } = await supabase.functions.invoke('extract-document', {
         body: requestData
@@ -71,6 +73,12 @@ export const fitAnalysisService = {
         console.error("No data returned from edge function");
         throw new Error("Nenhum dado retornado da análise");
       }
+      
+      console.log("Edge function response received:", {
+        hasError: !!data.error,
+        hasFallbackAnalysis: !!data.fallbackAnalysis,
+        compatibilityScore: data.compatibilityScore
+      });
       
       // Check if response contains error but still has fallback analysis
       if (data.error && data.fallbackAnalysis) {

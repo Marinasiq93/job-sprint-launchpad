@@ -12,7 +12,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     console.log("Starting job fit analysis process");
     // Parse the request body
     const data = await req.json();
-    const { resumeBase64, resumeType, resumeName, jobDescription } = data;
+    const { resumeBase64, resumeType, resumeName, jobDescription, jobTitle } = data;
     
     // Check for required input data
     if (!resumeBase64 || !jobDescription) {
@@ -23,9 +23,10 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     console.log(`Processing job fit analysis with available workflows`);
     console.log(`Resume name: ${resumeName}, type: ${resumeType}, job description length: ${jobDescription.length}`);
     console.log(`Resume base64 data length: ${resumeBase64?.length || 0}`);
+    console.log(`Job title provided: ${jobTitle ? 'Yes' : 'No'}`);
     
     // If no Eden AI workflow is accessible, use our fallback text-based analysis approach
-    if (!data.EDEN_AI_API_KEY && JOB_FIT_WORKFLOW_IDS.length === 0) {
+    if (!EDEN_AI_API_KEY && JOB_FIT_WORKFLOW_IDS.length === 0) {
       console.log("No Eden AI workflows available, using fallback analysis");
       return generateFallbackAnalysis(resumeBase64, jobDescription);
     }
@@ -35,6 +36,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
       const workflowResponse = await callEdenAIWorkflows(
         resumeBase64,
         jobDescription,
+        jobTitle || "",
         JOB_FIT_WORKFLOW_IDS,
         data.debug
       );
@@ -57,3 +59,6 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     return createErrorResponse(error instanceof Error ? error : new Error("Unknown error"));
   }
 }
+
+// Get Eden AI API key from environment
+const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY");

@@ -13,6 +13,7 @@ export async function callEdenAIWorkflow(
   }
   
   console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
+  console.log(`Input keys: ${Object.keys(inputs).join(', ')}`);
   
   try {
     // According to Eden AI documentation, we need to send inputs directly as top-level parameters
@@ -22,21 +23,26 @@ export async function callEdenAIWorkflow(
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(inputs) // Send inputs directly as top-level properties
+      body: JSON.stringify(inputs)
     });
     
     // Check if the request was successful
     if (!response.ok) {
+      // Log the full error response for debugging
+      const errorText = await response.text();
+      console.error(`Eden AI API error (${response.status}): ${errorText}`);
+      
       // Check for specific error codes
       if (response.status === 404) {
         throw new Error(`Workflow ID ${workflowId} not found`);
       } else if (response.status === 401) {
         throw new Error('Unauthorized: Check your Eden AI API key');
+      } else if (response.status === 400) {
+        throw new Error(`Bad request: ${errorText}`);
       }
       
-      // For other error codes, try to get more details from the response
-      const errorBody = await response.text();
-      throw new Error(`Eden AI API request failed: ${response.status} - ${errorBody}`);
+      // For other error codes, throw a generic error
+      throw new Error(`Eden AI API request failed: ${response.status}`);
     }
     
     // Parse the response
@@ -46,7 +52,8 @@ export async function callEdenAIWorkflow(
     console.log("Eden AI workflow response structure:", JSON.stringify({
       status: data.status,
       has_content: !!data.content,
-      has_results: data && data.results ? true : false
+      has_results: data && data.results ? true : false,
+      keys: Object.keys(data)
     }));
     
     // Return the results from the workflow response according to documentation
