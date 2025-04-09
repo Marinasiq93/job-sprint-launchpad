@@ -2,7 +2,7 @@
 import { EDEN_AI_API_KEY, hasBinaryData, formatDocumentWithMetadata } from "./utils.ts";
 
 /**
- * Calls Eden AI Workflow API with custom payload format
+ * Calls Eden AI Workflow API with proper payload format based on documentation
  */
 export async function callEdenAIWorkflow(
   workflowPayload: any,
@@ -18,14 +18,15 @@ export async function callEdenAIWorkflow(
   console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
   
   try {
-    // Call the Eden AI workflow API
-    const response = await fetch("https://api.edenai.run/v2/workflows/execute", {
+    // Call the Eden AI workflow execution API with updated payload format
+    // According to documentation, we send input parameters directly as top-level properties
+    const response = await fetch(`https://api.edenai.run/v2/workflow/${workflowId}/execution/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(workflowPayload)
+      body: JSON.stringify(workflowPayload.inputs)  // Send inputs directly as top-level properties
     });
     
     // Check if the request was successful
@@ -35,9 +36,9 @@ export async function callEdenAIWorkflow(
       
       // Log more details about the request
       console.error("Request details:", {
-        url: "https://api.edenai.run/v2/workflows/execute",
+        url: `https://api.edenai.run/v2/workflow/${workflowId}/execution/`,
         method: "POST",
-        workflow_id: workflowPayload.workflow_id,
+        workflow_id: workflowId,
         response_status: response.status,
         response_text: errorText.substring(0, 200) // Log first 200 chars of error
       });
@@ -54,12 +55,24 @@ export async function callEdenAIWorkflow(
     const data = await response.json();
     console.log("Eden AI workflow response structure:", JSON.stringify({
       has_response: !!data,
-      has_outputs: data && data.outputs ? true : false,
-      output_keys: data && data.outputs ? Object.keys(data.outputs) : []
+      status: data.status,
+      has_results: data && data.results ? true : false
     }));
     
-    // Return the outputs from the workflow response
-    return data.outputs || {};
+    // Return the results from the workflow response
+    // According to documentation, results are in the 'results' field
+    if (data.status === 'success' && data.results) {
+      return data.results;
+    }
+    
+    // If workflow is still processing
+    if (data.status === 'processing') {
+      console.log("Workflow is still processing, consider using async approach in future");
+      return { workflow_processing: true };
+    }
+    
+    // Return whatever data we have
+    return data;
   } catch (error) {
     console.error(`Error calling Eden AI workflow: ${error.message}`);
     throw error;
@@ -79,12 +92,12 @@ export function processDocumentExtractionResponse(
     return null;
   }
   
-  // Standard document extraction response processing
-  if (typeof data.workflow_result === 'string') {
-    console.log(`Workflow successful with ${data.workflow_result.length} chars`);
+  // Handle the case where we're getting a direct text result
+  if (typeof data === 'string') {
+    console.log(`Workflow successful with ${data.length} chars of string data`);
     
     // Check if the text contains binary data
-    if (hasBinaryData(data.workflow_result)) {
+    if (hasBinaryData(data)) {
       console.warn(`Workflow result contains binary data, will try OCR providers instead`);
       return null;
     }
@@ -94,16 +107,29 @@ export function processDocumentExtractionResponse(
       extracted_text: formatDocumentWithMetadata(
         fileName, 
         "Documento processado por workflow", 
-        data.workflow_result
+        data
       )
     };
-  } 
+  }
   
-  if (data.workflow_result && data.workflow_result.extracted_text) {
-    console.log(`Workflow successful with ${data.workflow_result.extracted_text.length} chars`);
+  // Standard document extraction response processing
+  if (data.job_fit_feedback) {
+    console.log(`Workflow returned job fit feedback with ${data.job_fit_feedback.length} chars`);
+    return {
+      success: true,
+      extracted_text: formatDocumentWithMetadata(
+        fileName, 
+        "Documento processado por workflow", 
+        data.job_fit_feedback
+      )
+    };
+  }
+  
+  if (data.extracted_text) {
+    console.log(`Workflow successful with ${data.extracted_text.length} chars`);
     
     // Check for binary data in extracted text
-    if (hasBinaryData(data.workflow_result.extracted_text)) {
+    if (hasBinaryData(data.extracted_text)) {
       console.warn(`Workflow result contains binary data, will try OCR providers instead`);
       return null;
     }
@@ -113,15 +139,21 @@ export function processDocumentExtractionResponse(
       extracted_text: formatDocumentWithMetadata(
         fileName, 
         "Documento processado por workflow", 
-        data.workflow_result.extracted_text
+        data.extracted_text
       )
     };
   } 
   
-  if (data.workflow_result) {
-    // Try to find any text content in the workflow result object
-    const workflowResultString = JSON.stringify(data.workflow_result);
-    if (workflowResultString.length > 100) {
+  if (data.workflow_processing) {
+    console.log("Workflow is still processing, returning null");
+    return null;
+  }
+  
+  // Try to find any text content in the workflow result object
+  if (data) {
+    // Convert to string if it's an object
+    const workflowResultString = typeof data === 'object' ? JSON.stringify(data) : String(data);
+    if (workflowResultString && workflowResultString.length > 100) {
       console.log(`Using workflow result data: ${workflowResultString.substring(0, 100)}...`);
       return {
         success: true,

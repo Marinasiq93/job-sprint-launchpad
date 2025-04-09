@@ -1,4 +1,3 @@
-
 import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
 import { corsHeaders } from "./utils.ts";
@@ -26,18 +25,20 @@ export async function callEdenAIWorkflows(
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
       // Prepare data for Eden AI workflow based on the workflow schema
+      // Following documentation: inputs should be top-level parameters
       const workflowPayload = {
+        // We'll keep the workflow_id field to maintain compatibility with our function signature
         workflow_id: workflowId,
         async: false,
         inputs: {
-          Jobdescription: jobDescription,
-          Resume: resumeBase64
+          // These are the actual input parameters that will be sent at the top level
+          Resume: resumeBase64,
+          Jobdescription: jobDescription
         }
       };
       
       console.log("Calling Eden AI workflow with payload:", JSON.stringify({
-        workflow_id: workflowPayload.workflow_id,
-        async: workflowPayload.async,
+        workflow_id: workflowId,
         input_sizes: {
           jobDescription_length: jobDescription?.length || 0,
           resumeBase64_length: resumeBase64?.length || 0
@@ -57,16 +58,22 @@ export async function callEdenAIWorkflows(
       }));
       
       // Check if we got a valid response from Eden AI
-      if (!result || !result.job_fit_feedback) {
+      if (!result || (!result.job_fit_feedback && !result.workflow_result)) {
         console.error("Invalid response from Eden AI workflow", JSON.stringify(result));
         continue; // Try next workflow ID
       }
       
       // Process the response from Eden AI
       try {
-        // Get the raw text from the workflow response
-        const jobFitFeedbackText = result.job_fit_feedback;
+        // Get the text from the workflow response
+        const jobFitFeedbackText = result.job_fit_feedback || result.workflow_result || "";
         console.log("Job fit feedback text sample:", jobFitFeedbackText.substring(0, 100) + "...");
+        
+        // Skip if feedback is too short
+        if (jobFitFeedbackText.length < 100) {
+          console.warn("Job fit feedback too short, trying next workflow");
+          continue;
+        }
         
         // Try to extract structured information from the text
         const analysisResult = extractStructuredAnalysis(jobFitFeedbackText);
@@ -98,7 +105,7 @@ export async function callEdenAIWorkflows(
             keySkills: ["Veja a análise completa abaixo"],
             relevantExperiences: ["Análise detalhada disponível"],
             identifiedGaps: ["Consulte a análise completa abaixo"],
-            rawAnalysis: result.job_fit_feedback || "Sem dados de análise disponíveis",
+            rawAnalysis: result.job_fit_feedback || result.workflow_result || "Sem dados de análise disponíveis",
             fallbackAnalysis: false
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }

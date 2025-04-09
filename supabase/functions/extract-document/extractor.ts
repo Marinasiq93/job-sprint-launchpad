@@ -20,7 +20,7 @@ export async function callEdenAI(
       workflow_id: workflowId,
       async: false,
       inputs: {
-        document: fileBase64
+        document: fileBase64  // This will become a top-level "document" parameter in the API call
       }
     };
     return callEdenAIWorkflow(workflowPayload, workflowId);
@@ -53,7 +53,7 @@ export async function extractWithFallbacks(
         workflow_id: workflowId,
         async: false,
         inputs: {
-          document: fileBase64
+          document: fileBase64  // This will become a top-level "document" parameter in the API call
         }
       };
       const data = await callEdenAIWorkflow(workflowPayload, workflowId);
