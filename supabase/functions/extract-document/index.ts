@@ -24,54 +24,54 @@ serve(async (req) => {
       console.log("Job fit route detected in URL path");
       isJobFitRequest = true;
     } else {
-      // If not in the URL path, check if it's in the request body
+      // Log content type header to help with debugging
+      console.log("Request content type:", req.headers.get("content-type"));
+      
+      // Try to determine if this is a job fit request based on body
       try {
         const clonedReq = req.clone();
-        let body;
         
-        // Try to parse as JSON first
-        try {
-          body = await clonedReq.json();
-          console.log("Request body parsed successfully as JSON");
-          console.log("Request route from body:", body.route);
-          
-          // For JSON requests, check the route parameter
-          if (body && body.route === 'job-fit') {
-            console.log("Job fit route detected in request body");
-            isJobFitRequest = true;
-          }
-        } catch (jsonError) {
-          console.log("JSON parsing error:", jsonError.message);
-          // If JSON parsing fails, check if it's form data
-          console.log("Request is not JSON. Checking if it's form data...");
+        // For JSON requests, check the route parameter
+        if (req.headers.get("content-type")?.includes("application/json")) {
           try {
-            const formData = await req.clone().formData();
+            const body = await clonedReq.json();
+            console.log("Request JSON body route:", body.route);
+            
+            if (body && body.route === 'job-fit') {
+              console.log("Job fit route detected in request body");
+              isJobFitRequest = true;
+            }
+          } catch (jsonError) {
+            console.log("JSON parsing error:", jsonError.message);
+          }
+        } 
+        // For form data requests, check if it has the route parameter
+        else if (req.headers.get("content-type")?.includes("multipart/form-data")) {
+          try {
+            const formData = await clonedReq.formData();
             const routeValue = formData.get('route');
             console.log("Form data route value:", routeValue);
+            
             if (routeValue === 'job-fit') {
               console.log("Job fit route detected in form data");
               isJobFitRequest = true;
             }
-            // Re-parse the form data in a way that doesn't consume the body stream
-            return handleRequestByType(isJobFitRequest, req);
           } catch (formError) {
             console.log("Form data parsing error:", formError.message);
-            console.log("Not form data either. Checking query parameters.");
-            // If it's neither JSON nor form data, check query params
-            const queryRoute = url.searchParams.get('route');
-            console.log("URL query route parameter:", queryRoute);
-            if (queryRoute === 'job-fit') {
-              console.log("Job fit route detected in query parameters");
-              isJobFitRequest = true;
-            }
-            return handleRequestByType(isJobFitRequest, req);
           }
         }
-      } catch (e) {
-        console.log("Error determining request type:", e.message);
-        // If all parsing fails, check query params as a fallback
+        
+        // Check query parameters as a last resort
         const queryRoute = url.searchParams.get('route');
-        console.log("URL query route parameter:", queryRoute);
+        if (queryRoute === 'job-fit') {
+          console.log("Job fit route detected in query parameters");
+          isJobFitRequest = true;
+        }
+      } catch (parseError) {
+        console.log("Error parsing request to determine type:", parseError.message);
+        
+        // Check query params as a fallback
+        const queryRoute = url.searchParams.get('route');
         if (queryRoute === 'job-fit') {
           console.log("Job fit route detected in query parameters");
           isJobFitRequest = true;
@@ -79,9 +79,18 @@ serve(async (req) => {
       }
     }
     
-    console.log(`Request is job fit request: ${isJobFitRequest}`);
-    return handleRequestByType(isJobFitRequest, req);
+    console.log(`Request identified as job fit request: ${isJobFitRequest}`);
     
+    // Handle according to the determined request type
+    if (isJobFitRequest) {
+      // Handle job fit analysis using Eden AI workflow
+      console.log("Forwarding to job fit handler");
+      return await handleJobFitRequest(req);
+    } else {
+      // Handle regular OCR document extraction
+      console.log("Forwarding to OCR handler");
+      return await handleOCRRequest(req);
+    }
   } catch (error) {
     console.error("Unhandled error in extract-document:", error);
     
@@ -95,34 +104,3 @@ serve(async (req) => {
     );
   }
 });
-
-/**
- * Handle the request based on determined type
- */
-async function handleRequestByType(isJobFitRequest: boolean, req: Request): Promise<Response> {
-  try {
-    // Log the request content type
-    console.log("Request content type:", req.headers.get("content-type"));
-    
-    // Handle according to the determined request type
-    if (isJobFitRequest) {
-      // Handle job fit analysis using Eden AI workflow
-      console.log("Forwarding to job fit handler");
-      return await handleJobFitRequest(req);
-    } else {
-      // Handle regular OCR document extraction
-      console.log("Forwarding to OCR handler");
-      return await handleOCRRequest(req);
-    }
-  } catch (error) {
-    console.error("Error in request handler:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        success: false,
-        extracted_text: "Erro ao processar a requisição. Por favor, tente novamente." 
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
-  }
-}

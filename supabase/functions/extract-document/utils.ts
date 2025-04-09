@@ -1,44 +1,52 @@
 
-/**
- * Shared utility functions and constants for document extraction
- */
-
-// CORS headers for browser requests
+// CORS headers for all responses
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Export the Eden AI API key - use environment variable if set, otherwise use provided key
-export const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY") || 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZDYxODMwYzctYTVlOC00NTk5LWI0ODEtMDk3YmU5NjU4OGRmIiwidHlwZSI6ImFwaV90b2tlbiJ9.K_UQL-aA_lIGArvk96ZepwaD-EBUSFXSF3Qlu1iO2zc";
+// Get Eden AI API key from environment variables
+export const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY");
 
-/**
- * Clean up and normalize extracted text
- */
-export function cleanExtractedText(text: string): string {
-  return text
-    // Replace multiple newlines with double newlines (paragraph breaks)
-    .replace(/\n{3,}/g, "\n\n")
-    // Remove excessive spaces
-    .replace(/[ \t]{3,}/g, " ")
-    // Normalize whitespace around punctuation
-    .replace(/\s+([.,;:!?])/g, "$1")
-    // Remove any non-printable characters
-    .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t ]/g, "");
+// Check if API key is properly set
+export function validateAPIKey() {
+  if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20) {
+    console.error("Eden AI API key issue:", EDEN_AI_API_KEY ? "Key too short" : "Key not found");
+    return false;
+  }
+  return true;
 }
 
-/**
- * Check if text contains binary or corrupted data
- */
-export function hasBinaryData(text: string): boolean {
-  return /[^\x20-\x7E\xA0-\xFF\n\r\t ]/g.test(text);
+// Create standardized error response
+export function createErrorResponse(error: Error, status = 500) {
+  console.error("Error in edge function:", error.message);
+  
+  return new Response(
+    JSON.stringify({ 
+      success: false,
+      error: error.message,
+      fallbackAnalysis: true,
+      compatibilityScore: "Erro na Análise",
+      keySkills: ["Não foi possível processar a análise"],
+      relevantExperiences: ["Ocorreu um erro no processamento"],
+      identifiedGaps: ["Tente novamente mais tarde"]
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status }
+  );
 }
 
-/**
- * Format file metadata and content into a complete document
- */
-export function formatDocumentWithMetadata(fileName: string, type: string, content: string): string {
-  const metadata = `Arquivo: ${fileName}\nTipo: ${type}\nData de extração: ${new Date().toLocaleString()}\n\n`;
-  return metadata + content;
+// Create standardized missing data response
+export function createMissingDataResponse(message: string) {
+  return new Response(
+    JSON.stringify({ 
+      success: false,
+      error: message,
+      fallbackAnalysis: true,
+      compatibilityScore: "Dados Insuficientes",
+      keySkills: ["Dados insuficientes para análise"],
+      relevantExperiences: ["Forneça informações completas"],
+      identifiedGaps: ["Verifique os dados informados"]
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+  );
 }

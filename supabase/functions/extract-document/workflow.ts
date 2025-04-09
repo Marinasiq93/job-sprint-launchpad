@@ -1,5 +1,5 @@
 
-import { EDEN_AI_API_KEY } from "./utils.ts";
+import { EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
 /**
  * Calls Eden AI workflow API
@@ -8,9 +8,10 @@ export async function callEdenAIWorkflow(
   inputs: Record<string, any>,
   workflowId: string
 ): Promise<any> {
-  if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20) {
-    console.error("Eden AI API key issue:", EDEN_AI_API_KEY ? "Key too short" : "Key not found");
-    throw new Error("Eden AI API key is not configured correctly");
+  // Verify API key before sending request
+  if (!validateAPIKey()) {
+    console.error("Eden AI API key validation failed");
+    throw new Error("API de análise não configurada corretamente");
   }
   
   console.log(`Sending request to Eden AI workflow for workflow ID: ${workflowId}`);
@@ -53,17 +54,17 @@ export async function callEdenAIWorkflow(
       
       // Check for specific error codes
       if (response.status === 404) {
-        throw new Error(`Workflow ID ${workflowId} not found`);
+        throw new Error(`Workflow ID ${workflowId} não encontrado`);
       } else if (response.status === 401) {
-        throw new Error('Unauthorized: Check your Eden AI API key');
+        throw new Error('Problema de autenticação: Verifique a chave de API');
       } else if (response.status === 400) {
-        throw new Error(`Bad request: ${errorText}`);
+        throw new Error(`Requisição inválida: ${errorText}`);
       } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded: Too many requests to Eden AI');
+        throw new Error('Taxa limite excedida: Muitas requisições para Eden AI');
       }
       
       // For other error codes, throw a generic error
-      throw new Error(`Eden AI API request failed: ${response.status}`);
+      throw new Error(`Falha na requisição da API: ${response.status}`);
     }
     
     // Parse the response
@@ -92,32 +93,5 @@ export async function callEdenAIWorkflow(
   } catch (error) {
     console.error("Error calling Eden AI workflow:", error);
     throw error;
-  }
-}
-
-/**
- * Processes document extraction response from workflow
- */
-export function processDocumentExtractionResponse(data: any, fileName: string): { success: boolean, extracted_text: string } | null {
-  if (!data) return null;
-  
-  try {
-    // Extract the text from the workflow response based on the expected structure
-    if (data.workflow_result && typeof data.workflow_result === 'string') {
-      return {
-        success: true,
-        extracted_text: data.workflow_result
-      };
-    } else if (data.extracted_text && typeof data.extracted_text === 'string') {
-      return {
-        success: true,
-        extracted_text: data.extracted_text
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error(`Error processing workflow response for ${fileName}:`, error);
-    return null;
   }
 }

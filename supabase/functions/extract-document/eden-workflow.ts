@@ -1,7 +1,7 @@
 
 import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
-import { corsHeaders, EDEN_AI_API_KEY } from "./utils.ts";
+import { corsHeaders, EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
 // Updated workflow IDs - using a fallback approach
 export const JOB_FIT_WORKFLOW_IDS = [
@@ -21,25 +21,34 @@ export async function callEdenAIWorkflows(
 ): Promise<Response | null> {
   let lastError = null;
   
+  // Validate API key before proceeding
+  if (!validateAPIKey()) {
+    console.error("Eden AI API key validation failed");
+    return null;
+  }
+  
   console.log("Starting Eden AI workflow call with API key:", 
-              EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 10)}...` : "No API key found");
+              EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 5)}...` : "No API key found");
   console.log("Job fit workflow IDs:", workflowIds);
+  console.log("Resume base64 length:", resumeBase64?.length || 0);
+  console.log("Job description length:", jobDescription?.length || 0);
   
   // Try each workflow ID until one works
   for (const workflowId of workflowIds) {
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Format inputs EXACTLY as expected by the Eden AI workflow
-      // IMPORTANT: Use the exact case-sensitive names shown in your workflow screenshots
+      // Format inputs EXACTLY as the workflow expects based on screenshots
+      // IMPORTANT: These must match the exact case and spelling in the Eden AI workflow
       const workflowInputs = {
         Resume: resumeBase64,
         Jobdescription: jobDescription
       };
       
-      // Add job title if provided - note: only add if your workflow actually has this input
-      if (jobTitle && workflowIds.includes("job_title")) {
-        workflowInputs['job_title'] = jobTitle;
+      // Add job title if provided
+      if (jobTitle) {
+        // Only include job_title if it's expected by the workflow
+        workflowInputs["job_title"] = jobTitle;
       }
       
       console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));

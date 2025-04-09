@@ -1,8 +1,7 @@
 
-import { corsHeaders } from "./utils.ts";
+import { corsHeaders, createMissingDataResponse, createErrorResponse } from "./utils.ts";
 import { generateFallbackAnalysis } from "./job-fit-fallback.ts";
 import { JOB_FIT_WORKFLOW_IDS, callEdenAIWorkflows } from "./eden-workflow.ts";
-import { createMissingDataResponse, createErrorResponse } from "./analysis-extractor.ts";
 import { EDEN_AI_API_KEY } from "./utils.ts";
 
 /**
@@ -14,8 +13,26 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     console.log("Eden AI API Key configured:", EDEN_AI_API_KEY ? "Yes (length: " + EDEN_AI_API_KEY.length + ")" : "No");
     
     // Parse the request body
-    const data = await req.json();
+    let data;
+    try {
+      data = await req.json();
+      console.log("Request body parsed successfully");
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
+      return createErrorResponse(new Error("Erro ao processar os dados da solicitação"), 400);
+    }
+    
+    // Extract data with detailed logging
     const { resumeBase64, resumeType, resumeName, jobDescription, jobTitle } = data;
+    console.log("Data extraction from request:", {
+      hasResumeBase64: !!resumeBase64,
+      resumeBase64Length: resumeBase64?.length || 0,
+      hasResumeType: !!resumeType,
+      hasResumeName: !!resumeName,
+      hasJobDescription: !!jobDescription,
+      jobDescriptionLength: jobDescription?.length || 0,
+      hasJobTitle: !!jobTitle
+    });
     
     // More detailed validation
     if (!resumeBase64) {
@@ -40,7 +57,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     console.log(`Job title provided: ${jobTitle ? 'Yes' : 'No'}`);
     
     // If no Eden AI workflow is accessible, use our fallback text-based analysis approach
-    if (!EDEN_AI_API_KEY || JOB_FIT_WORKFLOW_IDS.length === 0) {
+    if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20 || JOB_FIT_WORKFLOW_IDS.length === 0) {
       console.log("No Eden AI workflows available, using fallback analysis");
       return generateFallbackAnalysis(resumeBase64, jobDescription);
     }
