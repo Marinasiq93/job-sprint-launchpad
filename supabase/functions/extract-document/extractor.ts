@@ -1,5 +1,5 @@
 
-import { callEdenAIWorkflow, processDocumentExtractionResponse } from "./workflow.ts";
+import { callEdenAIWorkflow } from "./workflow.ts";
 import { callEdenAIOCR, processEdenAIResponse } from "./ocr-api.ts";
 
 /**
@@ -17,11 +17,7 @@ export async function callEdenAI(
     console.log(`Calling Eden AI workflow ${workflowId}...`);
     // Create payload for document extraction workflow
     const workflowPayload = {
-      workflow_id: workflowId,
-      async: false,
-      inputs: {
-        document: fileBase64  // This will become a top-level "document" parameter in the API call
-      }
+      document: fileBase64  // This will become a top-level "document" parameter in the API call
     };
     return callEdenAIWorkflow(workflowPayload, workflowId);
   } else {
@@ -50,20 +46,18 @@ export async function extractWithFallbacks(
       console.log(`Trying Eden AI workflow: ${workflowId}`);
       // Create payload for document extraction workflow
       const workflowPayload = {
-        workflow_id: workflowId,
-        async: false,
-        inputs: {
-          document: fileBase64  // This will become a top-level "document" parameter in the API call
-        }
+        document: fileBase64  // This will become a top-level "document" parameter in the API call
       };
       const data = await callEdenAIWorkflow(workflowPayload, workflowId);
       
-      // Process the workflow response
-      const workflowResult = processDocumentExtractionResponse(data, fileName);
-      if (workflowResult) {
-        return workflowResult;
+      // Process workflow response for document extraction
+      if (data && data.extracted_text) {
+        return {
+          success: true,
+          extracted_text: data.extracted_text
+        };
       }
-      // If workflow processing returned null, continue to OCR providers
+      // If workflow processing returned no text, continue to OCR providers
     } catch (error) {
       lastError = error;
       console.error(`Error with workflow ${workflowId}:`, error);

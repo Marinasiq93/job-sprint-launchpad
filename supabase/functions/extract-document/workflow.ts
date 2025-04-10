@@ -50,8 +50,8 @@ export async function callEdenAIWorkflow(
     }
     
     // Add Jobdescription as plain text with exact field name
-    if (inputs.jobDescription) {
-      formData.append('Jobdescription', inputs.jobDescription);
+    if (inputs.Jobdescription) {
+      formData.append('Jobdescription', inputs.Jobdescription);
       console.log("Added Jobdescription text to FormData");
     }
     
