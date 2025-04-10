@@ -41,10 +41,10 @@ export async function callEdenAIWorkflows(
     
     console.log("Calling Eden AI workflow with inputs:", Object.keys(workflowInputs));
     
-    // Call the Eden AI workflow with our inputs
+    // Call the Eden AI workflow with our inputs and wait for results
     const result = await callEdenAIWorkflow(workflowInputs, workflowId);
     
-    console.log("Eden AI workflow response received", JSON.stringify({
+    console.log("Eden AI workflow execution completed", JSON.stringify({
       has_result: !!result,
       result_type: result ? typeof result : 'undefined',
       result_keys: result ? Object.keys(result) : []
@@ -62,15 +62,15 @@ export async function callEdenAIWorkflows(
       const jobFitFeedbackText = result.job_fit_feedback || 
                                  result.workflow_result || 
                                  result.analysis || 
-                                 result.results?.output ||
                                  result.output ||
+                                 result.results?.output ||
                                  "";
                                  
       console.log("Job fit feedback text sample:", jobFitFeedbackText.substring(0, 100) + "...");
       
       // Skip if feedback is too short
-      if (jobFitFeedbackText.length < 50) {
-        console.warn("Job fit feedback too short");
+      if (!jobFitFeedbackText || jobFitFeedbackText.length < 50) {
+        console.warn("Job fit feedback too short or missing");
         return null;
       }
       
@@ -83,8 +83,11 @@ export async function callEdenAIWorkflows(
       // Add input summary for debugging if needed
       if (debug) {
         analysisResult.inputSummary = {
+          jobTitleLength: jobTitle?.length || 0,
           jobDescriptionLength: jobDescription?.length || 0,
-          resumeFileLength: resumeBase64?.length || 0
+          resumeTextLength: resumeBase64?.length || 0,
+          coverLetterTextLength: 0,
+          referenceTextLength: 0
         };
       }
       
@@ -103,7 +106,7 @@ export async function callEdenAIWorkflows(
           keySkills: ["Veja a análise completa abaixo"],
           relevantExperiences: ["Análise detalhada disponível"],
           identifiedGaps: ["Consulte a análise completa abaixo"],
-          rawAnalysis: result.job_fit_feedback || result.workflow_result || result.analysis || result.results?.output || result.output || "Sem dados de análise disponíveis",
+          rawAnalysis: result.job_fit_feedback || result.workflow_result || result.analysis || result.output || "Sem dados de análise disponíveis",
           fallbackAnalysis: false
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }

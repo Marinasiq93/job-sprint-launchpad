@@ -1,6 +1,9 @@
 
 import { EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
+const WORKFLOW_POLL_INTERVAL = 3000; // 3 seconds
+const WORKFLOW_MAX_POLLS = 10; // Maximum number of polling attempts
+
 /**
  * Calls Eden AI workflow API with proper FormData structure
  */
@@ -83,12 +86,11 @@ export async function callEdenAIWorkflow(
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`
-        // No need to set Content-Type, FormData will set it with correct boundary
       },
       body: formData
     });
     
-    console.log(`Eden AI response status: ${response.status}`);
+    console.log(`Eden AI workflow execution initiated - status: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -96,25 +98,95 @@ export async function callEdenAIWorkflow(
       throw new Error(`Eden AI API error: ${response.status} - ${errorText}`);
     }
     
-    const data = await response.json();
-    console.log("Eden AI workflow response received:", JSON.stringify({
-      status: data.status,
-      has_results: !!data.results,
-      keys: Object.keys(data)
+    // Get the initial response which contains the execution ID
+    const executionData = await response.json();
+    console.log("Eden AI workflow execution initiated:", JSON.stringify({
+      id: executionData.id,
+      status: executionData.status
     }));
     
-    // Return the results
-    if (data.status === 'success' && data.results) {
-      return data.results;
-    } else if (data.content && typeof data.content === 'object') {
-      return data.content;
-    } else if (data.output) {
-      return { output: data.output };
+    // Now poll for the execution results
+    const executionId = executionData.id;
+    if (!executionId) {
+      console.error("No execution ID received from Eden AI");
+      throw new Error("No execution ID received from Eden AI");
     }
     
-    return data;
+    console.log(`Polling for execution results, ID: ${executionId}`);
+    
+    // Poll for results
+    const results = await pollForWorkflowResults(workflowId, executionId);
+    return results;
   } catch (error) {
     console.error("Error calling Eden AI workflow:", error);
+    throw error;
+  }
+}
+
+/**
+ * Poll for workflow execution results until they are available
+ */
+async function pollForWorkflowResults(
+  workflowId: string,
+  executionId: string,
+  pollCount = 0
+): Promise<any> {
+  if (pollCount >= WORKFLOW_MAX_POLLS) {
+    console.error("Maximum polling attempts reached without getting results");
+    throw new Error("Tempo limite excedido para análise");
+  }
+  
+  console.log(`Polling for results (attempt ${pollCount + 1}/${WORKFLOW_MAX_POLLS})`);
+  const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/${executionId}/`;
+  
+  try {
+    const response = await fetch(apiUrl, {
+      headers: {
+        "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Error fetching execution results: ${response.status}`);
+      await new Promise(resolve => setTimeout(resolve, WORKFLOW_POLL_INTERVAL));
+      return pollForWorkflowResults(workflowId, executionId, pollCount + 1);
+    }
+    
+    const data = await response.json();
+    console.log("Execution status poll response:", JSON.stringify({
+      status: data.status,
+      has_content: !!data.content,
+      has_results: !!data.results
+    }));
+    
+    // If the workflow is still running, poll again
+    if (data.status === 'pending' || data.status === 'running') {
+      await new Promise(resolve => setTimeout(resolve, WORKFLOW_POLL_INTERVAL));
+      return pollForWorkflowResults(workflowId, executionId, pollCount + 1);
+    }
+    
+    // If the workflow is completed, return the results
+    if (data.status === 'success') {
+      console.log("Workflow execution completed successfully");
+      
+      // Navigate the response structure to find the results
+      if (data.results) {
+        return data.results;
+      } else if (data.content && typeof data.content === 'object') {
+        return data.content;
+      } else if (data.output) {
+        return { output: data.output };
+      }
+      
+      // Return the entire response if we can't find specific results
+      return data;
+    } else {
+      console.error(`Workflow execution failed with status: ${data.status}`);
+      throw new Error(`Falha na execução do fluxo de análise: ${data.status}`);
+    }
+  } catch (error) {
+    console.error(`Error polling for results:`, error);
     throw error;
   }
 }

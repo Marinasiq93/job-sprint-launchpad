@@ -12,6 +12,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
   const [result, setResult] = useState<FitAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [debugMode, setDebugMode] = useState(false);
+  const [analysisAttempt, setAnalysisAttempt] = useState(0);
 
   const generateFitAnalysis = async () => {
     if (!sprintData || !userDocuments) {
@@ -27,6 +28,8 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     
     setError(null);
     setLoading(true);
+    setAnalysisAttempt(prev => prev + 1);
+    
     try {
       console.log("Preparing data for job fit analysis...");
       
@@ -97,6 +100,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     error,
     generateFitAnalysis,
     debugMode,
-    setDebugMode
+    setDebugMode,
+    analysisAttempt
   };
 };

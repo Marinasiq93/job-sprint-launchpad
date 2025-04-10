@@ -49,10 +49,23 @@ export const fitAnalysisService = {
     try {
       console.log("Sending request to extract-document function");
       
-      // Call the edge function
-      const { data, error } = await supabase.functions.invoke('extract-document', {
+      // Call the edge function with a timeout
+      const fetchPromise = supabase.functions.invoke('extract-document', {
         body: requestData
       });
+      
+      // Add a timeout of 60 seconds
+      const timeoutPromise = new Promise<{data: null, error: Error}>(resolve => {
+        setTimeout(() => {
+          resolve({
+            data: null,
+            error: new Error("A análise está demorando muito, por favor tente novamente")
+          });
+        }, 60000);
+      });
+      
+      // Race between the fetch and the timeout
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       
       if (error) {
         console.error("Edge function error:", error);
@@ -69,6 +82,17 @@ export const fitAnalysisService = {
         hasFallbackAnalysis: !!data.fallbackAnalysis,
         compatibilityScore: data.compatibilityScore
       });
+      
+      // Add input summary for debugging
+      if (debug && data) {
+        data.inputSummary = {
+          jobTitleLength: jobTitle?.length || 0,
+          jobDescriptionLength: jobDescription.length,
+          resumeTextLength: resumeBase64.length / 1.33, // Approximate the original text length
+          coverLetterTextLength: 0,
+          referenceTextLength: 0
+        };
+      }
       
       // Check if response contains error but still has fallback analysis
       if (data.error && data.fallbackAnalysis) {
