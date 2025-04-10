@@ -38,7 +38,7 @@ export async function callEdenAIWorkflows(
       resume: resumeBase64             // PDF file as base64
     };
     
-    console.log("Calling Eden AI workflow with simplified inputs");
+    console.log("Calling Eden AI workflow with inputs:", Object.keys(workflowInputs));
     
     // Call the Eden AI workflow with our inputs
     const result = await callEdenAIWorkflow(workflowInputs, workflowId);
