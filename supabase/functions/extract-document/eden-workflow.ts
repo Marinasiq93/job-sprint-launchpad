@@ -38,26 +38,16 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Based on the example shared in chat, format the inputs EXACTLY as expected
-      // The workflow is expecting 'Resume' and 'Jobdescription' as input parameters
+      // Format the inputs exactly as shown in the provided example
       const workflowInputs = {
         Resume: resumeBase64,
         Jobdescription: jobDescription
       };
       
-      // Add job title if provided (only if the workflow expects it)
-      if (jobTitle) {
-        workflowInputs["job_title"] = jobTitle;
-      }
-      
       console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));
-      console.log("Input sample sizes - Resume:", resumeBase64.length, "Jobdescription:", jobDescription.length);
       
       // Call the Eden AI workflow with our prepared payload
-      const result = await callEdenAIWorkflow(
-        workflowInputs,
-        workflowId
-      );
+      const result = await callEdenAIWorkflow(workflowInputs, workflowId);
       
       console.log("Eden AI workflow response received", JSON.stringify({
         has_result: !!result,
@@ -128,8 +118,6 @@ export async function callEdenAIWorkflows(
     } catch (workflowError) {
       console.error(`Error with workflow ${workflowId}:`, workflowError);
       lastError = workflowError;
-      // Since there's only one workflow now, no need to continue
-      break;
     }
   }
   

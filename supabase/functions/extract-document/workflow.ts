@@ -33,7 +33,7 @@ export async function callEdenAIWorkflow(
     );
     console.log("Full request payload structure:", JSON.stringify(inputsDebug));
     
-    // Send inputs directly as top-level parameters according to the Eden AI API documentation you shared
+    // Send the request exactly as shown in the provided example
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -64,14 +64,12 @@ export async function callEdenAIWorkflow(
         throw new Error('Taxa limite excedida: Muitas requisições para Eden AI');
       }
       
-      // For other error codes, throw a generic error
       throw new Error(`Falha na requisição da API: ${response.status}`);
     }
     
     // Parse the response
     const data = await response.json();
     
-    // Log the response structure to help with debugging
     console.log("Eden AI workflow response structure:", JSON.stringify({
       status: data.status,
       has_content: !!data.content,
