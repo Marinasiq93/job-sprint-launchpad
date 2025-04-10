@@ -29,7 +29,7 @@ export async function callEdenAIWorkflows(
   console.log("Starting Eden AI workflow call with API key:", 
               EDEN_AI_API_KEY ? `${EDEN_AI_API_KEY.substring(0, 3)}...` : "No API key found");
   console.log("Job fit workflow IDs:", workflowIds);
-  console.log("Resume base64 length:", resumeBase64?.length || 0);
+  console.log("Resume file length:", resumeBase64?.length || 0);
   console.log("Job description length:", jobDescription?.length || 0);
   
   // Try each workflow ID until one works
@@ -37,39 +37,40 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // The input format could vary between workflows, trying multiple formats
-      // Format 1: Using lowercase with underscore (most common REST API format)
+      // The input format could vary between workflows, trying the most common formats
+      // Format 1: Using direct file upload pattern
       const workflowInputs1 = {
-        resume: resumeBase64,
-        job_description: jobDescription
+        resume_file: resumeBase64,
+        job_description: jobDescription,
+        job_title: jobTitle || ""
       };
       
-      console.log("Calling Eden AI workflow with input format 1");
+      console.log("Calling Eden AI workflow with direct file upload format");
       
       // Call the Eden AI workflow with our first format
       let result = await callEdenAIWorkflow(workflowInputs1, workflowId);
       
-      // If the first format fails, try a second format with camelCase
-      if (!result || (!result.job_fit_feedback && !result.workflow_result)) {
-        console.log("First input format didn't produce expected results, trying format 2");
+      // If the first format fails, try a second format with base64 encoded content
+      if (!result || (!result.job_fit_feedback && !result.workflow_result && !result.analysis)) {
+        console.log("First input format didn't produce expected results, trying base64 format");
         
-        // Format 2: Using camelCase (common in JavaScript)
         const workflowInputs2 = {
-          resumeContent: resumeBase64,
-          jobDescription: jobDescription
+          resume: resumeBase64,
+          job_description: jobDescription,
+          job_title: jobTitle || ""
         };
         
         result = await callEdenAIWorkflow(workflowInputs2, workflowId);
       }
       
-      // If the second format fails, try a third format with PascalCase
-      if (!result || (!result.job_fit_feedback && !result.workflow_result)) {
-        console.log("Second input format didn't produce expected results, trying format 3");
+      // If the second format fails, try a third format with camelCase
+      if (!result || (!result.job_fit_feedback && !result.workflow_result && !result.analysis)) {
+        console.log("Second input format didn't produce expected results, trying camelCase format");
         
-        // Format 3: Using PascalCase (sometimes used in APIs)
         const workflowInputs3 = {
-          Resume: resumeBase64,
-          JobDescription: jobDescription
+          resumeContent: resumeBase64,
+          jobDescription: jobDescription,
+          jobTitle: jobTitle || ""
         };
         
         result = await callEdenAIWorkflow(workflowInputs3, workflowId);
@@ -115,7 +116,7 @@ export async function callEdenAIWorkflows(
         if (debug) {
           analysisResult.inputSummary = {
             jobDescriptionLength: jobDescription?.length || 0,
-            resumeTextLength: resumeBase64?.length || 0
+            resumeFileLength: resumeBase64?.length || 0
           };
         }
         

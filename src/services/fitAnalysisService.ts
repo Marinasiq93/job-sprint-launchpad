@@ -41,19 +41,15 @@ export const fitAnalysisService = {
       resumeName,
       jobDescription,
       jobTitle,
-      coverLetterText,
-      referenceText,
       debug,
       route: 'job-fit' // Include route in the request body
     };
     
     // Log document text lengths for debugging
-    console.log("Document text lengths:", {
+    console.log("Document data lengths:", {
       jobTitleLength: jobTitle?.length || 0,
       jobDescriptionLength: jobDescription?.length || 0,
-      resumeBase64Length: resumeBase64?.length || 0,
-      coverLetterTextLength: coverLetterText?.length || 0,
-      referenceTextLength: referenceText?.length || 0
+      resumeBase64Length: resumeBase64?.length || 0
     });
     
     try {

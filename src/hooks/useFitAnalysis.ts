@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { FitAnalysisResult, UseFitAnalysisProps } from "@/types/fitAnalysis";
-import { extractDocumentTexts, textToBase64, validateDocumentContent } from "@/utils/documentAnalysisUtils";
+import { textToBase64 } from "@/utils/documentAnalysisUtils";
 import { fitAnalysisService } from "@/services/fitAnalysisService";
 
 export type { FitAnalysisResult } from "@/types/fitAnalysis";
@@ -19,45 +19,30 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       return;
     }
 
-    // Extract all document texts for analysis
-    const documentTexts = extractDocumentTexts(userDocuments);
-    
-    // Check if resume text is valid - look for content after any metadata headers
-    const resumeContent = documentTexts.resumeText?.split('\n\n').slice(1).join('\n\n') || 
-                         documentTexts.resumeText || '';
-    
-    // Validate the resume content but with more lenient validation
-    const validationOptions = {
-      minLength: 50, // Lower the minimum length requirement
-      requireLetters: true,
-      requireNumbers: false,
-      letterRatio: 0.2 // Lower the letter ratio requirement
-    };
-    
-    const { isValid, error: validationError } = validateDocumentContent(resumeContent, validationOptions);
-    
-    // Even if validation fails, we'll try to use whatever we have
-    if (!isValid) {
-      console.warn("Validation warning:", validationError);
-      toast.warning("O conteúdo do currículo é limitado, mas tentaremos gerar uma análise básica");
-      // Continue with analysis despite validation warning
+    // Check if resume data exists
+    if (!userDocuments.resume_text && !userDocuments.resume_file_name) {
+      toast.error("Necessário ter um currículo cadastrado");
+      return;
     }
-
+    
     setError(null);
     setLoading(true);
     try {
       console.log("Preparing data for Eden AI workflow analysis...");
       
-      // Use the resume content even if validation failed
-      let finalResumeContent = resumeContent;
+      // Use resume text content directly if available
+      let resumeBase64;
       
-      // If the content is really minimal, add some additional context from file name
-      if (finalResumeContent.length < 100 && userDocuments.resume_file_name) {
-        finalResumeContent += `\n\nCurrículo: ${userDocuments.resume_file_name}`;
+      if (userDocuments.resume_text) {
+        // Convert text content to base64 for the workflow
+        resumeBase64 = textToBase64(userDocuments.resume_text);
+        console.log("Using resume text content, converted to base64");
+      } else {
+        // Use resume file data from database if available
+        toast.error("Arquivo de currículo não encontrado");
+        setLoading(false);
+        return;
       }
-      
-      // Convert resume text to base64 for the workflow
-      const resumeBase64 = textToBase64(finalResumeContent);
       
       // Call the service to generate the fit analysis
       const data = await fitAnalysisService.generateFitAnalysis(
@@ -66,8 +51,8 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         userDocuments.resume_file_name || "resume.pdf",
         sprintData.jobDescription,
         sprintData.jobTitle,
-        documentTexts.coverLetterText,
-        documentTexts.referenceText,
+        null, // No cover letter needed for Eden AI workflow
+        null, // No reference text needed for Eden AI workflow
         debugMode
       );
 
