@@ -1,8 +1,7 @@
-
 import { EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
-const WORKFLOW_POLL_INTERVAL = 3000; // 3 seconds
-const WORKFLOW_MAX_POLLS = 10; // Maximum number of polling attempts
+const WORKFLOW_POLL_INTERVAL = 3000; // 3 seconds 
+const WORKFLOW_MAX_POLLS = 20; // Increased maximum number of polling attempts
 
 /**
  * Calls Eden AI workflow API with proper FormData structure
@@ -132,15 +131,19 @@ async function pollForWorkflowResults(
   pollCount = 0
 ): Promise<any> {
   if (pollCount >= WORKFLOW_MAX_POLLS) {
-    console.error("Maximum polling attempts reached without getting results");
-    throw new Error("Tempo limite excedido para análise");
+    console.error(`Maximum polling attempts (${WORKFLOW_MAX_POLLS}) reached without getting results`);
+    throw new Error(`Tempo limite excedido para análise (após ${WORKFLOW_MAX_POLLS} tentativas)`);
   }
   
   console.log(`Polling for results (attempt ${pollCount + 1}/${WORKFLOW_MAX_POLLS})`);
+  
+  // Construct the URL for getting execution results
   const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/${executionId}/`;
+  console.log(`Polling URL: ${apiUrl}`);
   
   try {
     const response = await fetch(apiUrl, {
+      method: "GET",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
         "Content-Type": "application/json"
@@ -148,7 +151,19 @@ async function pollForWorkflowResults(
     });
     
     if (!response.ok) {
-      console.error(`Error fetching execution results: ${response.status}`);
+      const errorStatus = response.status;
+      const errorBody = await response.text();
+      console.error(`Error fetching execution results: ${errorStatus} - ${errorBody}`);
+      
+      if (errorStatus === 404) {
+        throw new Error(`Execução do workflow não encontrada (ID: ${executionId})`);
+      }
+      
+      if (errorStatus === 401 || errorStatus === 403) {
+        throw new Error(`Erro de autenticação ao acessar o workflow (${errorStatus})`);
+      }
+      
+      // For other errors, continue polling
       await new Promise(resolve => setTimeout(resolve, WORKFLOW_POLL_INTERVAL));
       return pollForWorkflowResults(workflowId, executionId, pollCount + 1);
     }
@@ -157,36 +172,66 @@ async function pollForWorkflowResults(
     console.log("Execution status poll response:", JSON.stringify({
       status: data.status,
       has_content: !!data.content,
-      has_results: !!data.results
+      has_results: !!data.results,
+      content_keys: data.content ? Object.keys(data.content) : [],
+      results_keys: data.results ? Object.keys(data.results) : []
     }));
     
     // If the workflow is still running, poll again
-    if (data.status === 'pending' || data.status === 'running') {
+    if (data.status === 'pending' || data.status === 'running' || data.status === 'created') {
       await new Promise(resolve => setTimeout(resolve, WORKFLOW_POLL_INTERVAL));
       return pollForWorkflowResults(workflowId, executionId, pollCount + 1);
     }
     
+    // If the workflow failed, throw an error
+    if (data.status === 'failed' || data.status === 'error') {
+      console.error(`Workflow execution failed with status: ${data.status}`);
+      const errorMessage = data.error || `Falha na execução do workflow (${data.status})`;
+      throw new Error(errorMessage);
+    }
+    
     // If the workflow is completed, return the results
-    if (data.status === 'success') {
+    if (data.status === 'success' || data.status === 'completed') {
       console.log("Workflow execution completed successfully");
       
       // Navigate the response structure to find the results
-      if (data.results) {
+      if (data.results && Object.keys(data.results).length > 0) {
+        console.log("Returning 'results' from workflow response");
         return data.results;
-      } else if (data.content && typeof data.content === 'object') {
+      } else if (data.content && typeof data.content === 'object' && Object.keys(data.content).length > 0) {
+        console.log("Returning 'content' from workflow response");
         return data.content;
       } else if (data.output) {
+        console.log("Returning 'output' from workflow response");
         return { output: data.output };
+      } else if (data.job_fit_feedback) {
+        console.log("Returning 'job_fit_feedback' from workflow response");
+        return { job_fit_feedback: data.job_fit_feedback };
       }
       
       // Return the entire response if we can't find specific results
+      console.log("Returning entire workflow response data");
       return data;
     } else {
-      console.error(`Workflow execution failed with status: ${data.status}`);
-      throw new Error(`Falha na execução do fluxo de análise: ${data.status}`);
+      console.error(`Workflow execution has unexpected status: ${data.status}`);
+      throw new Error(`Status inesperado no workflow: ${data.status}`);
     }
   } catch (error) {
     console.error(`Error polling for results:`, error);
+    
+    // If we've made more than a few attempts, we'll throw the error
+    // Otherwise we'll keep trying
+    if (pollCount > 5 && error.message.includes("Execução do workflow não encontrada")) {
+      throw error;
+    }
+    
+    // If it's a network error or temporary failure, keep polling
+    if (!(error.message.includes("Tempo limite excedido") || 
+          error.message.includes("Erro de autenticação"))) {
+      await new Promise(resolve => setTimeout(resolve, WORKFLOW_POLL_INTERVAL));
+      return pollForWorkflowResults(workflowId, executionId, pollCount + 1);
+    }
+    
     throw error;
   }
 }

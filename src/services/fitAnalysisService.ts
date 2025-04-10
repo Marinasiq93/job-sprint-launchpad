@@ -49,19 +49,23 @@ export const fitAnalysisService = {
     try {
       console.log("Sending request to extract-document function");
       
-      // Call the edge function with a timeout
+      // Call the edge function with a timeout of 90 seconds (increased from 60)
       const fetchPromise = supabase.functions.invoke('extract-document', {
-        body: requestData
+        body: requestData,
+        // Increase the default timeout value to accommodate Eden AI's processing time
+        options: {
+          timeout: 90000 // 90 seconds
+        }
       });
       
-      // Add a timeout of 60 seconds
+      // Add a timeout of 90 seconds
       const timeoutPromise = new Promise<{data: null, error: Error}>(resolve => {
         setTimeout(() => {
           resolve({
             data: null,
             error: new Error("A análise está demorando muito, por favor tente novamente")
           });
-        }, 60000);
+        }, 90000); // 90 seconds
       });
       
       // Race between the fetch and the timeout
@@ -80,7 +84,9 @@ export const fitAnalysisService = {
       console.log("Edge function response received:", {
         hasError: !!data.error,
         hasFallbackAnalysis: !!data.fallbackAnalysis,
-        compatibilityScore: data.compatibilityScore
+        compatibilityScore: data.compatibilityScore,
+        hasRawAnalysis: !!data.rawAnalysis,
+        rawAnalysisLength: data.rawAnalysis?.length || 0
       });
       
       // Add input summary for debugging

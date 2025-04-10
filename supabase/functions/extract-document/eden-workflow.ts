@@ -27,6 +27,7 @@ export async function callEdenAIWorkflows(
   console.log("Starting Eden AI workflow call");
   console.log("Resume file length:", resumeBase64?.length || 0);
   console.log("Job description length:", jobDescription?.length || 0);
+  console.log("Job title:", jobTitle || "(not provided)");
   
   try {
     const workflowId = workflowIds[0]; // Just use the first workflow ID
@@ -60,13 +61,16 @@ export async function callEdenAIWorkflows(
     try {
       // Get the text from the workflow response - finding the most likely field
       const jobFitFeedbackText = result.job_fit_feedback || 
-                                 result.workflow_result || 
-                                 result.analysis || 
-                                 result.output ||
-                                 result.results?.output ||
-                                 "";
+                                result.workflow_result || 
+                                result.analysis || 
+                                result.output ||
+                                result.results?.output ||
+                                result.content?.job_fit_feedback ||
+                                result.results?.job_fit_feedback ||
+                                "";
                                  
       console.log("Job fit feedback text sample:", jobFitFeedbackText.substring(0, 100) + "...");
+      console.log("Job fit feedback text length:", jobFitFeedbackText.length);
       
       // Skip if feedback is too short
       if (!jobFitFeedbackText || jobFitFeedbackText.length < 50) {

@@ -47,7 +47,10 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         return;
       }
       
-      // Call the service with simplified parameters
+      // Show a loading toast to indicate the process might take some time
+      toast.loading("Analisando seu currículo e a vaga... Isso pode levar até 1 minuto.");
+      
+      // Call the service with parameters
       const data = await fitAnalysisService.generateFitAnalysis(
         resumeBase64,
         sprintData.jobDescription,
@@ -55,6 +58,9 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         debugMode
       );
 
+      // Dismiss the loading toast
+      toast.dismiss();
+      
       // Check if we received a fallback analysis due to an error
       if (data.fallbackAnalysis) {
         console.warn("Received fallback analysis:", data);
@@ -62,7 +68,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         setError(data.error ? `Análise simplificada: ${data.error}` : null);
         
         if (data.error) {
-          toast.warning("Análise simplificada gerada devido a um erro");
+          toast.warning("Análise simplificada gerada devido a um erro técnico");
         } else {
           // Even with fallback, if there's no explicit error, we consider it somewhat successful
           toast.success("Análise básica concluída");
@@ -74,6 +80,9 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       }
     } catch (error) {
       console.error("Error generating fit analysis:", error);
+      
+      // Dismiss the loading toast if it's still showing
+      toast.dismiss();
       
       // Create a fallback result for better user experience
       const fallbackResult = {

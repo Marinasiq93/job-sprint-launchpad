@@ -1,96 +1,197 @@
-
 /**
- * Extract structured analysis from the raw text returned by the AI
+ * Extract structured information from text analysis
  */
-export function extractStructuredAnalysis(text: string): any {
-  // Default values
-  const result = {
-    compatibilityScore: "Análise Realizada",
-    keySkills: [] as string[],
-    relevantExperiences: [] as string[],
-    identifiedGaps: [] as string[]
+export function extractStructuredAnalysis(text: string) {
+  if (!text) {
+    return {
+      compatibilityScore: "N/A",
+      keySkills: [],
+      relevantExperiences: [],
+      identifiedGaps: []
+    };
+  }
+  
+  // Try to extract compatibility score
+  let compatibilityScore = "Análise Realizada";
+  const scorePatterns = [
+    /compatibilidade[:\s]+([0-9]+[.,]?[0-9]*\s*%|[a-záàâãéèêíïóôõöúüçñ]+ [a-záàâãéèêíïóôõöúüçñ]+)/i,
+    /score[:\s]+([0-9]+[.,]?[0-9]*\s*%|[a-záàâãéèêíïóôõöúüçñ]+ [a-záàâãéèêíïóôõöúüçñ]+)/i,
+    /pontuação[:\s]+([0-9]+[.,]?[0-9]*\s*%|[a-záàâãéèêíïóôõöúüçñ]+ [a-záàâãéèêíïóôõöúüçñ]+)/i,
+    /fit[:\s]+([0-9]+[.,]?[0-9]*\s*%|[a-z]+ [a-z]+)/i
+  ];
+  
+  for (const pattern of scorePatterns) {
+    const match = text.match(pattern);
+    if (match && match[1]) {
+      compatibilityScore = match[1].trim();
+      break;
+    }
+  }
+  
+  // Enhanced skill extraction
+  const keySkills: string[] = [];
+  const skillSections = text.match(/(?:habilidades|competências|skills|principais\s+pontos|principais\s+competências)[:\s]+(?:\n|.)+?(?=\n\s*\n|\n\s*[A-Z]|$)/gi);
+  
+  if (skillSections && skillSections.length > 0) {
+    // Process each skills section
+    for (const section of skillSections) {
+      // Extract list items with various list markers
+      const items = section.match(/(?:[-•*]\s*|\d+[.)\]]\s*|\n\s*)[A-Z][^-•*\n\.]*(?:\.[^-•*\n\.]+)?/g);
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          const cleanItem = item.replace(/[-•*\d+.)\]]/g, "").trim();
+          if (cleanItem.length > 3 && !keySkills.includes(cleanItem)) {
+            keySkills.push(cleanItem);
+          }
+        });
+      } else {
+        // If no list items found, try splitting by commas or newlines
+        const text = section.replace(/(?:habilidades|competências|skills|principais\s+pontos|principais\s+competências)[:\s]+/i, "");
+        const parts = text.split(/[,\n]/).map(p => p.trim()).filter(p => 
+          p.length > 3 && 
+          !/^(?:habilidades|competências|skills)$/i.test(p)
+        );
+        
+        parts.forEach(part => {
+          if (!keySkills.includes(part)) {
+            keySkills.push(part);
+          }
+        });
+      }
+    }
+  }
+  
+  // If no skills extracted yet, try another approach
+  if (keySkills.length === 0) {
+    // Look for colon-separated lists
+    const skillColonList = text.match(/(?:habilidades|competências|skills)[:\s]+([^\.]+)/i);
+    if (skillColonList && skillColonList[1]) {
+      const skills = skillColonList[1].split(/[,;]/).map(s => s.trim()).filter(s => s.length > 3);
+      skills.forEach(skill => keySkills.push(skill));
+    }
+  }
+  
+  // Extract experiences with a similar approach
+  const relevantExperiences: string[] = [];
+  const experienceSections = text.match(/(?:experiências|experiência|experience|projetos relevantes|experiência relevante)[:\s]+(?:\n|.)+?(?=\n\s*\n|\n\s*[A-Z]|$)/gi);
+  
+  if (experienceSections && experienceSections.length > 0) {
+    for (const section of experienceSections) {
+      // Extract list items
+      const items = section.match(/(?:[-•*]\s*|\d+[.)\]]\s*|\n\s*)[A-Z][^-•*\n\.]*(?:\.[^-•*\n\.]+)?/g);
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          const cleanItem = item.replace(/[-•*\d+.)\]]/g, "").trim();
+          if (cleanItem.length > 3 && !relevantExperiences.includes(cleanItem)) {
+            relevantExperiences.push(cleanItem);
+          }
+        });
+      } else {
+        // If no list items found, try splitting by periods or newlines
+        const text = section.replace(/(?:experiências|experiência|experience|projetos relevantes|experiência relevante)[:\s]+/i, "");
+        const parts = text.split(/[.\n]/).map(p => p.trim()).filter(p => 
+          p.length > 3 && 
+          !/^(?:experiências|experiência|experience)$/i.test(p)
+        );
+        
+        parts.forEach(part => {
+          if (!relevantExperiences.includes(part)) {
+            relevantExperiences.push(part);
+          }
+        });
+      }
+    }
+  }
+  
+  // Extract gaps
+  const identifiedGaps: string[] = [];
+  const gapSections = text.match(/(?:lacunas|gaps|áreas de desenvolvimento|pontos fracos|melhorias|deficiências)[:\s]+(?:\n|.)+?(?=\n\s*\n|\n\s*[A-Z]|$)/gi);
+  
+  if (gapSections && gapSections.length > 0) {
+    for (const section of gapSections) {
+      // Extract list items
+      const items = section.match(/(?:[-•*]\s*|\d+[.)\]]\s*|\n\s*)[A-Z][^-•*\n\.]*(?:\.[^-•*\n\.]+)?/g);
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          const cleanItem = item.replace(/[-•*\d+.)\]]/g, "").trim();
+          if (cleanItem.length > 3 && !identifiedGaps.includes(cleanItem)) {
+            identifiedGaps.push(cleanItem);
+          }
+        });
+      } else {
+        // If no list items found, try splitting by periods or newlines
+        const text = section.replace(/(?:lacunas|gaps|áreas de desenvolvimento|pontos fracos|melhorias|deficiências)[:\s]+/i, "");
+        const parts = text.split(/[.\n]/).map(p => p.trim()).filter(p => 
+          p.length > 3 && 
+          !/^(?:lacunas|gaps|áreas de desenvolvimento|pontos fracos|melhorias|deficiências)$/i.test(p)
+        );
+        
+        parts.forEach(part => {
+          if (!identifiedGaps.includes(part)) {
+            identifiedGaps.push(part);
+          }
+        });
+      }
+    }
+  }
+  
+  // Ensure we have some minimum content
+  if (keySkills.length === 0) {
+    const skills = extractKeywordsFromText(text, ["programação", "desenvolvimento", "gestão", "análise", "design"]);
+    skills.forEach(skill => keySkills.push(skill));
+  }
+  
+  if (relevantExperiences.length === 0) {
+    const exps = extractKeywordsFromText(text, ["experiência", "projeto", "trabalhou", "desenvolveu", "implementou", "liderou"]);
+    exps.forEach(exp => relevantExperiences.push(exp));
+  }
+  
+  if (identifiedGaps.length === 0) {
+    const gaps = extractKeywordsFromText(text, ["falta", "ausência", "melhorar", "desenvolver", "aprimorar", "limitação"]);
+    gaps.forEach(gap => identifiedGaps.push(gap));
+  }
+  
+  // Limit the number of items in each array to keep the UI clean
+  const limitItems = (items: string[], limit: number = 5): string[] => {
+    return items.slice(0, limit);
   };
   
-  try {
-    console.log("Extracting structured analysis from text:", text.substring(0, 200) + "...");
-    
-    // Try to extract a compatibility score
-    const scoreMatch = text.match(/compatibility score:?\s*([\d.]+)%|compatibilidade:?\s*([\d.]+)%|pontuação:?\s*([\d.]+)%/i);
-    if (scoreMatch) {
-      const scoreValue = scoreMatch[1] || scoreMatch[2] || scoreMatch[3];
-      const score = parseFloat(scoreValue);
-      if (!isNaN(score)) {
-        if (score >= 80) {
-          result.compatibilityScore = `Alta Compatibilidade (${score}%)`;
-        } else if (score >= 60) {
-          result.compatibilityScore = `Compatibilidade Média (${score}%)`;
-        } else {
-          result.compatibilityScore = `Compatibilidade Baixa (${score}%)`;
+  return {
+    compatibilityScore,
+    keySkills: limitItems(keySkills),
+    relevantExperiences: limitItems(relevantExperiences),
+    identifiedGaps: limitItems(identifiedGaps)
+  };
+}
+
+/**
+ * Helper function to extract keywords from text when structured extraction fails
+ */
+function extractKeywordsFromText(text: string, keywords: string[], limit: number = 5): string[] {
+  const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
+  const result: string[] = [];
+  
+  // Extract sentences containing keywords
+  for (const keyword of keywords) {
+    for (const sentence of sentences) {
+      if (sentence.toLowerCase().includes(keyword.toLowerCase()) && !result.includes(sentence.trim())) {
+        const trimmed = sentence.trim();
+        if (trimmed.length > 5 && trimmed.length < 100) {
+          result.push(trimmed);
+          if (result.length >= limit) break;
         }
       }
-    } else if (text.toLowerCase().includes("alta compatibilidade") || text.toLowerCase().includes("high compatibility")) {
-      result.compatibilityScore = "Alta Compatibilidade";
-    } else if (text.toLowerCase().includes("média compatibilidade") || text.toLowerCase().includes("medium compatibility")) {
-      result.compatibilityScore = "Compatibilidade Média";
-    } else if (text.toLowerCase().includes("baixa compatibilidade") || text.toLowerCase().includes("low compatibility")) {
-      result.compatibilityScore = "Compatibilidade Baixa";
     }
-    
-    // Look for strengths, skills, or relevant sections
-    const strengthsMatch = text.match(/Strengths|Pontos Fortes|Forças|Skills|Habilidades|:[\s\S]*?(?=Gaps|Lacunas|Missing|$)/i);
-    if (strengthsMatch && strengthsMatch[0]) {
-      const strengthsText = strengthsMatch[0].replace(/Strengths|Pontos Fortes|Forças|Skills|Habilidades|:|\*\*/gi, '').trim();
-      // Extract bullet points
-      const strengthBullets = strengthsText.split(/\n-|\n•|\n\*|\n\d+\./).filter(Boolean).map(s => s.trim());
-      if (strengthBullets.length > 0) {
-        result.keySkills = strengthBullets.slice(0, 5); // Limit to first 5 skills
-      }
-      
-      // Try to find experiences separately, or use some skills as experiences if none found
-      const expMatch = text.match(/Experience|Experiência|Background|Projects|Projetos|:[\s\S]*?(?=Gaps|Lacunas|Missing|Skills|Habilidades|$)/i);
-      if (expMatch && expMatch[0]) {
-        const expText = expMatch[0].replace(/Experience|Experiência|Background|Projects|Projetos|:|\*\*/gi, '').trim();
-        const expBullets = expText.split(/\n-|\n•|\n\*|\n\d+\./).filter(Boolean).map(e => e.trim());
-        if (expBullets.length > 0) {
-          result.relevantExperiences = expBullets.slice(0, 5); // Limit to first 5 experiences
-        } else {
-          result.relevantExperiences = strengthBullets.slice(0, 3); // Use some skills as experiences if none found
-        }
-      } else {
-        result.relevantExperiences = strengthBullets.slice(0, 3); // Use some skills as experiences if no separate section
-      }
-    }
-    
-    // Look for gaps section
-    const gapsMatch = text.match(/Gaps|Lacunas|Missing|Areas for Improvement|Áreas para Melhorar|:[\s\S]*?(?=$)/i);
-    if (gapsMatch && gapsMatch[0]) {
-      const gapsText = gapsMatch[0].replace(/Gaps|Lacunas|Missing|Areas for Improvement|Áreas para Melhorar|:|\*\*/gi, '').trim();
-      // Extract bullet points
-      const gapBullets = gapsText.split(/\n-|\n•|\n\*|\n\d+\./).filter(Boolean).map(s => s.trim());
-      if (gapBullets.length > 0) {
-        result.identifiedGaps = gapBullets.slice(0, 5); // Limit to first 5 gaps
-      }
-    }
-    
-    // If we couldn't extract anything meaningful, set default values
-    if (result.keySkills.length === 0) {
-      result.keySkills = ["Análise de texto completa disponível abaixo"];
-    }
-    
-    if (result.relevantExperiences.length === 0) {
-      result.relevantExperiences = ["Consulte a análise completa para detalhes sobre experiências"];
-    }
-    
-    if (result.identifiedGaps.length === 0) {
-      result.identifiedGaps = ["Veja a análise detalhada para identificação de lacunas"];
-    }
-    
-    return result;
-  } catch (error) {
-    console.error("Error extracting structured analysis:", error);
-    // Return partial analysis
-    return result;
+    if (result.length >= limit) break;
   }
+  
+  // If we don't have enough results, add some generic ones
+  if (result.length === 0) {
+    result.push("Não foi possível extrair informações específicas do texto fornecido");
+    result.push("Considere fornecer um currículo mais detalhado para análise");
+  }
+  
+  return result;
 }
 
 /**
