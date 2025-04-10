@@ -30,12 +30,12 @@ export const fitAnalysisService = {
       };
     }
     
-    // Prepare the request payload with exact field names matching Eden AI workflow
+    // Prepare the request payload with simpler field names
     const requestData = {
-      resumeBase64: resumeBase64,  // Will be processed as 'resume' in the Edge Function
+      resumeBase64: resumeBase64,
       jobDescription: jobDescription,
-      jobTitle: jobTitle,
-      debug: debug,
+      jobTitle: jobTitle || "",
+      debug: !!debug,
       route: 'job-fit' // Include route in the request body
     };
     

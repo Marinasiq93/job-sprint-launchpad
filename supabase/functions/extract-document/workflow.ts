@@ -20,104 +20,98 @@ export async function callEdenAIWorkflow(
   try {
     // Use the direct workflow execution endpoint format
     const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/`;
-    console.log(`Sending request to Eden AI workflow API endpoint: ${apiUrl}`);
+    console.log(`Eden AI API endpoint: ${apiUrl}`);
     
     // Create FormData object for the request
     const formData = new FormData();
     
-    // Add each input to FormData with the proper field name
-    // For resume, we need to convert base64 to a blob
+    // Debug log what we're sending
+    console.log("Preparing inputs for Eden AI workflow:");
+    
+    // For resume file, convert base64 to blob and set as 'resume' field
     if (inputs.resume) {
-      // Convert base64 to blob
-      const base64Data = inputs.resume.split(',')[1] || inputs.resume;
-      const byteCharacters = atob(base64Data);
-      const byteArrays = [];
+      console.log("Processing resume base64 data...");
       
-      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-        const slice = byteCharacters.slice(offset, offset + 512);
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-          byteNumbers[i] = slice.charCodeAt(i);
+      try {
+        // Extract the base64 data part if it includes the data URL prefix
+        const base64Data = inputs.resume.includes(',') 
+          ? inputs.resume.split(',')[1] 
+          : inputs.resume;
+        
+        console.log(`Resume base64 length: ${base64Data.length}`);
+        
+        // Convert base64 to binary array
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
+        
+        // Create blob and add to FormData
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        formData.append('resume', blob, 'resume.pdf');
+        console.log("Resume blob created and added to FormData with key 'resume'");
+      } catch (error) {
+        console.error("Error processing resume base64:", error);
+        throw new Error("Error processing resume data");
       }
-      
-      // Create blob and add to FormData with the exact field name "Resume"
-      const blob = new Blob(byteArrays);
-      formData.append('Resume', blob, 'resume.pdf');
-      console.log("Added Resume file to FormData");
     }
     
-    // Add job description with exact field name "Jobdescription"
-    if (inputs.Jobdescription) {
-      formData.append('Jobdescription', inputs.Jobdescription);
-      console.log("Added Jobdescription text to FormData");
+    // Add job description as plain text
+    if (inputs.jobDescription) {
+      formData.append('job_description', inputs.jobDescription);
+      console.log("Added job description to FormData with key 'job_description'");
     }
     
-    console.log("FormData created with fields:", 
+    // Add any other inputs as form fields
+    for (const [key, value] of Object.entries(inputs)) {
+      if (key !== 'resume' && key !== 'jobDescription') {
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          formData.append(key, String(value));
+          console.log(`Added field ${key} to FormData`);
+        }
+      }
+    }
+    
+    console.log("Final FormData fields:", 
       Array.from(formData.entries()).map(entry => entry[0]));
     
-    // Add logging to help debug the request
-    console.log(`Authorization header will use token of length: ${EDEN_AI_API_KEY?.length || 0}`);
+    console.log(`Using Eden AI API Key: ${EDEN_AI_API_KEY ? "Yes (configured)" : "No (missing)"}`);
     
-    // Send the request to Eden AI using FormData
+    // Send the request to Eden AI
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`
-        // FormData sets its own content-type with boundary
+        // No need to set Content-Type, FormData will set it with correct boundary
       },
       body: formData
     });
     
-    // Log the response status and headers for debugging
-    console.log(`Eden AI API response status: ${response.status}`);
-    console.log('Response headers:', Object.fromEntries(response.headers));
+    console.log(`Eden AI response status: ${response.status}`);
     
-    // Check if the request was successful
     if (!response.ok) {
-      // Log the full error response for debugging
       const errorText = await response.text();
-      console.error(`Eden AI API error (${response.status}): ${errorText}`);
-      
-      // Check for specific error codes
-      if (response.status === 404) {
-        throw new Error(`Workflow ID ${workflowId} não encontrado`);
-      } else if (response.status === 401) {
-        throw new Error('Problema de autenticação: Verifique a chave de API');
-      } else if (response.status === 400) {
-        throw new Error(`Requisição inválida: ${errorText}`);
-      }
-      
-      throw new Error(`Falha na requisição da API: ${response.status}`);
+      console.error(`Eden AI API error (${response.status}):`, errorText);
+      throw new Error(`Eden AI API error: ${response.status} - ${errorText}`);
     }
     
-    // Parse the response
     const data = await response.json();
-    
-    console.log("Eden AI workflow response structure:", {
+    console.log("Eden AI workflow response received:", JSON.stringify({
       status: data.status,
-      has_content: !!data.content,
-      has_results: data && data.results ? true : false,
+      has_results: !!data.results,
       keys: Object.keys(data)
-    });
+    }));
     
-    // Return the results based on common Eden AI workflow response formats
+    // Return the results
     if (data.status === 'success' && data.results) {
       return data.results;
-    }
-    
-    if (data.content && typeof data.content === 'object') {
+    } else if (data.content && typeof data.content === 'object') {
       return data.content;
-    }
-    
-    // If output is available directly, return that
-    if (data.output) {
+    } else if (data.output) {
       return { output: data.output };
     }
     
-    // Return the whole data as a fallback
     return data;
   } catch (error) {
     console.error("Error calling Eden AI workflow:", error);

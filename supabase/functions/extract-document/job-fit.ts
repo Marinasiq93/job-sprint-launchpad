@@ -51,17 +51,10 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     }
 
     console.log(`Processing job fit analysis with workflow ID: ${JOB_FIT_WORKFLOW_IDS[0]}`);
-    console.log(`Job description length: ${jobDescription.length}`);
-    console.log(`Resume base64 data length: ${resumeBase64?.length || 0}`);
-    
-    // If no Eden AI workflow is accessible, use our fallback text-based analysis approach
-    if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20 || JOB_FIT_WORKFLOW_IDS.length === 0) {
-      console.log("No Eden AI workflows available, using fallback analysis");
-      return generateFallbackAnalysis(resumeBase64, jobDescription);
-    }
     
     try {
-      // Call Eden AI workflow with the resumeBase64 and jobDescription
+      // Try direct API call with proper FormData 
+      console.log("Sending request to Eden AI workflow API");
       const workflowResponse = await callEdenAIWorkflows(
         resumeBase64,
         jobDescription,
@@ -72,11 +65,12 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
       
       // If we got a valid response from Eden AI workflow, return it
       if (workflowResponse) {
+        console.log("Returning successful workflow response");
         return workflowResponse;
       }
       
       // If workflow failed, use our fallback analysis
-      console.log("Eden AI workflow failed, using fallback analysis");
+      console.log("Eden AI workflow returned no data, using fallback analysis");
       return generateFallbackAnalysis(resumeBase64, jobDescription);
       
     } catch (error) {

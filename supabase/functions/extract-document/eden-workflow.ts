@@ -32,11 +32,11 @@ export async function callEdenAIWorkflows(
     const workflowId = workflowIds[0]; // Just use the first workflow ID
     console.log(`Using Eden AI workflow ID: ${workflowId}`);
     
-    // Prepare inputs using the exact field names expected by Eden AI
-    // IMPORTANT: These must match what the API expects exactly
+    // Prepare inputs with simple field names that match our workflow.ts implementation
     const workflowInputs = {
-      Jobdescription: jobDescription,  // This name must match Eden AI workflow parameter exactly
-      resume: resumeBase64             // Will be transformed into 'Resume' file field
+      resume: resumeBase64,
+      jobDescription: jobDescription,
+      jobTitle: jobTitle || ""
     };
     
     console.log("Calling Eden AI workflow with inputs:", Object.keys(workflowInputs));
