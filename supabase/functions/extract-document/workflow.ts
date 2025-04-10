@@ -26,7 +26,7 @@ export async function callEdenAIWorkflow(
     const formData = new FormData();
     
     // Add each input to FormData with the proper field name
-    // For Resume, we need to convert base64 to a blob
+    // For resume, we need to convert base64 to a blob
     if (inputs.resume) {
       // Convert base64 to blob
       const base64Data = inputs.resume.split(',')[1] || inputs.resume;
@@ -43,13 +43,13 @@ export async function callEdenAIWorkflow(
         byteArrays.push(byteArray);
       }
       
-      // Create blob without specifying content type
-      const blob = new Blob([new Uint8Array(byteArrays)]);
-      formData.append('Resume', blob, 'Resume.pdf');
+      // Create blob and add to FormData with the exact field name "Resume"
+      const blob = new Blob(byteArrays);
+      formData.append('Resume', blob, 'resume.pdf');
       console.log("Added Resume file to FormData");
     }
     
-    // Add Jobdescription as plain text with exact field name
+    // Add job description with exact field name "Jobdescription"
     if (inputs.Jobdescription) {
       formData.append('Jobdescription', inputs.Jobdescription);
       console.log("Added Jobdescription text to FormData");
@@ -58,11 +58,15 @@ export async function callEdenAIWorkflow(
     console.log("FormData created with fields:", 
       Array.from(formData.entries()).map(entry => entry[0]));
     
+    // Add logging to help debug the request
+    console.log(`Authorization header will use token of length: ${EDEN_AI_API_KEY?.length || 0}`);
+    
     // Send the request to Eden AI using FormData
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${EDEN_AI_API_KEY}`
+        // FormData sets its own content-type with boundary
       },
       body: formData
     });

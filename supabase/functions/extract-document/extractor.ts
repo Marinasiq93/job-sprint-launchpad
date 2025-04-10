@@ -15,9 +15,9 @@ export async function callEdenAI(
 ): Promise<any> {
   if (useWorkflow && workflowId) {
     console.log(`Calling Eden AI workflow ${workflowId}...`);
-    // Create payload for document extraction workflow
+    // Create payload for document extraction workflow - field name matters!
     const workflowPayload = {
-      document: fileBase64  // This will become a top-level "document" parameter in the API call
+      document: fileBase64  // This will be converted to a file field named "document" in workflow.ts
     };
     return callEdenAIWorkflow(workflowPayload, workflowId);
   } else {
@@ -46,7 +46,7 @@ export async function extractWithFallbacks(
       console.log(`Trying Eden AI workflow: ${workflowId}`);
       // Create payload for document extraction workflow
       const workflowPayload = {
-        document: fileBase64  // This will become a top-level "document" parameter in the API call
+        document: fileBase64  // This will be processed as a file field named "document"
       };
       const data = await callEdenAIWorkflow(workflowPayload, workflowId);
       
