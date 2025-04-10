@@ -8,6 +8,18 @@ export const corsHeaders = {
 // Get Eden AI API key from environment variables
 export const EDEN_AI_API_KEY = Deno.env.get("EDEN_AI_API_KEY");
 
+// Add the missing cleanExtractedText function from textCleaner.ts
+export const cleanExtractedText = (text: string): string => {
+  return text
+    .replace(/\\(\d{3}|n|r|t|b|f|\\|\(|\))/g, " ") // Replace escape sequences
+    .replace(/[^\x20-\x7E\xA0-\xFF]/g, "")   // Keep only printable characters
+    .replace(/\s+/g, " ")                    // Normalize whitespace
+    .replace(/\( \)/g, " ")                  // Remove empty parentheses
+    .replace(/\[\]/g, " ")                   // Remove empty brackets
+    .replace(/\s+/g, " ")                    // Normalize whitespace again
+    .trim();
+};
+
 // Check if API key is properly set with more detailed logging
 export function validateAPIKey() {
   if (!EDEN_AI_API_KEY) {
@@ -61,3 +73,4 @@ export function createMissingDataResponse(message: string) {
     { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
   );
 }
+

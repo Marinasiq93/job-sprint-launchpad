@@ -37,19 +37,43 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // The EXACT format the Eden AI workflow expects - CAMEL CASE names are important!
-      // These parameter names must match what the workflow expects
-      const workflowInputs = {
+      // The input format could vary between workflows, trying multiple formats
+      // Format 1: Using lowercase with underscore (most common REST API format)
+      const workflowInputs1 = {
         resume: resumeBase64,
         job_description: jobDescription
       };
       
-      console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));
-      console.log("Resume input length:", resumeBase64.length);
-      console.log("Job description input length:", jobDescription.length);
+      console.log("Calling Eden AI workflow with input format 1");
       
-      // Call the Eden AI workflow with our prepared payload
-      const result = await callEdenAIWorkflow(workflowInputs, workflowId);
+      // Call the Eden AI workflow with our first format
+      let result = await callEdenAIWorkflow(workflowInputs1, workflowId);
+      
+      // If the first format fails, try a second format with camelCase
+      if (!result || (!result.job_fit_feedback && !result.workflow_result)) {
+        console.log("First input format didn't produce expected results, trying format 2");
+        
+        // Format 2: Using camelCase (common in JavaScript)
+        const workflowInputs2 = {
+          resumeContent: resumeBase64,
+          jobDescription: jobDescription
+        };
+        
+        result = await callEdenAIWorkflow(workflowInputs2, workflowId);
+      }
+      
+      // If the second format fails, try a third format with PascalCase
+      if (!result || (!result.job_fit_feedback && !result.workflow_result)) {
+        console.log("Second input format didn't produce expected results, trying format 3");
+        
+        // Format 3: Using PascalCase (sometimes used in APIs)
+        const workflowInputs3 = {
+          Resume: resumeBase64,
+          JobDescription: jobDescription
+        };
+        
+        result = await callEdenAIWorkflow(workflowInputs3, workflowId);
+      }
       
       console.log("Eden AI workflow response received", JSON.stringify({
         has_result: !!result,
