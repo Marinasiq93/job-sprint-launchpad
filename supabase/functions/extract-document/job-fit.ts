@@ -61,7 +61,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     }
     
     try {
-      // Try to use Eden AI workflow with simplified parameters
+      // Call Eden AI workflow with the resumeBase64 and jobDescription
       const workflowResponse = await callEdenAIWorkflows(
         resumeBase64,
         jobDescription,

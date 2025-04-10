@@ -34,8 +34,8 @@ export async function callEdenAIWorkflows(
     
     // Prepare inputs using the exact field names expected by Eden AI
     const workflowInputs = {
-      jobDescription: jobDescription,  // String format
-      resume: resumeBase64             // PDF file as base64
+      jobDescription: jobDescription,  // This should be a plain string
+      resume: resumeBase64             // This should be base64 data of the PDF
     };
     
     console.log("Calling Eden AI workflow with inputs:", Object.keys(workflowInputs));

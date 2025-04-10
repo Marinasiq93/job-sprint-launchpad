@@ -2,7 +2,7 @@
 import { EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
 /**
- * Calls Eden AI workflow API with simplified input structure
+ * Calls Eden AI workflow API with proper FormData structure
  */
 export async function callEdenAIWorkflow(
   inputs: Record<string, any>,
@@ -33,14 +33,50 @@ export async function callEdenAIWorkflow(
     );
     console.log("Request payload summary:", inputsDebug);
     
-    // Send the request to Eden AI
+    // Create FormData object for the request
+    const formData = new FormData();
+    
+    // Add each input to FormData with the proper field name
+    // For resume (file), we need to convert base64 to a blob
+    if (inputs.resume) {
+      // Convert base64 to blob
+      const base64Data = inputs.resume.split(',')[1] || inputs.resume;
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      
+      const blob = new Blob(byteArrays, { type: 'application/pdf' });
+      formData.append('resume', blob, 'resume.pdf');
+      console.log("Added resume file to FormData");
+    }
+    
+    // Add jobDescription as plain text
+    if (inputs.jobDescription) {
+      formData.append('jobDescription', inputs.jobDescription);
+      console.log("Added jobDescription text to FormData");
+    }
+    
+    console.log("FormData created with fields:", 
+      Array.from(formData.entries()).map(entry => entry[0]));
+    
+    // Send the request to Eden AI using FormData
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${EDEN_AI_API_KEY}`,
-        "Content-Type": "application/json"
+        "Authorization": `Bearer ${EDEN_AI_API_KEY}`
+        // Note: Do not set Content-Type header when using FormData
+        // It will be set automatically with the correct boundary
       },
-      body: JSON.stringify(inputs)
+      body: formData
     });
     
     // Log the response status
