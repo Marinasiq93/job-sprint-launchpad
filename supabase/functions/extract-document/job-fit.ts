@@ -52,8 +52,60 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
 
     console.log(`Processing job fit analysis with workflow ID: ${JOB_FIT_WORKFLOW_IDS[0]}`);
     
+    // Try to use the analyze-job-fit function first if it exists
     try {
-      // Try direct API call with proper FormData 
+      console.log("Attempting to call analyze-job-fit function");
+      
+      // Convert base64 to text
+      let resumeText = "";
+      try {
+        resumeText = atob(resumeBase64);
+        console.log("Successfully decoded base64 to text, length:", resumeText.length);
+      } catch (decodeError) {
+        console.error("Error decoding base64:", decodeError);
+        resumeText = "Error decoding resume content";
+      }
+      
+      // Prepare the request to the analyze-job-fit function
+      const analyzeRequest = new Request("http://localhost:9999/analyze-job-fit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jobTitle: jobTitle || "Job Position",
+          jobDescription: jobDescription,
+          resumeText: resumeText,
+          debug: data.debug
+        })
+      });
+      
+      try {
+        console.log("Sending request to analyze-job-fit function");
+        const analyzeResponse = await fetch(analyzeRequest);
+        
+        if (analyzeResponse.ok) {
+          console.log("analyze-job-fit function returned success");
+          const analyzeResult = await analyzeResponse.json();
+          
+          return new Response(
+            JSON.stringify(analyzeResult),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } else {
+          console.warn("analyze-job-fit function failed with status:", analyzeResponse.status);
+        }
+      } catch (analyzeError) {
+        console.error("Error calling analyze-job-fit function:", analyzeError);
+        // Will continue with Eden AI workflow as fallback
+      }
+    } catch (functionError) {
+      console.error("Error setting up analyze-job-fit request:", functionError);
+      // Will continue with Eden AI workflow
+    }
+    
+    // Fallback to Eden AI workflow
+    try {
       console.log("Sending request to Eden AI workflow API");
       const workflowResponse = await callEdenAIWorkflows(
         resumeBase64,

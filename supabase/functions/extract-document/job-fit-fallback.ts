@@ -28,6 +28,9 @@ export async function generateFallbackAnalysis(resumeBase64: string, jobDescript
       compatibilityScore = "Compatibilidade Baixa";
     }
     
+    console.log(`Fallback analysis complete. Match rate: ${matchRate}, score: ${compatibilityScore}`);
+    console.log(`Found ${matchedKeywords.length} matching keywords out of ${keywords.length}`);
+    
     // Create the analysis result
     const result = {
       compatibilityScore,
@@ -77,10 +80,22 @@ Recomendações: Continue melhorando seu currículo adicionando mais detalhes so
  */
 export function decodeBase64Text(base64Text: string): string {
   try {
-    return decodeURIComponent(escape(atob(base64Text)));
+    // First try standard base64 decoding
+    try {
+      const decoded = atob(base64Text);
+      console.log("Standard base64 decoding successful, length:", decoded.length);
+      return decoded;
+    } catch (e) {
+      console.warn("Standard base64 decoding failed, trying URL-safe decoding");
+      // Some base64 strings might be URL-safe encoded (with _ and - instead of + and /)
+      const normalized = base64Text.replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = atob(normalized);
+      console.log("URL-safe base64 decoding successful, length:", decoded.length);
+      return decoded;
+    }
   } catch (e) {
     console.error("Error decoding base64 text:", e);
-    return "";
+    return "Erro na decodificação do texto";
   }
 }
 
@@ -90,16 +105,21 @@ export function decodeBase64Text(base64Text: string): string {
 export function extractKeywords(text: string): string[] {
   if (!text) return [];
   
+  console.log("Extracting keywords from text of length:", text.length);
+  
   // Common words to exclude (stopwords in Portuguese)
   const stopwords = new Set(["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem"]);
   
   // Extract words, convert to lowercase, remove punctuation, filter out short words and stopwords
-  return text.toLowerCase()
+  const keywords = text.toLowerCase()
     .replace(/[^\wáàâãéèêíïóôõöúçñ ]/g, ' ')
     .split(/\s+/)
     .filter(word => word.length > 3 && !stopwords.has(word))
     .filter((word, index, self) => self.indexOf(word) === index) // Remove duplicates
     .slice(0, 50); // Limit to most important keywords
+    
+  console.log(`Extracted ${keywords.length} keywords`);
+  return keywords;
 }
 
 /**
@@ -109,5 +129,7 @@ export function findMatchingKeywords(resumeText: string, keywords: string[]): st
   if (!resumeText || !keywords.length) return [];
   
   const resumeLower = resumeText.toLowerCase();
-  return keywords.filter(keyword => resumeLower.includes(keyword));
+  const matches = keywords.filter(keyword => resumeLower.includes(keyword));
+  console.log(`Found ${matches.length} matching keywords out of ${keywords.length}`);
+  return matches;
 }

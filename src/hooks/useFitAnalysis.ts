@@ -28,7 +28,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
     setError(null);
     setLoading(true);
     try {
-      console.log("Preparing data for Eden AI workflow analysis...");
+      console.log("Preparing data for job fit analysis...");
       
       // Use resume text content directly if available
       let resumeBase64;
@@ -36,7 +36,7 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
       if (userDocuments.resume_text) {
         // Convert text content to base64 for the workflow
         resumeBase64 = textToBase64(userDocuments.resume_text);
-        console.log("Using resume text content, converted to base64");
+        console.log("Using resume text content, converted to base64, length:", resumeBase64.length);
       } else {
         // Use resume file data from database if available
         toast.error("Arquivo de currículo não encontrado");
