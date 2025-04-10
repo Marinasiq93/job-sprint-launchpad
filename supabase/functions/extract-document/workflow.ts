@@ -18,6 +18,7 @@ export async function callEdenAIWorkflow(
   console.log(`Input keys: ${Object.keys(inputs).join(', ')}`);
   
   try {
+    // Use the direct workflow execution endpoint format
     const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/`;
     console.log(`Sending request to Eden AI workflow API endpoint: ${apiUrl}`);
     
