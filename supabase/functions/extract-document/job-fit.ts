@@ -55,7 +55,6 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     console.log(`Processing job fit analysis with workflow ID: ${JOB_FIT_WORKFLOW_IDS[0]}`);
     console.log(`Resume name: ${resumeName}, type: ${resumeType}, job description length: ${jobDescription.length}`);
     console.log(`Resume base64 data length: ${resumeBase64?.length || 0}`);
-    console.log(`Job title provided: ${jobTitle ? 'Yes' : 'No'}`);
     
     // If no Eden AI workflow is accessible, use our fallback text-based analysis approach
     if (!EDEN_AI_API_KEY || EDEN_AI_API_KEY.length < 20 || JOB_FIT_WORKFLOW_IDS.length === 0) {

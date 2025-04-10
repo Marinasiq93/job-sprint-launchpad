@@ -6,7 +6,6 @@ import { corsHeaders, EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 // Updated workflow ID to only use the new one provided by the user
 export const JOB_FIT_WORKFLOW_IDS = [
   "7be3c4b4-b371-4d03-abae-afbce8415b37", // Primary workflow ID
-  // No fallback workflows - old one has been deleted
 ];
 
 /**
@@ -45,6 +44,8 @@ export async function callEdenAIWorkflows(
       };
       
       console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));
+      console.log("Resume input length:", resumeBase64.length);
+      console.log("Job description input length:", jobDescription.length);
       
       // Call the Eden AI workflow with our prepared payload
       const result = await callEdenAIWorkflow(workflowInputs, workflowId);
