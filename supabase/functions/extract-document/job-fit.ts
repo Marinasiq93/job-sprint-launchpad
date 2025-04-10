@@ -24,18 +24,16 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     }
     
     // Extract data with detailed logging
-    const { resumeBase64, resumeType, resumeName, jobDescription, jobTitle } = data;
+    const { resumeBase64, jobDescription, jobTitle } = data;
     console.log("Data extraction from request:", {
       hasResumeBase64: !!resumeBase64,
       resumeBase64Length: resumeBase64?.length || 0,
-      hasResumeType: !!resumeType,
-      hasResumeName: !!resumeName,
       hasJobDescription: !!jobDescription,
       jobDescriptionLength: jobDescription?.length || 0,
       hasJobTitle: !!jobTitle
     });
     
-    // More detailed validation
+    // Validate required fields
     if (!resumeBase64) {
       console.warn("Missing resume data");
       return createMissingDataResponse("Resume data is required");
@@ -53,7 +51,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     }
 
     console.log(`Processing job fit analysis with workflow ID: ${JOB_FIT_WORKFLOW_IDS[0]}`);
-    console.log(`Resume name: ${resumeName}, type: ${resumeType}, job description length: ${jobDescription.length}`);
+    console.log(`Job description length: ${jobDescription.length}`);
     console.log(`Resume base64 data length: ${resumeBase64?.length || 0}`);
     
     // If no Eden AI workflow is accessible, use our fallback text-based analysis approach
@@ -63,7 +61,7 @@ export async function handleJobFitRequest(req: Request): Promise<Response> {
     }
     
     try {
-      // Try to use Eden AI workflow
+      // Try to use Eden AI workflow with simplified parameters
       const workflowResponse = await callEdenAIWorkflows(
         resumeBase64,
         jobDescription,

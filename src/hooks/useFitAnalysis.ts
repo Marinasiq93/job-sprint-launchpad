@@ -44,15 +44,11 @@ export const useFitAnalysis = ({ sprintData, userDocuments }: UseFitAnalysisProp
         return;
       }
       
-      // Call the service to generate the fit analysis
+      // Call the service with simplified parameters
       const data = await fitAnalysisService.generateFitAnalysis(
         resumeBase64,
-        "application/pdf", // Treat as PDF for the workflow
-        userDocuments.resume_file_name || "resume.pdf",
         sprintData.jobDescription,
         sprintData.jobTitle,
-        null, // No cover letter needed for Eden AI workflow
-        null, // No reference text needed for Eden AI workflow
         debugMode
       );
 

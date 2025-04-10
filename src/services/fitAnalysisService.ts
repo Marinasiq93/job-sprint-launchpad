@@ -11,12 +11,8 @@ export const fitAnalysisService = {
    */
   generateFitAnalysis: async (
     resumeBase64: string,
-    resumeType: string,
-    resumeName: string,
     jobDescription: string,
     jobTitle?: string,
-    coverLetterText?: string,
-    referenceText?: string,
     debug?: boolean
   ): Promise<FitAnalysisResult> => {
     console.log("Calling extract-document/job-fit edge function...");
@@ -34,14 +30,12 @@ export const fitAnalysisService = {
       };
     }
     
-    // Prepare the request payload for our job fit workflow - match the input names from the workflow
+    // Prepare the request payload with exact field names matching Eden AI workflow
     const requestData = {
-      resumeBase64,
-      resumeType,
-      resumeName,
-      jobDescription,
-      jobTitle,
-      debug,
+      resumeBase64: resumeBase64,  // Will be processed as 'resume' in the Edge Function
+      jobDescription: jobDescription,
+      jobTitle: jobTitle,
+      debug: debug,
       route: 'job-fit' // Include route in the request body
     };
     
@@ -55,7 +49,7 @@ export const fitAnalysisService = {
     try {
       console.log("Sending request to extract-document function");
       
-      // Call the edge function with explicit route path
+      // Call the edge function
       const { data, error } = await supabase.functions.invoke('extract-document', {
         body: requestData
       });

@@ -2,7 +2,7 @@
 import { EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
 
 /**
- * Calls Eden AI workflow API
+ * Calls Eden AI workflow API with simplified input structure
  */
 export async function callEdenAIWorkflow(
   inputs: Record<string, any>,
@@ -22,16 +22,16 @@ export async function callEdenAIWorkflow(
     const apiUrl = `https://api.edenai.run/v2/workflow/${workflowId}/execution/`;
     console.log(`Sending request to Eden AI workflow API endpoint: ${apiUrl}`);
     
-    // Log the full input structure for debugging (excluding content length)
+    // Log the input keys and sizes for debugging
     const inputsDebug = Object.fromEntries(
       Object.entries(inputs).map(([key, value]) => {
-        if (typeof value === 'string' && value.length > 100) {
-          return [key, `${value.substring(0, 50)}... (truncated, length: ${value.length})`];
+        if (typeof value === 'string') {
+          return [key, `(length: ${value.length})`];
         }
         return [key, value];
       })
     );
-    console.log("Full request payload structure:", JSON.stringify(inputsDebug));
+    console.log("Request payload summary:", inputsDebug);
     
     // Send the request to Eden AI
     const response = await fetch(apiUrl, {
@@ -43,9 +43,8 @@ export async function callEdenAIWorkflow(
       body: JSON.stringify(inputs)
     });
     
-    // Log the response status and headers
+    // Log the response status
     console.log(`Eden AI API response status: ${response.status}`);
-    console.log(`Eden AI API response headers:`, Object.fromEntries([...response.headers]));
     
     // Check if the request was successful
     if (!response.ok) {
@@ -60,8 +59,6 @@ export async function callEdenAIWorkflow(
         throw new Error('Problema de autenticação: Verifique a chave de API');
       } else if (response.status === 400) {
         throw new Error(`Requisição inválida: ${errorText}`);
-      } else if (response.status === 429) {
-        throw new Error('Taxa limite excedida: Muitas requisições para Eden AI');
       }
       
       throw new Error(`Falha na requisição da API: ${response.status}`);
@@ -70,14 +67,14 @@ export async function callEdenAIWorkflow(
     // Parse the response
     const data = await response.json();
     
-    console.log("Eden AI workflow response structure:", JSON.stringify({
+    console.log("Eden AI workflow response structure:", {
       status: data.status,
       has_content: !!data.content,
       has_results: data && data.results ? true : false,
       keys: Object.keys(data)
-    }));
+    });
     
-    // Return the results from the workflow response according to documentation
+    // Return the results based on common Eden AI workflow response formats
     if (data.status === 'success' && data.results) {
       return data.results;
     }
@@ -86,8 +83,12 @@ export async function callEdenAIWorkflow(
       return data.content;
     }
     
-    // If we can't find results in the expected locations, return the whole data
-    console.warn("Eden AI workflow response format unexpected, returning raw data");
+    // If output is available directly, return that
+    if (data.output) {
+      return { output: data.output };
+    }
+    
+    // Return the whole data as a fallback
     return data;
   } catch (error) {
     console.error("Error calling Eden AI workflow:", error);
