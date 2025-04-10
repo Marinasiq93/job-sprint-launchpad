@@ -37,10 +37,11 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Format the inputs exactly as shown in the provided example
+      // The EXACT format the Eden AI workflow expects - CAMEL CASE names are important!
+      // These parameter names must match what the workflow expects
       const workflowInputs = {
-        Resume: resumeBase64,
-        Jobdescription: jobDescription
+        resume: resumeBase64,
+        job_description: jobDescription
       };
       
       console.log("Calling Eden AI workflow with input keys:", Object.keys(workflowInputs).join(', '));

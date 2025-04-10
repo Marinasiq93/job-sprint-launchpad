@@ -33,7 +33,7 @@ export async function callEdenAIWorkflow(
     );
     console.log("Full request payload structure:", JSON.stringify(inputsDebug));
     
-    // Send the request with form data as shown in the provided example
+    // Send the request to Eden AI
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
