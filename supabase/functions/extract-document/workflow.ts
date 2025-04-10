@@ -33,8 +33,7 @@ export async function callEdenAIWorkflow(
     );
     console.log("Full request payload structure:", JSON.stringify(inputsDebug));
     
-    // According to Eden AI documentation and the workflow screenshot, we need to send inputs 
-    // directly as top-level parameters with exact case-sensitive names: 'Resume' and 'Jobdescription'
+    // Send inputs directly as top-level parameters according to the Eden AI API documentation you shared
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {

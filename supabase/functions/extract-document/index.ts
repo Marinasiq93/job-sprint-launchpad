@@ -25,59 +25,43 @@ serve(async (req) => {
       console.log("Job fit route detected in URL path");
       isJobFitRequest = true;
     } else {
-      // Log content type header to help with debugging
-      console.log("Request content type:", req.headers.get("content-type"));
-      
-      // Try to determine if this is a job fit request based on body
+      // Check if this is a job fit request based on body
       try {
         const clonedReq = req.clone();
+        const contentType = req.headers.get("content-type") || "";
+        console.log("Request content type:", contentType);
         
-        // For JSON requests, check the route parameter
-        if (req.headers.get("content-type")?.includes("application/json")) {
-          try {
-            const body = await clonedReq.json();
-            console.log("Request JSON body keys:", Object.keys(body));
-            console.log("Request JSON body route:", body.route);
-            
-            if (body && (body.route === 'job-fit' || body.resumeBase64)) {
-              console.log("Job fit route detected in request body");
-              isJobFitRequest = true;
-            }
-          } catch (jsonError) {
-            console.log("JSON parsing error:", jsonError.message);
+        // For JSON requests, check the route parameter or the presence of resumeBase64
+        if (contentType.includes("application/json")) {
+          const body = await clonedReq.json();
+          console.log("Request JSON body keys:", Object.keys(body));
+          
+          if (body && (body.route === 'job-fit' || body.resumeBase64)) {
+            console.log("Job fit request detected from JSON body");
+            isJobFitRequest = true;
           }
-        } 
-        // For form data requests, check if it has the route parameter
-        else if (req.headers.get("content-type")?.includes("multipart/form-data")) {
-          try {
-            const formData = await clonedReq.formData();
-            const routeValue = formData.get('route');
-            console.log("Form data route value:", routeValue);
-            
-            if (routeValue === 'job-fit') {
-              console.log("Job fit route detected in form data");
-              isJobFitRequest = true;
-            }
-          } catch (formError) {
-            console.log("Form data parsing error:", formError.message);
+        }
+        // For form data requests, check for route parameter
+        else if (contentType.includes("multipart/form-data")) {
+          const formData = await clonedReq.formData();
+          const route = formData.get('route');
+          
+          if (route === 'job-fit') {
+            console.log("Job fit route detected from form data");
+            isJobFitRequest = true;
           }
         }
         
-        // Check query parameters as a last resort
+        // Check URL query parameters as a fallback
         const queryRoute = url.searchParams.get('route');
         if (queryRoute === 'job-fit') {
-          console.log("Job fit route detected in query parameters");
+          console.log("Job fit route detected from query parameters");
           isJobFitRequest = true;
         }
+        
       } catch (parseError) {
-        console.log("Error parsing request to determine type:", parseError.message);
-        
-        // Check query params as a fallback
-        const queryRoute = url.searchParams.get('route');
-        if (queryRoute === 'job-fit') {
-          console.log("Job fit route detected in query parameters");
-          isJobFitRequest = true;
-        }
+        console.error("Error parsing request to determine type:", parseError);
+        // Continue and rely on URL-based detection
       }
     }
     
@@ -85,11 +69,9 @@ serve(async (req) => {
     
     // Handle according to the determined request type
     if (isJobFitRequest) {
-      // Handle job fit analysis using Eden AI workflow
       console.log("Forwarding to job fit handler");
       return await handleJobFitRequest(req);
     } else {
-      // Handle regular OCR document extraction
       console.log("Forwarding to OCR handler");
       return await handleOCRRequest(req);
     }

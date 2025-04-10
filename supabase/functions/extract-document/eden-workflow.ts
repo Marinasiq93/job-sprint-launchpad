@@ -38,12 +38,11 @@ export async function callEdenAIWorkflows(
     try {
       console.log(`Attempting to use Eden AI workflow ID: ${workflowId}`);
       
-      // Format inputs EXACTLY as the workflow expects based on the provided example
-      // The input field names must match what's in the Eden AI workflow (case-sensitive)
-      // According to the example: 'Resume' and 'Jobdescription' are the expected parameter names
+      // Based on the example shared in chat, format the inputs EXACTLY as expected
+      // The workflow is expecting 'Resume' and 'Jobdescription' as input parameters
       const workflowInputs = {
-        "Resume": resumeBase64,
-        "Jobdescription": jobDescription
+        Resume: resumeBase64,
+        Jobdescription: jobDescription
       };
       
       // Add job title if provided (only if the workflow expects it)
