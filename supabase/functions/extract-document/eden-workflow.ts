@@ -1,4 +1,3 @@
-
 import { callEdenAIWorkflow } from "./workflow.ts";
 import { extractStructuredAnalysis } from "./analysis-extractor.ts";
 import { corsHeaders, EDEN_AI_API_KEY, validateAPIKey } from "./utils.ts";
@@ -34,8 +33,8 @@ export async function callEdenAIWorkflows(
     
     // Prepare inputs using the exact field names expected by Eden AI
     const workflowInputs = {
-      jobDescription: jobDescription,  // This should be a plain string
-      resume: resumeBase64             // This should be base64 data of the PDF
+      Jobdescription: jobDescription,  // Exact field name as expected by Eden AI
+      resume: resumeBase64             // Will be transformed to 'Resume' in FormData
     };
     
     console.log("Calling Eden AI workflow with inputs:", Object.keys(workflowInputs));
