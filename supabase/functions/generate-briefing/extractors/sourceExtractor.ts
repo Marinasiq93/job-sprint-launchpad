@@ -21,17 +21,25 @@ export const extractSources = (content: string): Array<{ title: string; url: str
     let match;
     
     while ((match = numberedSourceRegex.exec(sourcesSection)) !== null) {
+      // Clean the URL by removing trailing parentheses or invalid characters
+      let url = match[2].trim();
+      // Remove trailing period, comma, parenthesis or other punctuation
+      url = url.replace(/[.,;:)\]}]$/, '');
+      
       sources.push({
         title: match[1].trim().replace(/[:|-]$/, ''),
-        url: match[2].trim()
+        url: url
       });
     }
     
     // Second pattern: just URLs with optional numbers or bullets
     if (sources.length === 0) {
-      const urlOnlyRegex = /(?:^|\n)(?:\[\d+\]|\d+\.|\d+\)|[-•*]|\s+)\s*(https?:\/\/[^\s]+)(?:\s+-\s+([^\n]+))?/g;
+      const urlOnlyRegex = /(?:^|\n)(?:\[\d+\]|\d+\.|\d+\)|[-•*]|\s+)\s*(https?:\/\/[^\s)]+)(?:\s+-\s+([^\n]+))?/g;
       while ((match = urlOnlyRegex.exec(sourcesSection)) !== null) {
-        const url = match[1].trim();
+        let url = match[1].trim();
+        // Clean URL by removing trailing punctuation
+        url = url.replace(/[.,;:)\]}]$/, '');
+        
         const title = match[2] ? match[2].trim() : `Source: ${getDomainName(url)}`;
         sources.push({ title, url });
       }
@@ -44,9 +52,12 @@ export const extractSources = (content: string): Array<{ title: string; url: str
         .filter(line => line.includes('http') && line.trim().length > 0);
       
       linesWithUrls.forEach(line => {
-        const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+        const urlMatch = line.match(/(https?:\/\/[^\s)]+)/);
         if (urlMatch) {
-          const url = urlMatch[1].trim();
+          let url = urlMatch[1].trim();
+          // Clean URL by removing trailing punctuation
+          url = url.replace(/[.,;:)\]}]$/, '');
+          
           // Get everything before the URL, clean it up
           let title = line.substring(0, line.indexOf(url)).trim();
           // Remove numbering and special characters
@@ -61,12 +72,28 @@ export const extractSources = (content: string): Array<{ title: string; url: str
       });
     }
     
-    // If we still have no sources, extract URLs from the entire content
-    if (sources.length === 0) {
-      return extractAllUrls(content);
-    }
+    // Validate URLs and ensure they are properly formed
+    const validatedSources = sources.map(source => {
+      let { url, title } = source;
+      
+      // Fix common URL issues like trailing parentheses or closing brackets
+      url = url.replace(/[)\]}]$/, '');
+      
+      // Ensure URL doesn't end with unexpected characters
+      while (/[.,;:)]$/.test(url)) {
+        url = url.slice(0, -1);
+      }
+      
+      // Handle special case for EBANX URLs with extra slashes or parentheses
+      if (url.includes('ebanx.com')) {
+        url = url.replace(/\/{2,}$/, '/');
+        url = url.replace(/\)\/$/g, '/');
+      }
+      
+      return { title, url };
+    });
     
-    return sources;
+    return validatedSources;
   }
   
   // If no sources section found, extract URLs from the entire content
@@ -75,14 +102,19 @@ export const extractSources = (content: string): Array<{ title: string; url: str
 
 // Helper function to extract all URLs from content
 const extractAllUrls = (content: string): Array<{ title: string; url: string; }> => {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urlRegex = /(https?:\/\/[^\s)]+)/g;
   const sources = [];
   let urlMatch;
   
   while ((urlMatch = urlRegex.exec(content)) !== null) {
+    let url = urlMatch[1].trim();
+    
+    // Clean URL by removing trailing punctuation
+    url = url.replace(/[.,;:)\]}]$/, '');
+    
     sources.push({
-      title: `Source: ${getDomainName(urlMatch[1])}`,
-      url: urlMatch[1].trim()
+      title: `Source: ${getDomainName(url)}`,
+      url: url
     });
   }
   

@@ -1,3 +1,4 @@
+
 import { BRIEFING_CATEGORIES } from "./briefingConstants";
 
 // Perplexity prompts for each category
@@ -10,6 +11,12 @@ Um breve resumo de 2-3 frases sobre ${companyName} (o que faz, mercado, fatos no
 Um resumo dos valores fundamentais da empresa, conforme declarado em fontes oficiais.
 
 Um curto parágrafo descrevendo como esses valores se refletem na cultura interna ou programas da empresa (ex: rituais de equipe, esforços de diversidade e inclusão, prêmios, feedback de funcionários, etc.).
+
+IMPORTANTE:
+- Explore profundamente todas as seções do site, especialmente "Sobre", "Quem somos", "Nossa cultura", "Valores", "Código de conduta", etc.
+- Procure também essas seções em versões em inglês (About, Culture, Values, Code of Conduct)
+- Se uma URL específica não funcionar, tente variações (.com, .com.br, /pt-br/, /en/, etc.)
+- Cite APENAS fontes acessíveis, verificando cada URL antes de incluir
 
 Escreva a resposta completa em português brasileiro.`,
   

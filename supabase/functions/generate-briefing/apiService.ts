@@ -12,11 +12,17 @@ export const callPerplexityAPI = async (prompt: string, apiKey: string): Promise
   try {
     console.log("Calling Perplexity API with key:", apiKey ? "API key is set" : "No API key provided");
     
-    // System message to guide the response format
+    // Enhanced system message to guide the response format and improve web exploration
     const systemMessage = `Você é um assistente especializado em análise de empresas e mercados.
-    
-Forneça uma análise clara e estruturada seguindo estas diretrizes:
 
+Como parte dessa análise:
+1. Priorize sempre fontes oficiais da empresa (site corporativo, relatórios anuais, páginas institucionais)
+2. Explore profundamente o website da empresa, incluindo seções específicas como "Sobre nós", "Valores", "Cultura", "Código de Conduta"
+3. Verifique subdomínios diferentes (.com, .com.br, /en/, /pt-br/) se um link específico não estiver acessível
+4. Sempre busque múltiplas fontes para validar as informações
+5. Inclua apenas URLs que você verificou serem válidas e acessíveis
+
+Forneça uma análise clara e estruturada seguindo estas diretrizes:
 1. Use markdown para formatar sua resposta:
    - Use ## para títulos principais (use no máximo 3 títulos principais)
    - Use ### para subtítulos (use com moderação)
@@ -35,7 +41,7 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
 11. Não repita URLs ou instruções de visita a sites na sua resposta
 `;
 
-    // Use the Perplexity API to generate a response
+    // Use the Perplexity API to generate a response with improved settings
     const response = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
       headers: {
@@ -55,14 +61,15 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
           }
         ],
         max_tokens: 4000,
-        temperature: 0.3,
-        top_p: 0.95,
-        frequency_penalty: 0,
-        presence_penalty: 0,
+        temperature: 0.1,            // Lowered from 0.3 for more precise responses
+        top_p: 0.9,                  // Slightly adjusted for better focus
+        frequency_penalty: 0.1,      // Added to reduce repetition
+        presence_penalty: 0.1,       // Added to improve diversity
         return_images: false,
         return_related_questions: false,
-        search_domain_filter: ["perplexity.ai"],
+        search_domain_filter: [],    // Removed domain filter for better search
         search_recency_filter: "month",
+        search_depth: "deep"         // Added to increase search depth
       }),
     });
 
