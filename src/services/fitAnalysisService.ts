@@ -52,10 +52,9 @@ export const fitAnalysisService = {
       // Call the edge function with a timeout of 90 seconds (increased from 60)
       const fetchPromise = supabase.functions.invoke('extract-document', {
         body: requestData,
-        // Increase the default timeout value to accommodate Eden AI's processing time
-        options: {
-          timeout: 90000 // 90 seconds
-        }
+        // The issue is that 'options' is not a valid property for FunctionInvokeOptions
+        // Remove the options property and handle the timeout differently
+        timeout: 90000 // 90 seconds - this is the correct property name
       });
       
       // Add a timeout of 90 seconds

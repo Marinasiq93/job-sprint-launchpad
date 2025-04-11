@@ -1,19 +1,17 @@
-
 import { BRIEFING_CATEGORIES } from "./briefingConstants";
 
 // Perplexity prompts for each category
 export const perplexityPromptsByCategory = {
   [BRIEFING_CATEGORIES.CULTURE_VALUES]: (companyName: string, companyWebsite: string) => 
-    `Analise a empresa ${companyName} (${companyWebsite}).
-    
-    Comece com um overview da empresa ${companyName}: quem ela é, quando foi fundada, e qual seu posicionamento no mercado.
-    
-    Em seguida, apresente os valores corporativos e cultura da empresa:
-    - Liste e explique os valores e princípios da empresa
-    - Detalhe como esses valores se manifestam na cultura
-    - Mencione programas internos ou iniciativas que reflitam esses valores
-    
-    Finalize com 3 notícias recentes sobre a empresa (dos últimos 6 meses)`,
+    `Usando informações do site oficial (${companyWebsite}) e quaisquer materiais institucionais ou de imprensa disponíveis, forneça:
+
+Um breve resumo de 2-3 frases sobre ${companyName} (o que faz, mercado, fatos notáveis).
+
+Um resumo dos valores fundamentais da empresa, conforme declarado em fontes oficiais.
+
+Um curto parágrafo descrevendo como esses valores se refletem na cultura interna ou programas da empresa (ex: rituais de equipe, esforços de diversidade e inclusão, prêmios, feedback de funcionários, etc.).
+
+Escreva a resposta completa em português brasileiro.`,
   
   [BRIEFING_CATEGORIES.MISSION_VISION]: (companyName: string, companyWebsite: string) => 
     `Analise a empresa ${companyName} (${companyWebsite}).
