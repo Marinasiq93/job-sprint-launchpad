@@ -49,15 +49,13 @@ export const fitAnalysisService = {
     try {
       console.log("Sending request to extract-document function");
       
-      // Call the edge function with a timeout of 90 seconds (increased from 60)
+      // Call the edge function
+      // Remove the invalid 'timeout' property as it's not part of FunctionInvokeOptions
       const fetchPromise = supabase.functions.invoke('extract-document', {
-        body: requestData,
-        // The issue is that 'options' is not a valid property for FunctionInvokeOptions
-        // Remove the options property and handle the timeout differently
-        timeout: 90000 // 90 seconds - this is the correct property name
+        body: requestData
       });
       
-      // Add a timeout of 90 seconds
+      // Add a timeout of 90 seconds using Promise.race instead
       const timeoutPromise = new Promise<{data: null, error: Error}>(resolve => {
         setTimeout(() => {
           resolve({
