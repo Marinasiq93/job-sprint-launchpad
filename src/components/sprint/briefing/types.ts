@@ -1,3 +1,4 @@
+
 export interface Source {
   title: string;
   url: string;
@@ -6,6 +7,7 @@ export interface Source {
 export interface NewsItem {
   title: string;
   url: string;
+  date?: string; // Added optional date property
 }
 
 export interface BriefingContent {
