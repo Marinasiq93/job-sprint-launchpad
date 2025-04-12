@@ -30,13 +30,27 @@ serve(async (req) => {
 
     console.log(`Processing briefing request for ${companyName}, category: ${category}`);
     console.log(`API key present: ${!!perplexityApiKey}`);
+    console.log(`API key value prefix: ${perplexityApiKey ? perplexityApiKey.substring(0, 5) + '...' : 'not set'}`);
     
-    // Check if API key is available
+    // Check if API key is available and valid
     if (!perplexityApiKey || perplexityApiKey.trim() === '') {
       console.log("PERPLEXITY_API_KEY not set or empty, returning demo content");
       const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
       return new Response(JSON.stringify({
         ...briefingData,
+        apiUnavailable: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Verify API key format
+    if (!perplexityApiKey.startsWith('pplx-')) {
+      console.error("Invalid API key format, should start with 'pplx-'");
+      const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
+      return new Response(JSON.stringify({
+        ...briefingData,
+        error: "API key format is invalid. Perplexity API keys should start with 'pplx-'.",
         apiUnavailable: true
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -55,6 +69,9 @@ serve(async (req) => {
       
       // Process the raw text into our expected structure
       const processedResponse = processPerplexityResponse(perplexityResponse, companyName);
+      
+      // Mark that the API is available
+      processedResponse.apiUnavailable = false;
       
       return new Response(JSON.stringify(processedResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

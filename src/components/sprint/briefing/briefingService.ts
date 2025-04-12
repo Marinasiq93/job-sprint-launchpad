@@ -60,20 +60,22 @@ export const fetchBriefingContent = async (
     
     console.log('Edge function response received:', data);
     
-    // Check if the response contains an error message
-    if (data.error) {
-      console.error('API returned an error:', data.error);
-      // Use the fallback data if there's an API error but also some content
+    // Check if the response contains an error message or API unavailable flag
+    if (data.error || data.apiUnavailable === true) {
+      console.error('API returned an error or is unavailable:', data.error || 'API unavailable');
+      
+      // If there's actual content despite the error, use it
       if (data.overview && data.highlights && data.summary) {
         return {
           overview: data.overview,
           highlights: data.highlights,
           summary: data.summary,
           sources: data.sources || [],
-          recentNews: data.recentNews || []
+          recentNews: data.recentNews || [],
+          apiUnavailable: data.apiUnavailable === true
         };
       }
-      throw new Error(data.error);
+      throw new Error(data.error || 'API não está disponível no momento.');
     }
     
     return {
@@ -81,7 +83,8 @@ export const fetchBriefingContent = async (
       highlights: data.highlights,
       summary: data.summary,
       sources: data.sources || [],
-      recentNews: data.recentNews || []
+      recentNews: data.recentNews || [],
+      apiUnavailable: data.apiUnavailable === true
     };
   } catch (error) {
     console.error('Erro ao buscar informações da empresa:', error);
@@ -89,7 +92,11 @@ export const fetchBriefingContent = async (
       toast.error('Não foi possível atualizar a análise. Tente novamente mais tarde.');
     }
     
-    // Return custom rich fallback content
-    return createRichCompanyBriefing(companyName);
+    // Return custom rich fallback content with API unavailable flag
+    const fallbackContent = createRichCompanyBriefing(companyName);
+    return {
+      ...fallbackContent,
+      apiUnavailable: true
+    };
   }
 };

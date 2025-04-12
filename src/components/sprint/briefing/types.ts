@@ -1,17 +1,18 @@
+export interface Source {
+  title: string;
+  url: string;
+}
 
-// Interface for the briefing content structure
+export interface NewsItem {
+  title: string;
+  url: string;
+}
+
 export interface BriefingContent {
   overview: string;
   highlights: string[];
   summary: string;
-  additionalPoints?: string[]; // Adding this property for Mission & Vision content
-  sources?: Array<{
-    title: string;
-    url: string;
-  }>;
-  recentNews?: Array<{
-    title: string;
-    date?: string;
-    url?: string;
-  }>;
+  sources: Source[];
+  recentNews: NewsItem[];
+  apiUnavailable?: boolean; // Added flag to explicitly indicate if API is unavailable
 }

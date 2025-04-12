@@ -22,19 +22,26 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
   // Get the cached briefing or use default content
   const currentBriefing = briefingCache[currentBriefingCategory] || defaultContentByCategory[currentBriefingCategory];
 
-  // Verifica se o conteúdo é de demonstração
-  const isContentDemo = (content: string | undefined): boolean => {
-    if (!content) return true;
+  // Enhanced detection of demo content
+  const isContentDemo = (content: BriefingContent): boolean => {
+    if (!content || !content.overview) return true;
     
-    // Melhorada a detecção de conteúdo demo com termos específicos
+    // Check if any of these demo markers appear in the content
     const demoTerms = [
       'demonstração:', 
       'esta é uma versão de demonstração',
       'esta é uma análise de demonstração',
-      'modo de demonstração'
+      'modo de demonstração',
+      'apiUnavailable: true'
     ];
     
-    return demoTerms.some(term => content.toLowerCase().includes(term.toLowerCase()));
+    // Also check for explicitly flagged content from the API response
+    if (content.apiUnavailable === true) return true;
+    
+    return demoTerms.some(term => 
+      content.overview.toLowerCase().includes(term.toLowerCase()) ||
+      (content.summary && content.summary.toLowerCase().includes(term.toLowerCase()))
+    );
   };
 
   // Load briefing content
@@ -48,12 +55,16 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     setError(null);
     
     try {
+      console.log(`Fetching briefing content for ${companyName}, category: ${category}`);
       const briefingData = await fetchBriefingContent(category, companyName, companyWebsite);
+      console.log("Received briefing data:", briefingData);
       
-      // Verifica se é uma resposta de demonstração com lógica melhorada
-      if (isContentDemo(briefingData.overview)) {
+      // Check if it's demo content with enhanced logic
+      if (isContentDemo(briefingData)) {
+        console.log("Demo content detected");
         setIsApiAvailable(false);
       } else {
+        console.log("Real API content detected");
         setIsApiAvailable(true);
       }
       
@@ -78,6 +89,7 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     setError(null);
     
     try {
+      console.log(`Refreshing analysis for ${companyName}, category: ${currentBriefingCategory}`);
       const briefingData = await fetchBriefingContent(
         currentBriefingCategory, 
         companyName, 
@@ -85,8 +97,8 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
         true // Force refresh
       );
       
-      // Verifica se é uma resposta de demonstração
-      if (isContentDemo(briefingData.overview)) {
+      // Check if it's demo content
+      if (isContentDemo(briefingData)) {
         setIsApiAvailable(false);
         toast.info('Modo de demonstração: API não disponível. Configure a API Perplexity para análise completa.');
       } else {
