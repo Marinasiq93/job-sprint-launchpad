@@ -66,15 +66,15 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
           }
         ],
         max_tokens: 4000,
-        temperature: 0.1,            // Lowered from 0.3 for more precise responses
-        top_p: 0.9,                  // Slightly adjusted for better focus
-        frequency_penalty: 0.1,      // Added to reduce repetition
-        presence_penalty: 0.1,       // Added to improve diversity
+        temperature: 0.1,           // Lowered from 0.3 for more precise responses
+        top_p: 0.9,                 // Slightly adjusted for better focus
+        frequency_penalty: 0.1,     // Keep only one penalty parameter
+        // presence_penalty: 0.1,   // REMOVED this parameter as it conflicts with frequency_penalty
         return_images: false,
         return_related_questions: false,
-        search_domain_filter: [],    // Removed domain filter for better search
+        search_domain_filter: [],   // Removed domain filter for better search
         search_recency_filter: "month",
-        search_depth: "deep"         // Added to increase search depth
+        search_depth: "deep"        // Added to increase search depth
       }),
     });
 

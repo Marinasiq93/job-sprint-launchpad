@@ -46,8 +46,9 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
 
   // Load briefing content
   const loadBriefingContent = async (category: string) => {
-    // If we already have cached data for this category, use it
+    // Skip if we already have cached data for this category
     if (briefingCache[category]) {
+      console.log(`Using cached briefing data for category: ${category}`);
       return;
     }
 
@@ -61,10 +62,10 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
       
       // Check if it's demo content with enhanced logic
       if (isContentDemo(briefingData)) {
-        console.log("Demo content detected");
+        console.log("Demo content detected, API might be unavailable");
         setIsApiAvailable(false);
       } else {
-        console.log("Real API content detected");
+        console.log("Real API content detected, API is available");
         setIsApiAvailable(true);
       }
       
@@ -83,13 +84,14 @@ export const useBriefing = ({ companyName, companyWebsite, currentQuestionIndex 
     }
   };
 
-  // Handle refresh button click
+  // Handle refresh button click - forces a new API call
   const handleRefreshAnalysis = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
       console.log(`Refreshing analysis for ${companyName}, category: ${currentBriefingCategory}`);
+      // Always pass refresh=true to force a new API call
       const briefingData = await fetchBriefingContent(
         currentBriefingCategory, 
         companyName, 
