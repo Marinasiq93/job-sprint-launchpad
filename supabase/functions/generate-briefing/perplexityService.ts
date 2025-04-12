@@ -6,7 +6,18 @@ import { preserveMarkdownStructure, removeDuplicateHeaders } from "./utils/textU
 
 // Call Perplexity API to get the analysis
 export const getPerplexityAnalysis = async (prompt: string, perplexityApiKey: string): Promise<string> => {
-  return await callPerplexityAPI(prompt, perplexityApiKey);
+  console.log("Calling Perplexity API with prompt:", prompt.substring(0, 100) + "...");
+  
+  if (!perplexityApiKey || perplexityApiKey.trim() === '') {
+    throw new Error("Perplexity API Key is missing or invalid");
+  }
+  
+  try {
+    return await callPerplexityAPI(prompt, perplexityApiKey);
+  } catch (error) {
+    console.error("Error calling Perplexity API:", error);
+    throw new Error(`Failed to get analysis from Perplexity API: ${error.message}`);
+  }
 };
 
 // Check if content is a demo/placeholder response
@@ -25,6 +36,11 @@ const isDemoContent = (content: string): boolean => {
 export const processPerplexityResponse = (content: string, companyName: string): BriefingResponse => {
   try {
     console.log("Processing raw response: " + content.substring(0, 200) + "...");
+    
+    if (!content || content.trim() === '') {
+      console.log("Empty content received from API");
+      throw new Error("Empty response received from Perplexity API");
+    }
     
     // Check for demo content markers
     if (isDemoContent(content)) {

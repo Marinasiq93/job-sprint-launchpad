@@ -12,6 +12,10 @@ export const callPerplexityAPI = async (prompt: string, apiKey: string): Promise
   try {
     console.log("Calling Perplexity API with key:", apiKey ? "API key is set" : "No API key provided");
     
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error("Perplexity API key is missing or invalid");
+    }
+    
     // Enhanced system message to guide the response format and improve web exploration
     const systemMessage = `Você é um assistente especializado em análise de empresas e mercados.
 
@@ -39,6 +43,7 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
 9. Quando falar sobre a liderança, não repita informações sobre fundadores na seção da equipe executiva
 10. Na seção de Fundadores, sempre mencione seus cargos atuais (se ainda estiverem na empresa)
 11. Não repita URLs ou instruções de visita a sites na sua resposta
+12. FUNDAMENTAL: Insista em acessar o código de conduta/valores da empresa se disponível
 `;
 
     // Use the Perplexity API to generate a response with improved settings
@@ -84,6 +89,11 @@ Forneça uma análise clara e estruturada seguindo estas diretrizes:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
     
+    if (!content || content.trim() === '') {
+      console.error("Received empty content from Perplexity API");
+      throw new Error("Empty response from Perplexity API");
+    }
+    
     console.log("Perplexity API response received");
     console.log("Raw API response excerpt:", content.substring(0, 100) + "...\n");
     
@@ -104,7 +114,9 @@ export const generatePrompt = (request: BriefingPrompt): string => {
   - Website: ${companyWebsite}
   - Descrição da vaga: ${jobDescription}
   
-  Concentre-se em fornecer insights sobre a cultura da empresa, seus valores e propósito, e como eles se alinham com a vaga.`;
+  Concentre-se em fornecer insights sobre a cultura da empresa, seus valores e propósito, e como eles se alinham com a vaga.
+  
+  IMPORTANTE: procure os valores e cultura da empresa no site oficial (${companyWebsite}). Explore seções como "Sobre Nós", "Valores", "Cultura", "Código de Conduta", etc. Verifique também subdomínios como .com/.com.br ou caminhos como /en/, /pt-br/ caso não encontre as informações inicialmente.`;
   
   // Add specific questions based on the current question index
   if (currentQuestionIndex === 0) {

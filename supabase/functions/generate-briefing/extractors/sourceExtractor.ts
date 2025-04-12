@@ -26,6 +26,14 @@ export const extractSources = (content: string): Array<{ title: string; url: str
       // Remove trailing period, comma, parenthesis or other punctuation
       url = url.replace(/[.,;:)\]}]$/, '');
       
+      // Make sure URLs don't end with a parenthesis or invalid characters
+      while (/[.,;:)\]}]$/.test(url)) {
+        url = url.slice(0, -1);
+      }
+      
+      // Fix common URL format issues
+      url = fixUrlFormat(url);
+      
       sources.push({
         title: match[1].trim().replace(/[:|-]$/, ''),
         url: url
@@ -39,6 +47,14 @@ export const extractSources = (content: string): Array<{ title: string; url: str
         let url = match[1].trim();
         // Clean URL by removing trailing punctuation
         url = url.replace(/[.,;:)\]}]$/, '');
+        
+        // Make sure URLs don't end with a parenthesis or invalid characters
+        while (/[.,;:)\]}]$/.test(url)) {
+          url = url.slice(0, -1);
+        }
+        
+        // Fix common URL format issues
+        url = fixUrlFormat(url);
         
         const title = match[2] ? match[2].trim() : `Source: ${getDomainName(url)}`;
         sources.push({ title, url });
@@ -58,6 +74,14 @@ export const extractSources = (content: string): Array<{ title: string; url: str
           // Clean URL by removing trailing punctuation
           url = url.replace(/[.,;:)\]}]$/, '');
           
+          // Make sure URLs don't end with a parenthesis or invalid characters
+          while (/[.,;:)\]}]$/.test(url)) {
+            url = url.slice(0, -1);
+          }
+          
+          // Fix common URL format issues
+          url = fixUrlFormat(url);
+          
           // Get everything before the URL, clean it up
           let title = line.substring(0, line.indexOf(url)).trim();
           // Remove numbering and special characters
@@ -72,32 +96,79 @@ export const extractSources = (content: string): Array<{ title: string; url: str
       });
     }
     
-    // Validate URLs and ensure they are properly formed
-    const validatedSources = sources.map(source => {
-      let { url, title } = source;
-      
-      // Fix common URL issues like trailing parentheses or closing brackets
-      url = url.replace(/[)\]}]$/, '');
-      
-      // Ensure URL doesn't end with unexpected characters
-      while (/[.,;:)]$/.test(url)) {
-        url = url.slice(0, -1);
+    // Fourth pattern: Extract markdown link format [Title](URL)
+    if (sources.length === 0) {
+      const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+      while ((match = markdownLinkRegex.exec(sourcesSection)) !== null) {
+        let url = match[2].trim();
+        // Fix common URL format issues
+        url = fixUrlFormat(url);
+        
+        sources.push({
+          title: match[1].trim(),
+          url: url
+        });
       }
-      
-      // Handle special case for EBANX URLs with extra slashes or parentheses
-      if (url.includes('ebanx.com')) {
-        url = url.replace(/\/{2,}$/, '/');
-        url = url.replace(/\)\/$/g, '/');
-      }
-      
-      return { title, url };
-    });
+    }
     
-    return validatedSources;
+    // Return unique sources (remove duplicates based on URL)
+    const uniqueSources = Array.from(
+      new Map(sources.map(source => [source.url, source])).values()
+    );
+    
+    return uniqueSources;
   }
   
   // If no sources section found, extract URLs from the entire content
   return extractAllUrls(content);
+};
+
+// Helper function to fix common URL format issues
+const fixUrlFormat = (url: string): string => {
+  // Remove trailing parentheses or closing brackets
+  url = url.replace(/[)\]}]$/, '');
+  
+  // Remove trailing slashes if followed by punctuation or closing parenthesis
+  url = url.replace(/\/[.,;:)]$/, '');
+  
+  // Fix common error with closing parenthesis in middle of URL
+  url = url.replace(/\)\//, '/');
+  
+  // Fix common error with trailing slashes and periods
+  url = url.replace(/\.\/$/, '/');
+  url = url.replace(/\.$/, '');
+  
+  // Handle incomplete URLs or domains without http/https
+  if (url.match(/^www\./)) {
+    url = `https://${url}`;
+  }
+  
+  // Fix specific error with EBANX URL format
+  if (url.includes('ebanx.com')) {
+    // Remove trailing parenthesis and fix double slashes
+    url = url.replace(/\)$/, '');
+    url = url.replace(/\/\/$/, '/');
+    
+    // Fix common error with trailing context in URL
+    url = url.replace(/\)\/$/, '/');
+    
+    // Fix possible broken URL formats
+    if (url.includes('ebanx.com/pt-br/valores)/')) {
+      url = url.replace('ebanx.com/pt-br/valores)/', 'ebanx.com/pt-br/valores/');
+    }
+    
+    // Ensure URL correctness for common paths
+    if (url.includes('/valores') && !url.endsWith('/')) {
+      url = `${url}/`;
+    }
+    
+    // Try to fix code of conduct URL if it's malformed
+    if (url.includes('code-of-conduct') && url.endsWith(')')) {
+      url = url.replace(/\)$/, '');
+    }
+  }
+  
+  return url;
 };
 
 // Helper function to extract all URLs from content
@@ -112,11 +183,17 @@ const extractAllUrls = (content: string): Array<{ title: string; url: string; }>
     // Clean URL by removing trailing punctuation
     url = url.replace(/[.,;:)\]}]$/, '');
     
+    // Fix common URL format issues
+    url = fixUrlFormat(url);
+    
     sources.push({
       title: `Source: ${getDomainName(url)}`,
       url: url
     });
   }
   
-  return sources;
+  // Return unique sources (remove duplicates based on URL)
+  return Array.from(
+    new Map(sources.map(source => [source.url, source])).values()
+  );
 };

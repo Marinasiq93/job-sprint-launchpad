@@ -29,8 +29,8 @@ export const fetchBriefingContent = async (
     const prompt = perplexityPromptsByCategory[category](companyName, companyWebsite);
     
     console.log('Calling Supabase Edge Function: generate-briefing');
-    // Call Perplexity API through Supabase Edge Function
-    const { data, error } = await supabase.functions.invoke('generate-briefing', {
+    // Call Perplexity API through Supabase Edge Function with a timeout
+    const fetchPromise = supabase.functions.invoke('generate-briefing', {
       body: {
         prompt,
         category,
@@ -39,6 +39,19 @@ export const fetchBriefingContent = async (
         refresh // Signal to bypass any caching on the backend
       },
     });
+    
+    // Set a timeout for the API call (30 seconds)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Tempo limite excedido ao buscar informações da empresa. A API pode estar indisponível.'));
+      }, 30000);
+    });
+    
+    // Race between the API call and the timeout
+    const { data, error } = await Promise.race([
+      fetchPromise,
+      timeoutPromise
+    ]) as any;
     
     if (error) {
       console.error('Supabase Edge Function error:', error);

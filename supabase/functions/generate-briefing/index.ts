@@ -32,10 +32,13 @@ serve(async (req) => {
     console.log(`API key present: ${!!perplexityApiKey}`);
     
     // Check if API key is available
-    if (!perplexityApiKey) {
-      console.log("PERPLEXITY_API_KEY not set, returning demo content");
+    if (!perplexityApiKey || perplexityApiKey.trim() === '') {
+      console.log("PERPLEXITY_API_KEY not set or empty, returning demo content");
       const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
-      return new Response(JSON.stringify(briefingData), {
+      return new Response(JSON.stringify({
+        ...briefingData,
+        apiUnavailable: true
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -44,6 +47,11 @@ serve(async (req) => {
       // Try to get data from Perplexity API (now getting raw text)
       const perplexityResponse = await getPerplexityAnalysis(prompt, perplexityApiKey);
       console.log("Raw API response excerpt:", perplexityResponse.substring(0, 100) + "...");
+      
+      if (!perplexityResponse || perplexityResponse.trim() === '') {
+        console.error("Received empty response from Perplexity API");
+        throw new Error("Received empty response from Perplexity API");
+      }
       
       // Process the raw text into our expected structure
       const processedResponse = processPerplexityResponse(perplexityResponse, companyName);
@@ -55,7 +63,11 @@ serve(async (req) => {
       console.error("Error from Perplexity API, falling back to demo content:", apiError);
       // Fallback to demo content if API call fails
       const briefingData = generateDemoContent(companyName, category, companyWebsite || 'https://www.example.com');
-      return new Response(JSON.stringify(briefingData), {
+      return new Response(JSON.stringify({
+        ...briefingData,
+        apiUnavailable: true,
+        error: `API Error: ${apiError.message}`
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -67,6 +79,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ 
       error: error.message,
+      apiUnavailable: true,
       ...errorResponse
     }), {
       status: 500,
