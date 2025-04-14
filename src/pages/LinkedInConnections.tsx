@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { LinkedInCSVUpload } from "@/components/linkedin/LinkedInCSVUpload"
@@ -9,10 +8,10 @@ import { toast } from "@/lib/toast"
 
 interface UserPreferences {
   target_role: string
-  target_sector: string
-  target_company_size: string
+  target_sector: string[]
+  target_company_size: string[]
   target_region: string
-  preferred_contact_type?: string
+  preferred_contact_type?: string[]
 }
 
 const LinkedInConnections = () => {

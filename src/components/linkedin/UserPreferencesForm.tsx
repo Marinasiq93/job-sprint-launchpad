@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button"
 
 interface UserPreferences {
   target_role: string
-  target_sector: string
-  target_company_size: string
+  target_sector: string[]
+  target_company_size: string[]
   target_region: string
-  preferred_contact_type?: string
+  preferred_contact_type?: string[]
 }
 
 interface UserPreferencesFormProps {
@@ -21,10 +21,10 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
   const form = useForm<UserPreferences>({
     defaultValues: {
       target_role: "",
-      target_sector: "",
-      target_company_size: "",
+      target_sector: [],
+      target_company_size: [],
       target_region: "",
-      preferred_contact_type: undefined
+      preferred_contact_type: []
     }
   })
 
@@ -53,10 +53,31 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
           name="target_sector"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Setor de Interesse</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Ex: Tecnologia" />
-              </FormControl>
+              <FormLabel>Setores de Interesse</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  const values = field.value || []
+                  if (values.includes(value)) {
+                    field.onChange(values.filter(v => v !== value))
+                  } else {
+                    field.onChange([...values, value])
+                  }
+                }}
+                value={field.value?.[0] || ""}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={`${field.value?.length || 0} setores selecionados`} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="tecnologia">Tecnologia</SelectItem>
+                  <SelectItem value="financas">Finanças</SelectItem>
+                  <SelectItem value="saude">Saúde</SelectItem>
+                  <SelectItem value="educacao">Educação</SelectItem>
+                  <SelectItem value="varejo">Varejo</SelectItem>
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />
@@ -66,15 +87,21 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
           name="target_company_size"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tamanho da Empresa</FormLabel>
+              <FormLabel>Tamanhos de Empresa</FormLabel>
               <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
+                onValueChange={(value) => {
+                  const values = field.value || []
+                  if (values.includes(value)) {
+                    field.onChange(values.filter(v => v !== value))
+                  } else {
+                    field.onChange([...values, value])
+                  }
+                }}
+                value={field.value?.[0] || ""}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tamanho" />
+                    <SelectValue placeholder={`${field.value?.length || 0} tamanhos selecionados`} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -107,15 +134,21 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
           name="preferred_contact_type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipo de Contato Preferido</FormLabel>
+              <FormLabel>Tipos de Contato Preferidos</FormLabel>
               <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
+                onValueChange={(value) => {
+                  const values = field.value || []
+                  if (values.includes(value)) {
+                    field.onChange(values.filter(v => v !== value))
+                  } else {
+                    field.onChange([...values, value])
+                  }
+                }}
+                value={field.value?.[0] || ""}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
+                    <SelectValue placeholder={`${field.value?.length || 0} tipos selecionados`} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
