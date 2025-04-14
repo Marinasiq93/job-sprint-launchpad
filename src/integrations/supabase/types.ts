@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      linkedin_connections: {
+        Row: {
+          company: string | null
+          company_size: string | null
+          contact_type: string | null
+          created_at: string
+          first_name: string
+          id: string
+          industry: string | null
+          last_name: string
+          linkedin_url: string | null
+          position: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          company_size?: string | null
+          contact_type?: string | null
+          created_at?: string
+          first_name: string
+          id?: string
+          industry?: string | null
+          last_name: string
+          linkedin_url?: string | null
+          position?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          company_size?: string | null
+          contact_type?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          industry?: string | null
+          last_name?: string
+          linkedin_url?: string | null
+          position?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

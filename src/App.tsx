@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import SprintCultura from "./pages/sprint/SprintCultura";
 import SprintFitAnalysis from "./pages/sprint/SprintFitAnalysis";
 import TestRunnerPage from "./pages/TestRunner";
 import NotFound from "./pages/NotFound";
+import LinkedInConnections from "./pages/LinkedInConnections";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +36,7 @@ const App = () => (
           <Route path="/dashboard/sprint/:sprintId/cultura" element={<SprintCultura />} />
           <Route path="/dashboard/sprint/:sprintId/fit-analysis" element={<SprintFitAnalysis />} />
           <Route path="/test-runner" element={<TestRunnerPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/dashboard/linkedin-connections" element={<LinkedInConnections />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
