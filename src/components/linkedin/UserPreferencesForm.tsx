@@ -1,5 +1,5 @@
 
-import { useForm, Controller } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,7 +18,7 @@ interface UserPreferencesFormProps {
 }
 
 export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
-  const { control, handleSubmit } = useForm<UserPreferences>({
+  const form = useForm<UserPreferences>({
     defaultValues: {
       target_role: "",
       target_sector: "",
@@ -28,15 +28,15 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
     }
   })
 
-  const onFormSubmit = (data: UserPreferences) => {
+  const handleSubmit = form.handleSubmit((data) => {
     onSubmit(data)
-  }
+  })
 
   return (
-    <Form>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <FormField
-          control={control}
+          control={form.control}
           name="target_role"
           render={({ field }) => (
             <FormItem>
@@ -49,7 +49,7 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
         />
 
         <FormField
-          control={control}
+          control={form.control}
           name="target_sector"
           render={({ field }) => (
             <FormItem>
@@ -62,7 +62,7 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
         />
 
         <FormField
-          control={control}
+          control={form.control}
           name="target_company_size"
           render={({ field }) => (
             <FormItem>
@@ -90,7 +90,7 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
         />
 
         <FormField
-          control={control}
+          control={form.control}
           name="target_region"
           render={({ field }) => (
             <FormItem>
@@ -103,7 +103,7 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
         />
 
         <FormField
-          control={control}
+          control={form.control}
           name="preferred_contact_type"
           render={({ field }) => (
             <FormItem>
