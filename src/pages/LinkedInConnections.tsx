@@ -1,11 +1,29 @@
 
+import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { LinkedInCSVUpload } from "@/components/linkedin/LinkedInCSVUpload"
 import { UserPreferencesForm } from "@/components/linkedin/UserPreferencesForm"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "@/lib/toast"
+
+interface UserPreferences {
+  target_role: string
+  target_sector: string
+  target_company_size: string
+  target_region: string
+  preferred_contact_type?: string
+}
 
 const LinkedInConnections = () => {
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
+
+  const handlePreferencesSubmit = (prefs: UserPreferences) => {
+    setPreferences(prefs)
+    toast.success("Preferências salvas com sucesso!")
+    console.log("Saved preferences:", prefs)
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -45,7 +63,7 @@ const LinkedInConnections = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <UserPreferencesForm onSubmit={(prefs) => console.log(prefs)} />
+                <UserPreferencesForm onSubmit={handlePreferencesSubmit} />
               </CardContent>
             </Card>
           </TabsContent>

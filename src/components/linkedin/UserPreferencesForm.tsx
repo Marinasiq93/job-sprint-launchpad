@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useForm, Controller } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,99 +18,115 @@ interface UserPreferencesFormProps {
 }
 
 export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    target_role: "",
-    target_sector: "",
-    target_company_size: "",
-    target_region: "",
+  const { control, handleSubmit } = useForm<UserPreferences>({
+    defaultValues: {
+      target_role: "",
+      target_sector: "",
+      target_company_size: "",
+      target_region: "",
+      preferred_contact_type: undefined
+    }
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(preferences)
+  const onFormSubmit = (data: UserPreferences) => {
+    onSubmit(data)
   }
 
   return (
     <Form>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField>
-          <FormItem>
-            <FormLabel>Cargo Desejado</FormLabel>
-            <FormControl>
-              <Input
-                value={preferences.target_role}
-                onChange={(e) => setPreferences({ ...preferences, target_role: e.target.value })}
-                placeholder="Ex: Product Manager"
-              />
-            </FormControl>
-          </FormItem>
-        </FormField>
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+        <FormField
+          control={control}
+          name="target_role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cargo Desejado</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Ex: Product Manager" />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-        <FormField>
-          <FormItem>
-            <FormLabel>Setor de Interesse</FormLabel>
-            <FormControl>
-              <Input
-                value={preferences.target_sector}
-                onChange={(e) => setPreferences({ ...preferences, target_sector: e.target.value })}
-                placeholder="Ex: Tecnologia"
-              />
-            </FormControl>
-          </FormItem>
-        </FormField>
+        <FormField
+          control={control}
+          name="target_sector"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Setor de Interesse</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Ex: Tecnologia" />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-        <FormField>
-          <FormItem>
-            <FormLabel>Tamanho da Empresa</FormLabel>
-            <Select
-              value={preferences.target_company_size}
-              onValueChange={(value) => setPreferences({ ...preferences, target_company_size: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tamanho" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1-10">1-10 funcionários</SelectItem>
-                <SelectItem value="11-50">11-50 funcionários</SelectItem>
-                <SelectItem value="51-200">51-200 funcionários</SelectItem>
-                <SelectItem value="201-1000">201-1000 funcionários</SelectItem>
-                <SelectItem value="1000+">1000+ funcionários</SelectItem>
-              </SelectContent>
-            </Select>
-          </FormItem>
-        </FormField>
+        <FormField
+          control={control}
+          name="target_company_size"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tamanho da Empresa</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tamanho" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1-10">1-10 funcionários</SelectItem>
+                  <SelectItem value="11-50">11-50 funcionários</SelectItem>
+                  <SelectItem value="51-200">51-200 funcionários</SelectItem>
+                  <SelectItem value="201-1000">201-1000 funcionários</SelectItem>
+                  <SelectItem value="1000+">1000+ funcionários</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
 
-        <FormField>
-          <FormItem>
-            <FormLabel>Região</FormLabel>
-            <FormControl>
-              <Input
-                value={preferences.target_region}
-                onChange={(e) => setPreferences({ ...preferences, target_region: e.target.value })}
-                placeholder="Ex: Brasil, Remoto"
-              />
-            </FormControl>
-          </FormItem>
-        </FormField>
+        <FormField
+          control={control}
+          name="target_region"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Região</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Ex: Brasil, Remoto" />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-        <FormField>
-          <FormItem>
-            <FormLabel>Tipo de Contato Preferido</FormLabel>
-            <Select
-              value={preferences.preferred_contact_type}
-              onValueChange={(value) => setPreferences({ ...preferences, preferred_contact_type: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recruiter">Recrutador</SelectItem>
-                <SelectItem value="decision-maker">Tomador de Decisão</SelectItem>
-                <SelectItem value="peer">Colega da Área</SelectItem>
-              </SelectContent>
-            </Select>
-          </FormItem>
-        </FormField>
+        <FormField
+          control={control}
+          name="preferred_contact_type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tipo de Contato Preferido</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="recruiter">Recrutador</SelectItem>
+                  <SelectItem value="decision-maker">Tomador de Decisão</SelectItem>
+                  <SelectItem value="peer">Colega da Área</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
 
         <Button type="submit">Salvar Preferências</Button>
       </form>
