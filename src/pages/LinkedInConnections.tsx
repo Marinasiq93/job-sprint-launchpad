@@ -21,27 +21,17 @@ const LinkedInConnections = () => {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
   const [activeTab, setActiveTab] = useState("import")
   
-  const { connections, loading, error, regenerateMessage } = useLinkedInConnections()
+  const { connections, loading, error, regenerateMessage, refreshConnections } = useLinkedInConnections(preferences)
 
   const handlePreferencesSubmit = async (prefs: UserPreferences) => {
     try {
-      // Store preferences in Supabase
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert([
-          {
-            id: 1, // Using a fixed ID for simplicity
-            target_role: prefs.target_role,
-            target_sector: prefs.target_sector,
-            target_company_size: prefs.target_company_size,
-            target_region: prefs.target_region
-          }
-        ]);
-        
-      if (error) throw error;
-      
       setPreferences(prefs);
       toast.success("Preferências salvas com sucesso!");
+      
+      // Refresh connections with new preferences
+      if (prefs) {
+        await refreshConnections();
+      }
       
       // Switch to results tab if there are connections available
       if (connections.length > 0) {
@@ -93,7 +83,10 @@ const LinkedInConnections = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <UserPreferencesForm onSubmit={handlePreferencesSubmit} />
+                <UserPreferencesForm 
+                  onSubmit={handlePreferencesSubmit}
+                  initialValues={preferences || undefined}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -138,6 +131,3 @@ const LinkedInConnections = () => {
 }
 
 export default LinkedInConnections
-
-// Import the supabase client at the top
-import { supabase } from "@/integrations/supabase/client"

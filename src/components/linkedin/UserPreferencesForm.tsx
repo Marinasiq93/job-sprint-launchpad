@@ -15,18 +15,19 @@ interface UserPreferences {
 
 interface UserPreferencesFormProps {
   onSubmit: (preferences: UserPreferences) => void
+  initialValues?: UserPreferences
 }
 
-export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
-  const [selectedSectors, setSelectedSectors] = useState<string[]>([])
-  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>([])
+export const UserPreferencesForm = ({ onSubmit, initialValues }: UserPreferencesFormProps) => {
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(initialValues?.target_sector || [])
+  const [selectedCompanySizes, setSelectedCompanySizes] = useState<string[]>(initialValues?.target_company_size || [])
   
   const form = useForm<UserPreferences>({
     defaultValues: {
-      target_role: "",
-      target_sector: [],
-      target_company_size: [],
-      target_region: "",
+      target_role: initialValues?.target_role || "",
+      target_sector: initialValues?.target_sector || [],
+      target_company_size: initialValues?.target_company_size || [],
+      target_region: initialValues?.target_region || "",
     }
   })
 
