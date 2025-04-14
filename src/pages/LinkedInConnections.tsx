@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { LinkedInCSVUpload } from "@/components/linkedin/LinkedInCSVUpload"
@@ -25,23 +24,29 @@ const LinkedInConnections = () => {
 
   const handlePreferencesSubmit = async (prefs: UserPreferences) => {
     try {
-      setPreferences(prefs);
-      toast.success("Preferências salvas com sucesso!");
-      
-      // Refresh connections with new preferences
-      if (prefs) {
-        await refreshConnections();
-      }
+      setPreferences(prefs)
+      toast.success("Preferências salvas com sucesso!")
       
       // Switch to results tab if there are connections available
       if (connections.length > 0) {
-        setActiveTab("results");
+        await refreshConnections()
+        setActiveTab("results")
       }
     } catch (err) {
-      console.error("Error saving preferences:", err);
-      toast.error("Erro ao salvar preferências. Tente novamente.");
+      console.error("Error saving preferences:", err)
+      toast.error("Erro ao salvar preferências. Tente novamente.")
     }
-  };
+  }
+
+  const handleCSVUpload = async () => {
+    if (preferences) {
+      await refreshConnections()
+      setActiveTab("results")
+    } else {
+      setActiveTab("preferences")
+      toast.info("Por favor, defina suas preferências para analisarmos suas conexões")
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -69,7 +74,7 @@ const LinkedInConnections = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <LinkedInCSVUpload />
+                <LinkedInCSVUpload onUploadSuccess={handleCSVUpload} />
               </CardContent>
             </Card>
           </TabsContent>
