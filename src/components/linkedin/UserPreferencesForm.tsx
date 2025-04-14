@@ -3,9 +3,8 @@ import { useForm } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { useState } from "react"
-import { ChevronDown } from "lucide-react"
+import { MultiSelectTags } from "./MultiSelectTags"
 
 interface UserPreferences {
   target_role: string
@@ -32,7 +31,6 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
   })
 
   const handleSubmit = form.handleSubmit((data) => {
-    // Update the form data with our selected values from the dropdowns
     data.target_sector = selectedSectors
     data.target_company_size = selectedCompanySizes
     onSubmit(data)
@@ -88,52 +86,26 @@ export const UserPreferencesForm = ({ onSubmit }: UserPreferencesFormProps) => {
 
         <FormItem>
           <FormLabel>Setores de Interesse</FormLabel>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                {selectedSectors.length === 0 
-                  ? "Selecione setores" 
-                  : `${selectedSectors.length} setores selecionados`}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-full min-w-[200px]">
-              {sectors.map((sector) => (
-                <DropdownMenuCheckboxItem
-                  key={sector.value}
-                  checked={selectedSectors.includes(sector.value)}
-                  onCheckedChange={() => toggleSector(sector.value)}
-                >
-                  {sector.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <MultiSelectTags
+            options={sectors}
+            selected={selectedSectors}
+            onSelect={toggleSector}
+            onRemove={toggleSector}
+            placeholder="Selecione setores"
+            label="Adicionar setor"
+          />
         </FormItem>
 
         <FormItem>
           <FormLabel>Tamanhos de Empresa</FormLabel>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                {selectedCompanySizes.length === 0 
-                  ? "Selecione tamanhos" 
-                  : `${selectedCompanySizes.length} tamanhos selecionados`}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-full min-w-[200px]">
-              {companySizes.map((size) => (
-                <DropdownMenuCheckboxItem
-                  key={size.value}
-                  checked={selectedCompanySizes.includes(size.value)}
-                  onCheckedChange={() => toggleCompanySize(size.value)}
-                >
-                  {size.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <MultiSelectTags
+            options={companySizes}
+            selected={selectedCompanySizes}
+            onSelect={toggleCompanySize}
+            onRemove={toggleCompanySize}
+            placeholder="Selecione tamanhos"
+            label="Adicionar tamanho"
+          />
         </FormItem>
 
         <FormField
