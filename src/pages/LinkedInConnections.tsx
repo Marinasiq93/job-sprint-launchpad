@@ -3,9 +3,12 @@ import { useState } from "react"
 import DashboardLayout from "@/components/DashboardLayout"
 import { LinkedInCSVUpload } from "@/components/linkedin/LinkedInCSVUpload"
 import { UserPreferencesForm } from "@/components/linkedin/UserPreferencesForm"
+import { ConnectionResults } from "@/components/linkedin/ConnectionResults"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/lib/toast"
+import { useLinkedInConnections } from "@/hooks/use-linkedin-connections"
+import { Loader2 } from "lucide-react"
 
 interface UserPreferences {
   target_role: string
@@ -16,12 +19,39 @@ interface UserPreferences {
 
 const LinkedInConnections = () => {
   const [preferences, setPreferences] = useState<UserPreferences | null>(null)
+  const [activeTab, setActiveTab] = useState("import")
+  
+  const { connections, loading, error, regenerateMessage } = useLinkedInConnections()
 
-  const handlePreferencesSubmit = (prefs: UserPreferences) => {
-    setPreferences(prefs)
-    toast.success("Preferências salvas com sucesso!")
-    console.log("Saved preferences:", prefs)
-  }
+  const handlePreferencesSubmit = async (prefs: UserPreferences) => {
+    try {
+      // Store preferences in Supabase
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert([
+          {
+            id: 1, // Using a fixed ID for simplicity
+            target_role: prefs.target_role,
+            target_sector: prefs.target_sector,
+            target_company_size: prefs.target_company_size,
+            target_region: prefs.target_region
+          }
+        ]);
+        
+      if (error) throw error;
+      
+      setPreferences(prefs);
+      toast.success("Preferências salvas com sucesso!");
+      
+      // Switch to results tab if there are connections available
+      if (connections.length > 0) {
+        setActiveTab("results");
+      }
+    } catch (err) {
+      console.error("Error saving preferences:", err);
+      toast.error("Erro ao salvar preferências. Tente novamente.");
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -33,10 +63,11 @@ const LinkedInConnections = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="import">
+        <Tabs defaultValue="import" value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="import">Importar</TabsTrigger>
             <TabsTrigger value="preferences">Preferências</TabsTrigger>
+            <TabsTrigger value="results" disabled={connections.length === 0}>Resultados</TabsTrigger>
           </TabsList>
           
           <TabsContent value="import">
@@ -66,6 +97,40 @@ const LinkedInConnections = () => {
               </CardContent>
             </Card>
           </TabsContent>
+          
+          <TabsContent value="results">
+            <Card>
+              <CardHeader>
+                <CardTitle>Conexões estratégicas para sua próxima oportunidade</CardTitle>
+                <CardDescription>
+                  Selecionamos as pessoas mais alinhadas com seu objetivo de carreira para você se conectar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    <span className="ml-2 text-gray-500">Processando suas conexões...</span>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-12 text-red-500">
+                    <p>Erro ao carregar conexões: {error}</p>
+                  </div>
+                ) : connections.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">
+                      Nenhuma conexão encontrada. Importe suas conexões do LinkedIn e defina suas preferências.
+                    </p>
+                  </div>
+                ) : (
+                  <ConnectionResults 
+                    connections={connections}
+                    onRegenerateMessage={regenerateMessage}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
@@ -73,3 +138,6 @@ const LinkedInConnections = () => {
 }
 
 export default LinkedInConnections
+
+// Import the supabase client at the top
+import { supabase } from "@/integrations/supabase/client"

@@ -1,6 +1,6 @@
 
 import React from "react"
-import { X } from "lucide-react"
+import { X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -64,7 +64,7 @@ export const MultiSelectTags = ({
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="w-full justify-between">
             {label}
-            <X className="ml-2 h-4 w-4" />
+            <ChevronDown className="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-full">
